@@ -2462,13 +2462,39 @@ function renderHist(){
   if(!history.length){el.innerHTML='<div class="empty">Las tareas completadas aparecerán aquí</div>';return;}
   el.innerHTML=history.map(h=>{
     const whoLine=h.extra?`${h.person} ↗ <span style="color:var(--text2)">${h.extra}</span>`:h.person;
-    const liveTask=tasks.find(t=>t.id===h.taskId);
-    const undoBtn=(liveTask&&liveTask.done)?`<button onclick="undoFromHistory('${h.taskId}')" title="Desmarcar esta tarea" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 8px;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0;">↺</button>`:'';
+    const undoBtn=`<button onclick="deleteHistoryEntry('${h.id}')" title="Eliminar este registro y revertir su XP" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 8px;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0;">↺</button>`;
     return`<div class="hist-item"><div class="hi-icon">${chkSVG()}</div><div class="hi-info"><div class="hi-name">${escHtml(h.name)}</div><div class="hi-meta">${whoLine} · ${h.zona} · ${h.date}${h.note?` · 💬 ${escHtml(h.note)}`:''}</div></div><div class="hi-pts">+${h.pts} XP</div>${undoBtn}</div>`;
   }).join('');
 }
-window.undoFromHistory=async(taskId)=>{
-  await undoToggle(taskId);
+
+// Elimina UNA entrada concreta del historial y revierte el XP que generó en su
+// momento, sin tocar el estado actual de la tarea (que puede ya haberse
+// reabierto y seguir su vida normal de forma independiente).
+window.deleteHistoryEntry=async(histId)=>{
+  const entry=history.find(h=>h.id===histId);
+  if(!entry){showToast('Este registro ya no existe');return;}
+  const xpFor=entry.xpFor||{};
+  for(const person of ['Rafa','María']){
+    const amount=xpFor[person]||0;
+    if(amount>0){
+      xpState[person]=Math.max(0,(xpState[person]||0)-amount);
+      xpWeekly[person]=Math.max(0,(xpWeekly[person]||0)-amount);
+      xpMonthly[person]=Math.max(0,(xpMonthly[person]||0)-amount);
+      wallet[person]=Math.max(0,(wallet[person]||0)-amount);
+    }
+  }
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
+  // Si la tarea sigue marcada como hecha en este momento, la desmarcamos
+  // también — de lo contrario quedaría "hecha" sin haber aportado XP real.
+  const liveTask=tasks.find(t=>t.id===entry.taskId);
+  if(liveTask&&liveTask.done){
+    await updateDoc(doc(db,'tasks',entry.taskId),{done:false,completedNote:'',completedBy:''});
+  }
+  await deleteDoc(doc(db,'history',histId));
+  showToast('Registro eliminado y XP revertido ✓');
 };
 
 function renderResumen(){
