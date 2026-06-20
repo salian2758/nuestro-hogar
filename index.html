@@ -346,7 +346,6 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div class="stitle mt" id="daily-title-none" style="display:none;">Sin asignar</div>
     <div id="list-d-none" class="drop-zone" data-drop-person="none" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-cadax-header" style="display:none;">Cada X días</div>
-    <div class="stitle mt" id="daily-title-cadax-none" style="display:none;">Sin asignar</div>
     <div id="list-d-cadax-none"></div>
     <div class="stitle mt" id="daily-title-cadax-rafa" style="display:none;">Rafa</div>
     <div id="list-d-cadax-rafa"></div>
@@ -377,14 +376,13 @@ input,textarea{-webkit-user-select:text;user-select:text;}
       <button class="fb" data-f="Baño">Baño</button>
       <button class="fb" data-f="General">General</button>
     </div>
-    <div class="stitle" id="sem-title-weekly-none" style="display:none;">Semanales — sin asignar</div>
+    <div class="stitle" id="sem-title-weekly-none" style="display:none;">Sin asignar</div>
     <div id="list-s-weekly-none" class="drop-zone" data-drop-group="" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-a" style="display:none;">Grupo A — Rafa</div>
     <div id="list-s-a" class="drop-zone" data-drop-group="A" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-b" style="display:none;">Grupo B — María</div>
     <div id="list-s-b" class="drop-zone" data-drop-group="B" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-cadax-header" style="display:none;">Cada X semanas</div>
-    <div class="stitle mt" id="sem-title-cadax-none" style="display:none;">Sin asignar</div>
     <div id="list-s-cadax-none"></div>
     <div class="stitle mt" id="sem-title-cadax-rafa" style="display:none;">Rafa</div>
     <div id="list-s-cadax-rafa"></div>
@@ -412,7 +410,6 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div class="stitle mt" id="mes-title-rot" style="display:none;">Rotativas</div>
     <div id="list-mes-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Mensual"></div>
     <div class="stitle mt" id="mes-cadax-header" style="display:none;">Cada X meses</div>
-    <div class="stitle mt" id="mes-title-cadax-none" style="display:none;">Sin asignar</div>
     <div id="list-mes-cadax-none"></div>
     <div class="stitle mt" id="mes-title-cadax-rafa" style="display:none;">Rafa</div>
     <div id="list-mes-cadax-rafa"></div>
@@ -1999,9 +1996,9 @@ function renderTask(t){
   </div>`;
 }
 
-function setList(id,arr){
+function setList(id,arr,hideWhenEmpty){
   const el=document.getElementById(id);if(!el)return;
-  if(!arr.length){el.innerHTML='<div class="empty">Sin tareas</div>';return;}
+  if(!arr.length){el.innerHTML=hideWhenEmpty?'':'<div class="empty">Sin tareas</div>';return;}
   const pending=arr.filter(t=>!t.done);
   const done=arr.filter(t=>t.done);
   let html=pending.map(renderTask).join('');
@@ -2055,16 +2052,16 @@ function renderAll(){
     if(fh==='Rotativa')return list.filter(t=>t.person==='Rotativa');
     return list;
   };
-  setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[]);
+  setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[],true);
   const rafaTitle=document.getElementById('daily-title-rafa');
   if(rafaTitle)rafaTitle.style.display=((fh==='all'||fh==='Rafa')&&dr.length)?'':'none';
-  setList('list-d-maria',fh==='all'||fh==='María'?dm:[]);
+  setList('list-d-maria',fh==='all'||fh==='María'?dm:[],true);
   const mariaTitle=document.getElementById('daily-title-maria');
   if(mariaTitle)mariaTitle.style.display=((fh==='all'||fh==='María')&&dm.length)?'':'none';
-  setList('list-d-rot',fh==='all'||fh==='Rotativa'?drot:[]);
+  setList('list-d-rot',fh==='all'||fh==='Rotativa'?drot:[],true);
   const rotTitle=document.getElementById('daily-title-rot');
   if(rotTitle)rotTitle.style.display=((fh==='all'||fh==='Rotativa')&&drot.length)?'':'none';
-  setList('list-d-none',fh==='all'?dnone:[]);
+  setList('list-d-none',fh==='all'?dnone:[],true);
   const noneTitle=document.getElementById('daily-title-none');
   if(noneTitle)noneTitle.style.display=(fh==='all'&&dnone.length)?'':'none';
 
@@ -2076,13 +2073,12 @@ function renderAll(){
   const cdRot=fh==='all'?cadaXDailyAll.filter(t=>t.person==='Rotativa'):[];
   const cdHeader=document.getElementById('daily-cadax-header');
   if(cdHeader)cdHeader.style.display=(fh==='all'&&cadaXDailyAll.length)?'':'none';
-  setList('list-d-cadax-none',cdNone);
-  const tCdNone=document.getElementById('daily-title-cadax-none');if(tCdNone)tCdNone.style.display=cdNone.length?'':'none';
-  setList('list-d-cadax-rafa',cdRafa);
+  setList('list-d-cadax-none',cdNone,true);
+  setList('list-d-cadax-rafa',cdRafa,true);
   const tCdRafa=document.getElementById('daily-title-cadax-rafa');if(tCdRafa)tCdRafa.style.display=cdRafa.length?'':'none';
-  setList('list-d-cadax-maria',cdMaria);
+  setList('list-d-cadax-maria',cdMaria,true);
   const tCdMaria=document.getElementById('daily-title-cadax-maria');if(tCdMaria)tCdMaria.style.display=cdMaria.length?'':'none';
-  setList('list-d-cadax-rot',cdRot);
+  setList('list-d-cadax-rot',cdRot,true);
   const tCdRot=document.getElementById('daily-title-cadax-rot');if(tCdRot)tCdRot.style.display=cdRot.length?'':'none';
 
   const rdEl=document.getElementById('rxp-d');if(rdEl)rdEl.textContent=dr.reduce((s,t)=>s+getXP(t),0)+' XP/día';
@@ -2100,15 +2096,15 @@ function renderAll(){
   const weeklyAFiltered=fs==='B'?[]:filterByZona(weeklyA);
   const weeklyBFiltered=fs==='A'?[]:filterByZona(weeklyB);
 
-  setList('list-s-weekly-none',weeklyNoneFiltered);
+  setList('list-s-weekly-none',weeklyNoneFiltered,true);
   const titleWeeklyNone=document.getElementById('sem-title-weekly-none');
   if(titleWeeklyNone)titleWeeklyNone.style.display=weeklyNoneFiltered.length?'':'none';
 
-  setList('list-s-a',weeklyAFiltered);
+  setList('list-s-a',weeklyAFiltered,true);
   const titleA=document.getElementById('sem-title-a');
   if(titleA)titleA.style.display=weeklyAFiltered.length?'':'none';
 
-  setList('list-s-b',weeklyBFiltered);
+  setList('list-s-b',weeklyBFiltered,true);
   const titleB=document.getElementById('sem-title-b');
   if(titleB)titleB.style.display=weeklyBFiltered.length?'':'none';
 
@@ -2122,13 +2118,12 @@ function renderAll(){
   const cwRot=cadaXBase.filter(t=>t.person==='Rotativa');
   const cadaxHeader=document.getElementById('sem-cadax-header');
   if(cadaxHeader)cadaxHeader.style.display=cadaXBase.length?'':'none';
-  setList('list-s-cadax-none',cwNone);
-  const tCwNone=document.getElementById('sem-title-cadax-none');if(tCwNone)tCwNone.style.display=cwNone.length?'':'none';
-  setList('list-s-cadax-rafa',cwRafa);
+  setList('list-s-cadax-none',cwNone,true);
+  setList('list-s-cadax-rafa',cwRafa,true);
   const tCwRafa=document.getElementById('sem-title-cadax-rafa');if(tCwRafa)tCwRafa.style.display=cwRafa.length?'':'none';
-  setList('list-s-cadax-maria',cwMaria);
+  setList('list-s-cadax-maria',cwMaria,true);
   const tCwMaria=document.getElementById('sem-title-cadax-maria');if(tCwMaria)tCwMaria.style.display=cwMaria.length?'':'none';
-  setList('list-s-cadax-rot',cwRot);
+  setList('list-s-cadax-rot',cwRot,true);
   const tCwRot=document.getElementById('sem-title-cadax-rot');if(tCwRot)tCwRot.style.display=cwRot.length?'':'none';
 
   const fm=activeFilter.mes;
@@ -2144,13 +2139,13 @@ function renderAll(){
   const mMariaF=matchesFilter('María')?mensualMaria:[];
   const mRotF=matchesFilter('Rotativa')?mensualRot:[];
 
-  setList('list-mes-none',mNoneF);
+  setList('list-mes-none',mNoneF,true);
   const tNone=document.getElementById('mes-title-none');if(tNone)tNone.style.display=mNoneF.length?'':'none';
-  setList('list-mes-rafa',mRafaF);
+  setList('list-mes-rafa',mRafaF,true);
   const tRafa=document.getElementById('mes-title-rafa');if(tRafa)tRafa.style.display=mRafaF.length?'':'none';
-  setList('list-mes-maria',mMariaF);
+  setList('list-mes-maria',mMariaF,true);
   const tMaria=document.getElementById('mes-title-maria');if(tMaria)tMaria.style.display=mMariaF.length?'':'none';
-  setList('list-mes-rot',mRotF);
+  setList('list-mes-rot',mRotF,true);
   const tRot=document.getElementById('mes-title-rot');if(tRot)tRot.style.display=mRotF.length?'':'none';
 
   // Cada X meses — subdividido por persona, igual que las mensuales normales
@@ -2161,13 +2156,12 @@ function renderAll(){
   const cmRot=fm==='all'?cadaXMonthlyAll.filter(t=>t.person==='Rotativa'):[];
   const cmHeader=document.getElementById('mes-cadax-header');
   if(cmHeader)cmHeader.style.display=(fm==='all'&&cadaXMonthlyAll.length)?'':'none';
-  setList('list-mes-cadax-none',cmNone);
-  const tCmNone=document.getElementById('mes-title-cadax-none');if(tCmNone)tCmNone.style.display=cmNone.length?'':'none';
-  setList('list-mes-cadax-rafa',cmRafa);
+  setList('list-mes-cadax-none',cmNone,true);
+  setList('list-mes-cadax-rafa',cmRafa,true);
   const tCmRafa=document.getElementById('mes-title-cadax-rafa');if(tCmRafa)tCmRafa.style.display=cmRafa.length?'':'none';
-  setList('list-mes-cadax-maria',cmMaria);
+  setList('list-mes-cadax-maria',cmMaria,true);
   const tCmMaria=document.getElementById('mes-title-cadax-maria');if(tCmMaria)tCmMaria.style.display=cmMaria.length?'':'none';
-  setList('list-mes-cadax-rot',cmRot);
+  setList('list-mes-cadax-rot',cmRot,true);
   const tCmRot=document.getElementById('mes-title-cadax-rot');if(tCmRot)tCmRot.style.display=cmRot.length?'':'none';
 
   updateHeader();
