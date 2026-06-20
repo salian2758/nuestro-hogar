@@ -1737,7 +1737,15 @@ window.cancelComplete=()=>{
 };
 
 window.undoToggle=async(id)=>{
-  const t=tasks.find(t=>t.id===id);if(!t||!t.done)return;
+  const t=tasks.find(t=>t.id===id);
+  if(!t){
+    showToast('Esta tarea ya no existe');
+    return;
+  }
+  if(!t.done){
+    showToast('Esta tarea ya se desmarcó o se reabrió sola con el tiempo');
+    return;
+  }
   await updateDoc(doc(db,'tasks',id),{done:false,completedNote:'',completedBy:''});
   // Buscar la entrada real del historial para saber EXACTAMENTE cómo se repartió
   // el XP (Solo yo / Compartido / Solo el otro) y revertir a cada persona lo
@@ -2454,8 +2462,8 @@ function renderHist(){
   if(!history.length){el.innerHTML='<div class="empty">Las tareas completadas aparecerán aquí</div>';return;}
   el.innerHTML=history.map(h=>{
     const whoLine=h.extra?`${h.person} ↗ <span style="color:var(--text2)">${h.extra}</span>`:h.person;
-    const taskStillExists=tasks.some(t=>t.id===h.taskId);
-    const undoBtn=taskStillExists?`<button onclick="undoFromHistory('${h.taskId}')" title="Desmarcar esta tarea" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 8px;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0;">↺</button>`:'';
+    const liveTask=tasks.find(t=>t.id===h.taskId);
+    const undoBtn=(liveTask&&liveTask.done)?`<button onclick="undoFromHistory('${h.taskId}')" title="Desmarcar esta tarea" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 8px;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0;">↺</button>`:'';
     return`<div class="hist-item"><div class="hi-icon">${chkSVG()}</div><div class="hi-info"><div class="hi-name">${escHtml(h.name)}</div><div class="hi-meta">${whoLine} · ${h.zona} · ${h.date}${h.note?` · 💬 ${escHtml(h.note)}`:''}</div></div><div class="hi-pts">+${h.pts} XP</div>${undoBtn}</div>`;
   }).join('');
 }
