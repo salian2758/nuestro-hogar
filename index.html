@@ -899,31 +899,36 @@ function getDailyMessage(person,pct){
   }
   return msg;
 }
-// Catálogo de referencia — ideas con costes orientativos, pensado para que la
-// proporción de XP tenga sentido real (un viaje no debería costar lo mismo que
-// un helado). Esto NO es el catálogo real de nadie, solo una guía para copiar.
+// Catálogo de referencia — ideas con costes orientativos, calculados sobre el ritmo
+// REAL de generación de XP de esta app (~340 XP/semana por persona haciendo sus
+// diarias fijas + un par de semanales). Esto NO es el catálogo real de nadie,
+// solo una guía para copiar y editar.
 const REFERENCE_CATALOG=[
-  {tramo:'Micro · 1-2 días de esfuerzo',items:[
-    {name:'🍦 Un heladito o capricho dulce',desc:'',cost:40},
-    {name:'📱 Media hora sin que me toque el móvil',desc:'',cost:50},
-    {name:'☕ Que me traigas el desayuno a la cama',desc:'',cost:60},
+  {tramo:'Micro · medio día de esfuerzo',items:[
+    {name:'🍦 Un heladito o capricho dulce',desc:'',cost:60},
+    {name:'📱 Media hora sin que me toque el móvil',desc:'',cost:70},
   ]},
-  {tramo:'Pequeño · media semana',items:[
-    {name:'🎬 Elegir la peli/serie de esta noche',desc:'',cost:90},
-    {name:'🍕 Elegir la cena de hoy',desc:'',cost:100},
-    {name:'🛋️ Librarte de una tarea hoy',desc:'',cost:120},
-    {name:'💆 Masaje de 15-20 minutos',desc:'',cost:150},
+  {tramo:'Pequeño · un día completo de esfuerzo',items:[
+    {name:'☕ Que me traigas el desayuno a la cama',desc:'',cost:150},
+    {name:'🎬 Elegir la peli/serie de esta noche',desc:'',cost:180},
+    {name:'🛋️ Librarte de una tarea hoy',desc:'',cost:220},
   ]},
-  {tramo:'Medio · una semana completa',items:[
-    {name:'🎁 Una sorpresa pequeña a elegir por el otro',desc:'',cost:280},
-    {name:'💆 Masaje largo, sin prisa',desc:'30-40 minutos',cost:300},
-    {name:'🍽️ Cena fuera de casa, los dos',desc:'',cost:320},
-    {name:'🌅 Tarde entera sin planes ni tareas',desc:'Solo los dos',cost:350},
+  {tramo:'Medio · 2-3 días de esfuerzo',items:[
+    {name:'🍕 Elegir la cena de hoy',desc:'',cost:280},
+    {name:'💆 Masaje de 15-20 minutos',desc:'',cost:350},
   ]},
-  {tramo:'Grande · varias semanas de ahorro',items:[
-    {name:'🎟️ Entradas a un concierto o evento',desc:'',cost:700},
-    {name:'🏨 Escapada de un día',desc:'Spa, ciudad cercana...',cost:900},
-    {name:'✈️ Viaje de fin de semana',desc:'',cost:1800},
+  {tramo:'Notable · casi una semana completa',items:[
+    {name:'🎁 Una sorpresa pequeña a elegir por el otro',desc:'',cost:500},
+    {name:'💆 Masaje largo, sin prisa',desc:'30-40 minutos',cost:600},
+    {name:'🍽️ Cena fuera de casa, los dos',desc:'',cost:700},
+  ]},
+  {tramo:'Grande · 2-3 semanas de esfuerzo constante',items:[
+    {name:'🌅 Tarde entera sin planes ni tareas',desc:'Solo los dos',cost:900},
+    {name:'🎟️ Entradas a un concierto o evento',desc:'',cost:1400},
+  ]},
+  {tramo:'Muy grande · un mes o más de ahorro real',items:[
+    {name:'🏨 Escapada de un día',desc:'Spa, ciudad cercana...',cost:2200},
+    {name:'✈️ Viaje de fin de semana',desc:'',cost:4500},
   ]},
 ];
 
