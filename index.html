@@ -96,11 +96,14 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .tcheck.done{background:var(--c4);border-color:var(--c4);animation:checkPop .35s cubic-bezier(.34,1.56,.64,1);}
 .tcheck-holding{animation:holdGrow .4s ease-out forwards;}
 @keyframes holdGrow{0%{transform:scale(1);}100%{transform:scale(1.18);box-shadow:0 0 0 6px rgba(255,255,255,.08);}}
-.card-bubble-pop{animation:cardBubble .48s cubic-bezier(.34,1.56,.64,1) forwards;position:relative;z-index:5;}
+.card-bubble-pop{animation:cardBubble 1.1s cubic-bezier(.34,1.2,.64,1) forwards;position:relative;z-index:5;}
 @keyframes cardBubble{
-  0%{transform:scale(1);}
-  40%{transform:scale(1.18);box-shadow:0 12px 40px rgba(16,185,129,.5);}
-  68%{transform:scale(0.94);}
+  0%{transform:scale(1);box-shadow:none;}
+  20%{transform:scale(1.04);box-shadow:0 4px 14px rgba(16,185,129,.18);}
+  55%{transform:scale(1.13);box-shadow:0 10px 30px rgba(16,185,129,.35);}
+  78%{transform:scale(1.22);box-shadow:0 14px 44px rgba(16,185,129,.55);}
+  86%{transform:scale(1.24);box-shadow:0 14px 46px rgba(16,185,129,.6);}
+  93%{transform:scale(0.93);box-shadow:0 4px 12px rgba(16,185,129,.15);}
   100%{transform:scale(1);box-shadow:none;}
 }
 @keyframes particleFly{
@@ -2916,42 +2919,52 @@ async function reassignTaskFromDrop(taskId,dropZone){
 window.quickComplete=async(id,checkEl)=>{
   const t=tasks.find(t=>t.id===id);if(!t||t.done)return;
   const card=checkEl?checkEl.closest('.tc'):null;
-  if(card)triggerBubblePop(card);
-  await toggle(id);
+  if(card){
+    await triggerBubblePop(card); // esperamos a que termine la animación completa...
+  }
+  await toggle(id); // ...antes de escribir en Firestore, para que el re-render no la corte a mitad
 };
 
 function triggerBubblePop(card){
-  card.classList.add('card-bubble-pop');
-  const theme=THEMES[userTheme[currentUser]||'hogar']||THEMES.hogar;
-  const colors=[theme.c1,theme.c2,theme.c3];
-  const rect=card.getBoundingClientRect();
-  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-  const burst=document.createElement('div');
-  burst.style.position='fixed';burst.style.left='0';burst.style.top='0';
-  burst.style.width='100%';burst.style.height='100%';burst.style.pointerEvents='none';
-  burst.style.zIndex='350';
-  const N=22;
-  for(let i=0;i<N;i++){
-    const p=document.createElement('div');
-    const angle=(Math.PI*2*i/N)+(Math.random()*0.4-0.2);
-    const dist=100+Math.random()*90;
-    const size=6+Math.random()*8;
-    const color=colors[i%colors.length];
-    p.style.position='absolute';
-    p.style.left=cx+'px';p.style.top=cy+'px';
-    p.style.width=size+'px';p.style.height=size+'px';
-    p.style.borderRadius='50%';
-    p.style.background=color;
-    p.style.opacity='0.95';
-    p.style.transform='translate(-50%,-50%)';
-    p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
-    p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
-    p.style.animation=`particleFly .55s cubic-bezier(.25,.8,.4,1) forwards`;
-    burst.appendChild(p);
-  }
-  document.body.appendChild(burst);
-  setTimeout(()=>{burst.remove();},650);
-  setTimeout(()=>{card.classList.remove('card-bubble-pop');},420);
+  return new Promise(resolve=>{
+    card.classList.add('card-bubble-pop');
+    const theme=THEMES[userTheme[currentUser]||'hogar']||THEMES.hogar;
+    const colors=[theme.c1,theme.c2,theme.c3];
+    const POP_DELAY=920; // momento del estallido, sincronizado con el ~86% de cardBubble (1.1s)
+    setTimeout(()=>{
+      const rect=card.getBoundingClientRect();
+      const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+      const burst=document.createElement('div');
+      burst.style.position='fixed';burst.style.left='0';burst.style.top='0';
+      burst.style.width='100%';burst.style.height='100%';burst.style.pointerEvents='none';
+      burst.style.zIndex='350';
+      const N=22;
+      for(let i=0;i<N;i++){
+        const p=document.createElement('div');
+        const angle=(Math.PI*2*i/N)+(Math.random()*0.4-0.2);
+        const dist=100+Math.random()*90;
+        const size=6+Math.random()*8;
+        const color=colors[i%colors.length];
+        p.style.position='absolute';
+        p.style.left=cx+'px';p.style.top=cy+'px';
+        p.style.width=size+'px';p.style.height=size+'px';
+        p.style.borderRadius='50%';
+        p.style.background=color;
+        p.style.opacity='0.95';
+        p.style.transform='translate(-50%,-50%)';
+        p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
+        p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
+        p.style.animation=`particleFly .55s cubic-bezier(.25,.8,.4,1) forwards`;
+        burst.appendChild(p);
+      }
+      document.body.appendChild(burst);
+      setTimeout(()=>{burst.remove();},650);
+    },POP_DELAY);
+    setTimeout(()=>{
+      card.classList.remove('card-bubble-pop');
+      resolve();
+    },1100);
+  });
 }
 
 // Mantener pulsado: abre el modal de reparto y nota de siempre (lo que antes hacía cualquier toque)
