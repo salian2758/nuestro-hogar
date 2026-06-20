@@ -1679,8 +1679,8 @@ window.handleCheck=(id)=>{
 window.toggle=async(id)=>{
   const t=tasks.find(t=>t.id===id);if(!t)return;
   if(t.done){return;}
-  const isUnassigned=t.person==='none'||!t.person;
   const isRotativa=t.person==='Rotativa';
+  const isUnassigned=!isRotativa&&t.person!=='Rafa'&&t.person!=='María';
   if(isUnassigned&&currentUser){
     // Tarea sin asignar: se asigna automáticamente y de forma PERMANENTE a
     // quien la marca, y se completa al instante, sin modal ni nota.
