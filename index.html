@@ -527,11 +527,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <input class="fi" id="notif-time" type="time" value="20:00" style="width:100px;" onchange="saveNotifTime()">
     </div>
 
-    <!-- RESETEO SEMANAL MANUAL -->
-    <div class="stitle mt">Reseteo semanal</div>
+    <!-- RESETEO MANUAL -->
+    <div class="stitle mt">Reseteo de tareas</div>
     <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px;">
-      Las tareas se resetean automáticamente cada lunes a las 00:00. También puedes hacerlo manualmente:
-      <button onclick="resetTasks()" style="display:block;width:100%;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">↺ Resetear tareas ahora</button>
+      Las diarias se resetean solas cada día. Las semanales y mensuales se mantienen marcadas hasta que pasa exactamente una semana o un mes desde que las completaste — no un día fijo de calendario. También puedes forzar el reseteo de las diarias manualmente:
+      <button onclick="resetTasks()" style="display:block;width:100%;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">↺ Resetear diarias ahora</button>
     </div>
 
     <!-- PAPELERA -->
@@ -1037,7 +1037,27 @@ function safeSetItem(key,value){
 let unsubTasks=null,unsubHist=null;
 let nextTaskNum=26;
 
+function addOneMonthSafe(date){
+  // setMonth() simple puede "desbordar" al mes siguiente si el día de origen
+  // no existe en el mes de destino (ej: 31 enero + 1 mes = 3 marzo, en vez de
+  // quedarse en el último día de febrero). Esto lo corrige.
+  const d=new Date(date);
+  const originalDay=d.getDate();
+  d.setMonth(d.getMonth()+1);
+  if(d.getDate()!==originalDay){
+    // Desbordó — retrocedemos al último día del mes de destino real
+    d.setDate(0);
+  }
+  return d;
+}
+
 function nextAvailableDate(t){
+  if(t.freq==='Semanal'){
+    return new Date(t.lastDoneDate+604800000).toLocaleDateString('es-ES');
+  }
+  if(t.freq==='Mensual'){
+    return addOneMonthSafe(new Date(t.lastDoneDate)).toLocaleDateString('es-ES');
+  }
   const msPerUnit={'días':86400000,'semanas':604800000,'meses':2592000000};
   const intervalMs=(t.cadaxNum||2)*(msPerUnit[t.cadaxUnit]||604800000);
   const nextDate=new Date(t.lastDoneDate+intervalMs);
@@ -1248,9 +1268,9 @@ async function checkWeeklyXPReset(){
       const winner=wr>=wm?'Rafa':'María';
       const loser=winner==='Rafa'?'María':'Rafa';
       const loserPct=Math.max(wr,wm)>0?Math.round(Math.min(wr,wm)/Math.max(wr,wm)*100):0;
-      xpState[winner]=(xpState[winner]||0)+50;
-      xpMonthly[winner]=(xpMonthly[winner]||0)+50;
-      if(loserPct>=70){xpState[loser]=(xpState[loser]||0)+20;xpMonthly[loser]=(xpMonthly[loser]||0)+20;}
+      xpState[winner]=(xpState[winner]||0)+25;
+      xpMonthly[winner]=(xpMonthly[winner]||0)+25;
+      if(loserPct>=70){xpState[loser]=(xpState[loser]||0)+10;xpMonthly[loser]=(xpMonthly[loser]||0)+10;}
       await setDoc(doc(db,'state','xp'),xpState);
       await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
       const weekResult={winner,loser,wrXP:wr,wmXP:wm,loserBonus:loserPct>=70,date:now.toLocaleDateString('es-ES'),ts:Date.now()};
@@ -1282,7 +1302,7 @@ async function checkMonthlyReset(){
     const mr=xpMonthly.Rafa||0;const mm=xpMonthly.María||0;
     if(mr>0||mm>0){
       const winner=mr>=mm?'Rafa':'María';
-      xpState[winner]=(xpState[winner]||0)+150;
+      xpState[winner]=(xpState[winner]||0)+50;
       await setDoc(doc(db,'state','xp'),xpState);
       const monthResult={winner,rXP:mr,mXP:mm,date:now.toLocaleDateString('es-ES'),ts:Date.now()};
       await setDoc(doc(db,'state','lastMonthResult'),monthResult);
@@ -1302,7 +1322,7 @@ async function showWeekWinner(){
   const txt=document.getElementById('winner-text');
   const sub=document.getElementById('winner-sub');
   if(txt)txt.textContent=`🏆 ¡${result.winner} gana la semana!`;
-  if(sub){const bonus=result.loserBonus?' · '+result.loser+' +20 XP por colaboración':'';sub.textContent='+50 XP bonus'+bonus;}
+  if(sub){const bonus=result.loserBonus?' · '+result.loser+' +10 XP por colaboración':'';sub.textContent='+25 XP bonus'+bonus;}
   el.style.display='flex';
   setTimeout(()=>{if(el)el.style.display='none';},8000);
 }
@@ -1360,17 +1380,19 @@ function getWeekKey(d){
 
 
 window.resetTasks=async()=>{
-  if(!confirm('¿Resetear todas las tareas a pendiente?'))return;
+  if(!confirm('¿Resetear las tareas diarias a pendiente?'))return;
   await doReset();
-  showToast('Tareas reseteadas ✓');
+  showToast('Diarias reseteadas ✓');
 };
 async function doReset(){
-  // Only called on Monday - reset diarias and semanales (NOT CadaX - that has its own interval logic, NOT mensuales/puntuales)
+  // Solo resetea Diarias de forma fija. Las Semanales y Mensuales ya NO se
+  // resetean aquí — cada una tiene su propio intervalo móvil (7 días / 1 mes
+  // exacto desde que se marcó), gestionado en doDailyReset().
   const snap=await getDocs(collection(db,'tasks'));
   const batch=writeBatch(db);
   snap.forEach(d=>{
     const t=d.data();
-    if(t.done&&(t.freq==='Diaria'||t.freq==='Semanal')){
+    if(t.done&&t.freq==='Diaria'){
       batch.update(doc(db,'tasks',d.id),{done:false,completedNote:'',completedBy:''});
     }
   });
@@ -1391,6 +1413,25 @@ async function doDailyReset(){
       const intervalMs=(t.cadaxNum||2)*(msPerUnit[t.cadaxUnit]||604800000);
       if((Date.now()-t.lastDoneDate)>=intervalMs){
         batch.update(doc(db,'tasks',d.id),{done:false,completedNote:'',completedBy:''});
+      }
+    }
+    // Semanales: intervalo móvil de 7 días exactos desde que se marcaron (no
+    // "hasta el próximo lunes" — cada tarea tiene su propio reloj de 7 días)
+    if(t.done&&t.freq==='Semanal'){
+      if(!t.lastDoneDate||(Date.now()-t.lastDoneDate)>=604800000){
+        // Sin lastDoneDate = tarea marcada antes de este cambio: la reabrimos
+        batch.update(doc(db,'tasks',d.id),{done:false,completedNote:'',completedBy:''});
+      }
+    }
+    // Mensuales: intervalo móvil de 1 mes calendario exacto desde que se marcaron
+    if(t.done&&t.freq==='Mensual'){
+      if(!t.lastDoneDate){
+        batch.update(doc(db,'tasks',d.id),{done:false,completedNote:'',completedBy:''});
+      }else{
+        const nextMonthDate=addOneMonthSafe(new Date(t.lastDoneDate));
+        if(Date.now()>=nextMonthDate.getTime()){
+          batch.update(doc(db,'tasks',d.id),{done:false,completedNote:'',completedBy:''});
+        }
       }
     }
   });
@@ -1517,7 +1558,7 @@ window.confirmComplete=async()=>{
   const whoDidIt=me||t.person||'Sin asignar'; // sigue usándose para registro de "quién marcó"
   try{
     const updateData={done:true,completedNote:note,completedBy:whoDidIt};
-    if(t.freq==='CadaX')updateData.lastDoneDate=Date.now();
+    if(t.freq==='CadaX'||t.freq==='Semanal'||t.freq==='Mensual')updateData.lastDoneDate=Date.now();
     await updateDoc(doc(db,'tasks',id),updateData);
   }catch(e){
     showToast('Error al guardar — comprueba la conexión');
@@ -1778,7 +1819,7 @@ function renderTask(t){
     <div class="tinfo">
       <div class="tname${t.done?' done':''}" onclick="openEditModal('${t.id}')" style="cursor:pointer;">${t.name} <span style="font-size:10px;color:var(--text2);opacity:.6;">✎</span></div>
       <div class="tmeta"><span class="tag tag-z">${t.zona}</span><span class="tag tag-d">${DIFF_LBL[t.diff]}</span>${t.freq==='CadaX'?`<span class="tag" style="background:rgba(99,102,241,0.15);color:#A5B4FC;">${t.freqLabel||'Cada X'}</span>`:''}${gTag(t.group)}</div>
-      ${t.freq==='CadaX'&&t.done&&t.lastDoneDate?`<div class="tnote">⏳ Próxima vez: ${nextAvailableDate(t)}</div>`:''}
+      ${(t.freq==='CadaX'||t.freq==='Semanal'||t.freq==='Mensual')&&t.done&&t.lastDoneDate?`<div class="tnote">⏳ Próxima vez: ${nextAvailableDate(t)}</div>`:''}
       <button class="assign-btn ${assignBtnClass(t.person)}" onclick="openAssignModal('${t.id}')">${assignBtnLabel(t.person)} <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       ${t.note?`<div class="tnote">📌 ${t.note}</div>`:''}
       ${t.completedNote?`<div class="tnote">💬 ${t.completedNote}</div>`:''}
