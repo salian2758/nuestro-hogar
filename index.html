@@ -469,7 +469,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         </div>
       </div>
       <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:10px;line-height:1.5;">
-        🔥 50+ XP propios al día = racha positiva. 🥶 Menos de 30 XP = racha negativa.<br>Entre 30 y 49 XP el día queda neutro: corta lo negativo, pero no suma a lo positivo.
+        🔥 50+ XP propios al día = racha positiva. 🥶 Menos de 20 XP = racha negativa.<br>Entre 20 y 49 XP el día queda neutro: corta lo negativo, pero no suma a lo positivo.
       </div>
     </div>
 
@@ -2501,7 +2501,7 @@ window.fulfillPending=async(id)=>{
 // < 30 XP individuales  → día "malo"   → suma a racha negativa
 // 30-49 XP individuales → día "neutro" → corta cualquier racha negativa, vuelve a 0
 // 50+ XP individuales   → día "bueno"  → suma a racha positiva (si venías de negativo, resetea a +1)
-const STREAK_NEUTRAL_MIN=30;
+const STREAK_NEUTRAL_MIN=20;
 const STREAK_GOOD_MIN=50;
 const STREAK_MIN_DAILY_XP=STREAK_GOOD_MIN; // alias por compatibilidad con código existente
 
@@ -2533,7 +2533,7 @@ async function updateStreak(person,xpEarnedNow){
 
 // ─── RACHA CONJUNTA del progreso diario (sobre el objetivo de 140 XP entre los dos) ───
 const COUPLE_STREAK_GOOD_MIN=100;
-const COUPLE_STREAK_NEUTRAL_MIN=70;
+const COUPLE_STREAK_NEUTRAL_MIN=40;
 
 async function updateCoupleStreak(xpEarnedTodayTotal){
   const today=new Date().toLocaleDateString('es-ES');
