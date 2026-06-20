@@ -1094,7 +1094,8 @@ function isCadaXLocked(t){
 
 function calcXP(freq,diff,custom){
   if(custom&&!isNaN(parseInt(custom)))return parseInt(custom);
-  return Math.round(BASE[freq]*(DIFF[diff]||1));
+  const baseFreq=freq==='CadaX'?'Semanal':freq; // CadaX no tiene entrada propia en BASE, usa el valor de Semanal
+  return Math.round((BASE[baseFreq]||10)*(DIFF[diff]||1));
 }
 function getXP(t){return calcXP(t.freq,t.diff,t.customXP);}
 
