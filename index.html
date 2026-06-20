@@ -1679,6 +1679,33 @@ window.handleCheck=(id)=>{
 window.toggle=async(id)=>{
   const t=tasks.find(t=>t.id===id);if(!t)return;
   if(t.done){return;}
+  const isUnassigned=t.person==='none'||!t.person;
+  const isRotativa=t.person==='Rotativa';
+  if(isUnassigned&&currentUser){
+    // Tarea sin asignar: se asigna automáticamente y de forma PERMANENTE a
+    // quien la marca, y se completa al instante, sin modal ni nota.
+    try{
+      await updateDoc(doc(db,'tasks',id),{person:currentUser});
+      t.person=currentUser; // actualizar en memoria de inmediato, sin esperar al snapshot
+    }catch(e){
+      showToast('Error al guardar — comprueba la conexión');
+      return;
+    }
+    pendingCompleteId=id;
+    splitMode='mine';
+    document.getElementById('complete-note').value='';
+    await confirmComplete();
+    return;
+  }
+  if(isRotativa&&currentUser){
+    // Rotativa: toque rápido, 100% del XP para quien la marca esta vez, pero
+    // SIN cambiar su asignación — sigue siendo "Rotativa" para la próxima vez.
+    pendingCompleteId=id;
+    splitMode='mine';
+    document.getElementById('complete-note').value='';
+    await confirmComplete();
+    return;
+  }
   pendingCompleteId=id;
   document.getElementById('complete-note').value='';
   const lbl=document.getElementById('complete-task-label');
