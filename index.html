@@ -345,7 +345,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div id="list-d-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-none" style="display:none;">Sin asignar</div>
     <div id="list-d-none" class="drop-zone" data-drop-person="none" data-drop-freq="Diaria"></div>
-    <div class="stitle mt" id="daily-cadax-header" style="display:none;">Cada X</div>
+    <div class="stitle mt" id="daily-cadax-header" style="display:none;">Cada X días</div>
+    <div class="stitle mt" id="daily-title-cadax-none" style="display:none;">Sin asignar</div>
     <div id="list-d-cadax-none"></div>
     <div class="stitle mt" id="daily-title-cadax-rafa" style="display:none;">Rafa</div>
     <div id="list-d-cadax-rafa"></div>
@@ -383,6 +384,7 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div class="stitle mt" id="sem-title-b" style="display:none;">Grupo B — María</div>
     <div id="list-s-b" class="drop-zone" data-drop-group="B" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-cadax-header" style="display:none;">Cada X semanas</div>
+    <div class="stitle mt" id="sem-title-cadax-none" style="display:none;">Sin asignar</div>
     <div id="list-s-cadax-none"></div>
     <div class="stitle mt" id="sem-title-cadax-rafa" style="display:none;">Rafa</div>
     <div id="list-s-cadax-rafa"></div>
@@ -410,6 +412,7 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div class="stitle mt" id="mes-title-rot" style="display:none;">Rotativas</div>
     <div id="list-mes-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Mensual"></div>
     <div class="stitle mt" id="mes-cadax-header" style="display:none;">Cada X meses</div>
+    <div class="stitle mt" id="mes-title-cadax-none" style="display:none;">Sin asignar</div>
     <div id="list-mes-cadax-none"></div>
     <div class="stitle mt" id="mes-title-cadax-rafa" style="display:none;">Rafa</div>
     <div id="list-mes-cadax-rafa"></div>
@@ -2074,6 +2077,7 @@ function renderAll(){
   const cdHeader=document.getElementById('daily-cadax-header');
   if(cdHeader)cdHeader.style.display=(fh==='all'&&cadaXDailyAll.length)?'':'none';
   setList('list-d-cadax-none',cdNone,true);
+  const tCdNone=document.getElementById('daily-title-cadax-none');if(tCdNone)tCdNone.style.display=cdNone.length?'':'none';
   setList('list-d-cadax-rafa',cdRafa,true);
   const tCdRafa=document.getElementById('daily-title-cadax-rafa');if(tCdRafa)tCdRafa.style.display=cdRafa.length?'':'none';
   setList('list-d-cadax-maria',cdMaria,true);
@@ -2119,6 +2123,7 @@ function renderAll(){
   const cadaxHeader=document.getElementById('sem-cadax-header');
   if(cadaxHeader)cadaxHeader.style.display=cadaXBase.length?'':'none';
   setList('list-s-cadax-none',cwNone,true);
+  const tCwNone=document.getElementById('sem-title-cadax-none');if(tCwNone)tCwNone.style.display=cwNone.length?'':'none';
   setList('list-s-cadax-rafa',cwRafa,true);
   const tCwRafa=document.getElementById('sem-title-cadax-rafa');if(tCwRafa)tCwRafa.style.display=cwRafa.length?'':'none';
   setList('list-s-cadax-maria',cwMaria,true);
@@ -2157,6 +2162,7 @@ function renderAll(){
   const cmHeader=document.getElementById('mes-cadax-header');
   if(cmHeader)cmHeader.style.display=(fm==='all'&&cadaXMonthlyAll.length)?'':'none';
   setList('list-mes-cadax-none',cmNone,true);
+  const tCmNone=document.getElementById('mes-title-cadax-none');if(tCmNone)tCmNone.style.display=cmNone.length?'':'none';
   setList('list-mes-cadax-rafa',cmRafa,true);
   const tCmRafa=document.getElementById('mes-title-cadax-rafa');if(tCmRafa)tCmRafa.style.display=cmRafa.length?'':'none';
   setList('list-mes-cadax-maria',cmMaria,true);
