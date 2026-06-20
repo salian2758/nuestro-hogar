@@ -42,7 +42,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .week-pct{font-size:12px;font-weight:700;color:var(--c4);}
 .logout-btn{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:0.5px solid var(--border);}
 .profiles{display:flex;gap:8px;}
-.profile-chip{flex:1;background:var(--bg3);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px;}
+.profile-chip{flex:1;background:linear-gradient(135deg,var(--bg3),var(--bg2));border-radius:14px;padding:9px 11px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:transform .15s;}
+.profile-chip:active{transform:scale(0.97);}
 .avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
 .av-r{background:rgba(59,130,246,0.25);color:#60A5FA;}
 .av-m{background:rgba(168,85,247,0.25);color:#C084FC;}
@@ -71,11 +72,11 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .fb.active{background:var(--c1);border-color:var(--c1);color:white;}
 
 /* PROGRESS */
-.pbox{background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px 14px;margin-bottom:12px;}
+.pbox{background:linear-gradient(135deg,var(--bg2),var(--bg3));border-radius:14px;border:0.5px solid var(--border);padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
 .pbox-title{font-size:11px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;}
 .pbox-msg{font-size:13px;color:var(--text);margin-bottom:8px;}
-.pbar{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
-.pbar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .5s;}
+.pbar{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(255,107,107,.4);}
 
 /* SECTION */
 .stitle{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between;}
@@ -85,13 +86,18 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .sb-g{background:rgba(16,185,129,0.15);color:#34D399;}
 
 /* TASK */
-.tc{background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:11px 12px;margin-bottom:7px;display:flex;align-items:flex-start;gap:9px;transition:opacity .2s;}
+.tc{background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:11px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:9px;transition:opacity .2s,transform .15s,box-shadow .15s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.tc:active{transform:scale(0.985);}
 .tdraghandle{color:var(--text2);font-size:16px;line-height:1;cursor:grab;touch-action:none;padding:4px 2px;flex-shrink:0;align-self:center;opacity:.5;}
 .tdraghandle:active{cursor:grabbing;opacity:1;}
 .tc.done-card{opacity:.7;border-color:rgba(16,185,129,0.2);}
 .tc.done-card .tname{text-decoration:line-through;color:var(--text2);}
 .tcheck{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;margin-top:1px;}
-.tcheck.done{background:var(--c4);border-color:var(--c4);}
+.tcheck.done{background:var(--c4);border-color:var(--c4);animation:checkPop .35s cubic-bezier(.34,1.56,.64,1);}
+.tcheck.done svg{stroke-dasharray:24;stroke-dashoffset:24;animation:checkDraw .3s ease-out .05s forwards;}
+@keyframes checkPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,.5);}40%{transform:scale(1.25);box-shadow:0 0 0 8px rgba(16,185,129,.15);}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,0);}}
+@keyframes checkDraw{to{stroke-dashoffset:0;}}
+@keyframes levelUpDrop{0%{transform:translateY(-100%);}100%{transform:translateY(0);}}
 .tcheck svg{width:12px;height:12px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;display:none;}
 .tcheck.done svg{display:block;}
 .tinfo{flex:1;min-width:0;}
@@ -671,6 +677,13 @@ input,textarea{-webkit-user-select:text;user-select:text;}
   <button onclick="document.getElementById('daily-reward-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.25);border:none;border-radius:8px;color:white;padding:5px 14px;font-size:11px;cursor:pointer;font-family:inherit;">Cerrar</button>
 </div>
 
+<div id="level-up-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:450;background:linear-gradient(135deg,#F59E0B,#FBBF24);padding:18px 20px;padding-top:calc(18px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:4px;text-align:center;animation:levelUpDrop .4s cubic-bezier(.34,1.56,.64,1);">
+  <div style="font-size:30px;" id="level-up-emoji">🌱</div>
+  <div style="font-size:15px;font-weight:800;color:#3D2A00;">¡Subiste de nivel!</div>
+  <div style="font-size:13px;color:#3D2A00;font-weight:600;" id="level-up-text"></div>
+  <button onclick="document.getElementById('level-up-banner').style.display='none'" style="margin-top:4px;background:rgba(0,0,0,0.15);border:none;border-radius:8px;color:#3D2A00;padding:5px 14px;font-size:11px;cursor:pointer;font-family:inherit;">Cerrar</button>
+</div>
+
 <div id="group-rotation-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:linear-gradient(135deg,#6366F1,#3B82F6);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:6px;text-align:center;">
   <div style="font-size:22px;">🔄</div>
   <div style="font-size:14px;font-weight:700;color:white;">¡Los grupos han rotado!</div>
@@ -927,7 +940,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ═══ SISTEMA DE TEMÁTICAS Y AVATARES (15 niveles, curva pronunciada) ═══
-const LEVEL_XP_CURVE=[0,100,215,348,498,670,870,1098,1360,1660,2005,2402,2858,3380,3980];
+const LEVEL_XP_CURVE=[0,220,473,766,1096,1474,1914,2416,2992,3652,4411,5284,6288,7436,8756];
 
 const THEMES={
   hogar:{
@@ -1074,30 +1087,30 @@ function showDailyGoalRewardBanner(msg){
 // solo una guía para copiar y editar.
 const REFERENCE_CATALOG=[
   {tramo:'Micro · medio día de esfuerzo',items:[
-    {name:'🍦 Un heladito o capricho dulce',desc:'',cost:90},
-    {name:'📱 Media hora sin que me toque el móvil',desc:'',cost:105},
+    {name:'🍦 Un heladito o capricho dulce',desc:'',cost:117},
+    {name:'📱 Media hora sin que me toque el móvil',desc:'',cost:136},
   ]},
   {tramo:'Pequeño · un día completo de esfuerzo',items:[
-    {name:'☕ Que me traigas el desayuno a la cama',desc:'',cost:225},
-    {name:'🎬 Elegir la peli/serie de esta noche',desc:'',cost:270},
-    {name:'🛋️ Librarte de una tarea hoy',desc:'',cost:330},
+    {name:'☕ Que me traigas el desayuno a la cama',desc:'',cost:292},
+    {name:'🎬 Elegir la peli/serie de esta noche',desc:'',cost:351},
+    {name:'🛋️ Librarte de una tarea hoy',desc:'',cost:429},
   ]},
   {tramo:'Medio · 2-3 días de esfuerzo',items:[
-    {name:'🍕 Elegir la cena de hoy',desc:'',cost:420},
-    {name:'💆 Masaje de 15-20 minutos',desc:'',cost:525},
+    {name:'🍕 Elegir la cena de hoy',desc:'',cost:546},
+    {name:'💆 Masaje de 15-20 minutos',desc:'',cost:682},
   ]},
   {tramo:'Notable · casi una semana completa',items:[
-    {name:'🎁 Una sorpresa pequeña a elegir por el otro',desc:'',cost:750},
-    {name:'💆 Masaje largo, sin prisa',desc:'30-40 minutos',cost:900},
-    {name:'🍽️ Cena fuera de casa, los dos',desc:'',cost:1050},
+    {name:'🎁 Una sorpresa pequeña a elegir por el otro',desc:'',cost:975},
+    {name:'💆 Masaje largo, sin prisa',desc:'30-40 minutos',cost:1170},
+    {name:'🍽️ Cena fuera de casa, los dos',desc:'',cost:1365},
   ]},
   {tramo:'Grande · 2-3 semanas de esfuerzo constante',items:[
-    {name:'🌅 Tarde entera sin planes ni tareas',desc:'Solo los dos',cost:1350},
-    {name:'🎟️ Entradas a un concierto o evento',desc:'',cost:2100},
+    {name:'🌅 Tarde entera sin planes ni tareas',desc:'Solo los dos',cost:1755},
+    {name:'🎟️ Entradas a un concierto o evento',desc:'',cost:2730},
   ]},
   {tramo:'Muy grande · un mes o más de ahorro real',items:[
-    {name:'🏨 Escapada de un día',desc:'Spa, ciudad cercana...',cost:3300},
-    {name:'✈️ Viaje de fin de semana',desc:'',cost:6750},
+    {name:'🏨 Escapada de un día',desc:'Spa, ciudad cercana...',cost:4290},
+    {name:'✈️ Viaje de fin de semana',desc:'',cost:8775},
   ]},
 ];
 
@@ -1270,6 +1283,7 @@ let streakData={Rafa:{count:0,lastDate:null},María:{count:0,lastDate:null}};
 let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso diario CONJUNTO (no individual)
 let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null,intervalNum:1,intervalUnit:'semanas'}; // quién tiene el Grupo A/B actualmente, y si rota sola
 let dailyRewardShown={date:null}; // evita repetir el mensaje de "100% conseguido" más de una vez al día
+let lastSeenLevel={Rafa:null,María:null}; // para detectar subidas de nivel y celebrarlas solo una vez
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
 let personalCatalog={Rafa:[],María:[]};
 let activeGoal={Rafa:null,María:null}; // {rewardId, name, cost} — premio marcado como objetivo de ahorro
@@ -1535,6 +1549,17 @@ function showGroupRotationBanner(newAssignment){
   textEl.textContent=`Rafa pasa al Grupo ${newAssignment.Rafa} · María pasa al Grupo ${newAssignment.María}`;
   banner.style.display='flex';
   setTimeout(()=>{banner.style.display='none';},9000);
+}
+
+function showLevelUpBanner(info){
+  const banner=document.getElementById('level-up-banner');
+  const emojiEl=document.getElementById('level-up-emoji');
+  const textEl=document.getElementById('level-up-text');
+  if(!banner||!textEl)return;
+  emojiEl.textContent=info.emoji;
+  textEl.textContent=`Nivel ${info.level} · ${info.name}`;
+  banner.style.display='flex';
+  setTimeout(()=>{banner.style.display='none';},7000);
 }
 
 window.setGroupRotationMode=async(mode)=>{
@@ -2430,6 +2455,15 @@ function updateHeader(){
     const xpel=document.getElementById(k+'xp');if(xpel)xpel.style.width=info.pct+'%';
     const xpn=document.getElementById(k+'xpn');if(xpn)xpn.textContent=(xpState[p]||0)+' XP total';
     const avEl=document.getElementById((p==='Rafa'?'rafa':'maria')+'-avatar-emoji');if(avEl)avEl.textContent=info.emoji;
+    // Detectar subida de nivel y celebrarla — solo si ya habíamos visto un nivel antes (evita falso positivo al cargar la app)
+    if(lastSeenLevel[p]===null){
+      lastSeenLevel[p]=info.level;
+    }else if(info.level>lastSeenLevel[p]){
+      lastSeenLevel[p]=info.level;
+      if(p===currentUser)showLevelUpBanner(info);
+    }else if(info.level<lastSeenLevel[p]){
+      lastSeenLevel[p]=info.level; // bajó (ej: reset de avatar) — actualizar sin celebrar
+    }
     // Mini-barra de objetivo activo (wallet hacia el premio marcado)
     const key=p==='Rafa'?'rafa':'maria';
     const goalMini=document.getElementById(key+'-goal-mini');
