@@ -15,7 +15,8 @@
 <style>
 :root{--c1:#FF6B6B;--c2:#FF8E53;--c4:#10B981;--c6:#F59E0B;--bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#242424;--text:#F5F5F5;--text2:#A0A0A0;--border:rgba(255,255,255,0.08);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;position:fixed;width:100%;top:0;left:0;right:0;bottom:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;position:fixed;width:100%;top:0;left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+input,textarea{-webkit-user-select:text;user-select:text;}
 .screen{display:none;flex:1;flex-direction:column;overflow-y:auto;padding-bottom:75px;-webkit-overflow-scrolling:touch;}
 .screen.active{display:flex;}
 
@@ -2286,6 +2287,7 @@ function updateHeader(){
   maybeShowDailyGoalReward(pct);
   const zoneEl=document.getElementById('couple-streak-zone');
   if(zoneEl){
+    const isLateInDay=new Date().getHours()>=20; // últimas 4 horas del día (20:00-23:59)
     if(totalDailyXP>=COUPLE_STREAK_GOOD_MIN){
       zoneEl.textContent=`🔥 Racha asegurada hoy (${totalDailyXP}/${COUPLE_STREAK_GOOD_MIN} XP para mantenerla)`;
       zoneEl.style.color='#34D399';
@@ -2293,10 +2295,16 @@ function updateHeader(){
       const falta=COUPLE_STREAK_GOOD_MIN-totalDailyXP;
       zoneEl.textContent=`⚪ Día neutro — ${falta} XP más para activar la racha 🔥`;
       zoneEl.style.color='var(--text2)';
-    }else{
+    }else if(isLateInDay){
+      // Solo avisamos en rojo si quedan pocas horas para medianoche — antes de
+      // eso, estar bajo el mínimo es normal y no debe sentirse alarmante.
       const falta=COUPLE_STREAK_NEUTRAL_MIN-totalDailyXP;
       zoneEl.textContent=`${falta} XP más para evitar racha negativa`;
       zoneEl.style.color='#F87171';
+    }else{
+      const falta=COUPLE_STREAK_NEUTRAL_MIN-totalDailyXP;
+      zoneEl.textContent=`Aún hay tiempo — ${falta} XP para asegurar el día`;
+      zoneEl.style.color='var(--text2)';
     }
   }
   const msg=document.getElementById('day-msg');
