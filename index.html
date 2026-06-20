@@ -462,7 +462,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         </div>
       </div>
       <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:10px;line-height:1.5;">
-        🔥 La racha cuenta días seguidos completando al menos una tarea.<br>Si un día no completas ninguna, vuelve a empezar desde 1.
+        🔥 La racha cuenta días seguidos en los que ganas al menos 50 XP propios.<br>Si un día no llegas a 50 XP, vuelve a empezar desde 1.
       </div>
     </div>
 
@@ -476,6 +476,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
     <!-- WALLET / CATÁLOGO DE PAREJA -->
     <div id="active-goal-box" style="display:none;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:14px;"></div>
+
+    <!-- CATÁLOGO DE REFERENCIA -->
+    <div class="stitle" style="cursor:pointer;" onclick="toggleReferenceCatalog()">
+      💡 Ideas y referencia de precios <span id="ref-catalog-arrow" style="margin-left:4px;">▾</span>
+    </div>
+    <div id="reference-catalog-box" style="display:none;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Ejemplos con costes orientativos — pulsa "+" para copiarlo a tu propio catálogo, edítalo si quieres.</div>
+      <div id="reference-catalog-list"></div>
+    </div>
+
     <div class="stitle">Catálogo de premios <button onclick="openRewardEditor()" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:2px 10px;font-size:10px;cursor:pointer;font-family:inherit;text-transform:none;letter-spacing:0;font-weight:400;">+ Añadir</button></div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Premios que tu pareja te da a ti. Cánjealos con tu wallet.</div>
     <div id="rewards-list"><div class="empty">Añade premios al catálogo</div></div>
@@ -889,6 +899,34 @@ function getDailyMessage(person,pct){
   }
   return msg;
 }
+// Catálogo de referencia — ideas con costes orientativos, pensado para que la
+// proporción de XP tenga sentido real (un viaje no debería costar lo mismo que
+// un helado). Esto NO es el catálogo real de nadie, solo una guía para copiar.
+const REFERENCE_CATALOG=[
+  {tramo:'Micro · 1-2 días de esfuerzo',items:[
+    {name:'🍦 Un heladito o capricho dulce',desc:'',cost:40},
+    {name:'📱 Media hora sin que me toque el móvil',desc:'',cost:50},
+    {name:'☕ Que me traigas el desayuno a la cama',desc:'',cost:60},
+  ]},
+  {tramo:'Pequeño · media semana',items:[
+    {name:'🎬 Elegir la peli/serie de esta noche',desc:'',cost:90},
+    {name:'🍕 Elegir la cena de hoy',desc:'',cost:100},
+    {name:'🛋️ Librarte de una tarea hoy',desc:'',cost:120},
+    {name:'💆 Masaje de 15-20 minutos',desc:'',cost:150},
+  ]},
+  {tramo:'Medio · una semana completa',items:[
+    {name:'🎁 Una sorpresa pequeña a elegir por el otro',desc:'',cost:280},
+    {name:'💆 Masaje largo, sin prisa',desc:'30-40 minutos',cost:300},
+    {name:'🍽️ Cena fuera de casa, los dos',desc:'',cost:320},
+    {name:'🌅 Tarde entera sin planes ni tareas',desc:'Solo los dos',cost:350},
+  ]},
+  {tramo:'Grande · varias semanas de ahorro',items:[
+    {name:'🎟️ Entradas a un concierto o evento',desc:'',cost:700},
+    {name:'🏨 Escapada de un día',desc:'Spa, ciudad cercana...',cost:900},
+    {name:'✈️ Viaje de fin de semana',desc:'',cost:1800},
+  ]},
+];
+
 const DEFAULT_TASKS=[
   {id:'t1',name:'🛏️ Hacer la cama',zona:'Dormitorio',freq:'Diaria',diff:'1',person:'Rafa',group:'',done:false,note:'',customXP:null},
   {id:'t2',name:'🧹 Pasar trapo/plumero',zona:'General',freq:'Diaria',diff:'1',person:'Rafa',group:'',done:false,note:'',customXP:null},
@@ -2111,6 +2149,39 @@ function initPersonalRewards(){
   });
 }
 
+// ─── CATÁLOGO DE REFERENCIA (ideas + precios orientativos, no editable, solo para copiar) ───
+let referenceCatalogOpen=false;
+window.toggleReferenceCatalog=()=>{
+  referenceCatalogOpen=!referenceCatalogOpen;
+  const box=document.getElementById('reference-catalog-box');
+  const arrow=document.getElementById('ref-catalog-arrow');
+  if(box)box.style.display=referenceCatalogOpen?'block':'none';
+  if(arrow)arrow.textContent=referenceCatalogOpen?'▴':'▾';
+  if(referenceCatalogOpen)renderReferenceCatalog();
+};
+function renderReferenceCatalog(){
+  const el=document.getElementById('reference-catalog-list');if(!el)return;
+  el.innerHTML=REFERENCE_CATALOG.map(group=>`
+    <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;">${group.tramo}</div>
+    ${group.items.map(item=>`
+      <div style="background:var(--bg2);border-radius:10px;border:0.5px dashed var(--border);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:12px;color:var(--text);">${escHtml(item.name)}</div>
+          ${item.desc?`<div style="font-size:10px;color:var(--text2);margin-top:1px;">${escHtml(item.desc)}</div>`:''}
+          <div style="font-size:11px;color:var(--c6);margin-top:3px;font-weight:600;">${item.cost} XP</div>
+        </div>
+        <button onclick="copyReferenceToMyCatalog('${escForAttr(item.name)}','${escForAttr(item.desc)}',${item.cost})" style="background:var(--c1);border:none;border-radius:8px;color:white;width:28px;height:28px;font-size:16px;cursor:pointer;font-family:inherit;flex-shrink:0;">+</button>
+      </div>
+    `).join('')}
+  `).join('');
+}
+window.copyReferenceToMyCatalog=async(name,desc,cost)=>{
+  if(!profileViewing)return;
+  const id='r'+Date.now();
+  await setDoc(doc(db,'catalog_'+profileViewing,id),{id,name,desc,cost});
+  showToast(`"${name}" añadido a tu catálogo ✓`);
+};
+
 function renderRewardsFor(person){
   const el=document.getElementById('rewards-list');if(!el)return;
   const list=personalCatalog[person]||[];
@@ -2229,7 +2300,7 @@ window.fulfillPending=async(id)=>{
 };
 
 // ─── RACHAS ───
-const STREAK_MIN_DAILY_XP=30; // XP individual mínimo en el día para que cuente como "racha mantenida"
+const STREAK_MIN_DAILY_XP=50; // XP individual mínimo en el día para que cuente como "racha mantenida"
 
 async function updateStreak(person,xpEarnedNow){
   const today=new Date().toLocaleDateString('es-ES');
