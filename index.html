@@ -341,7 +341,7 @@ input,textarea{-webkit-user-select:text;user-select:text;}
       <button class="fb active" data-f="all">Todas</button>
       <button class="fb" data-f="Rafa">Rafa</button>
       <button class="fb" data-f="María">María</button>
-      <button class="fb" data-f="Rotativa">Rotativas</button>
+      <button class="fb" data-f="none">Sin asignar</button>
     </div>
     <div class="stitle" id="daily-title-rafa">Fijas de Rafa <span class="sb sb-r" id="rxp-d"></span></div>
     <div id="list-d-rafa" class="drop-zone" data-drop-person="Rafa" data-drop-freq="Diaria"></div>
@@ -2124,21 +2124,22 @@ function renderAll(){
   setList('list-d-maria',fh==='all'||fh==='María'?dm:[],true);
   const mariaTitle=document.getElementById('daily-title-maria');
   if(mariaTitle)mariaTitle.style.display=((fh==='all'||fh==='María')&&dm.length)?'':'none';
-  setList('list-d-rot',fh==='all'||fh==='Rotativa'?drot:[],true);
+  setList('list-d-rot',fh==='all'?drot:[],true);
   const rotTitle=document.getElementById('daily-title-rot');
-  if(rotTitle)rotTitle.style.display=((fh==='all'||fh==='Rotativa')&&drot.length)?'':'none';
-  setList('list-d-none',fh==='all'?dnone:[],true);
+  if(rotTitle)rotTitle.style.display=(fh==='all'&&drot.length)?'':'none';
+  setList('list-d-none',fh==='all'||fh==='none'?dnone:[],true);
   const noneTitle=document.getElementById('daily-title-none');
-  if(noneTitle)noneTitle.style.display=(fh==='all'&&dnone.length)?'':'none';
+  if(noneTitle)noneTitle.style.display=((fh==='all'||fh==='none')&&dnone.length)?'':'none';
 
   // Cada X días — subdividido por persona, igual que las diarias normales
   const cadaXDailyAll=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='CadaX'&&t.cadaxUnit==='días'));
-  const cdNone=fh==='all'?cadaXDailyAll.filter(t=>t.person==='none'||!t.person):[];
-  const cdRafa=fh==='all'?cadaXDailyAll.filter(t=>t.person==='Rafa'):[];
-  const cdMaria=fh==='all'?cadaXDailyAll.filter(t=>t.person==='María'):[];
-  const cdRot=fh==='all'?cadaXDailyAll.filter(t=>t.person==='Rotativa'):[];
+  const cdShowAll=fh==='all';
+  const cdNone=(cdShowAll||fh==='none')?cadaXDailyAll.filter(t=>t.person==='none'||!t.person):[];
+  const cdRafa=(cdShowAll||fh==='Rafa')?cadaXDailyAll.filter(t=>t.person==='Rafa'):[];
+  const cdMaria=(cdShowAll||fh==='María')?cadaXDailyAll.filter(t=>t.person==='María'):[];
+  const cdRot=cdShowAll?cadaXDailyAll.filter(t=>t.person==='Rotativa'):[];
   const cdHeader=document.getElementById('daily-cadax-header');
-  if(cdHeader)cdHeader.style.display=(fh==='all'&&cadaXDailyAll.length)?'':'none';
+  if(cdHeader)cdHeader.style.display=(cdNone.length||cdRafa.length||cdMaria.length||cdRot.length)?'':'none';
   setList('list-d-cadax-none',cdNone,true);
   const tCdNone=document.getElementById('daily-title-cadax-none');if(tCdNone)tCdNone.style.display=cdNone.length?'':'none';
   setList('list-d-cadax-rafa',cdRafa,true);
