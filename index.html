@@ -509,11 +509,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Premios que tu pareja canjeó y tienes que darle.</div>
     <div id="pending-rewards-list"><div class="empty">Nada pendiente por ahora</div></div>
 
+    <!-- ROTACIÓN DE GRUPOS A/B -->
+    <div class="stitle mt">Rotación de grupos A/B</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Quién tiene cada grupo puede rotar solo, o quedarse fijo y cambiarlo a mano cuando quieras.</div>
+    <div class="filters" id="group-rotation-mode-selector" style="margin-bottom:14px;"></div>
+
     <!-- EQUILIBRIO SEMANAL -->
     <div class="stitle mt">Equilibrio semanal</div>
     <div class="eqbox">
-      <div class="eqrow"><span class="eqname">Rafa A</span><div class="eqbarw"><div class="eqbar-r" id="cfg-eq-r" style="width:50%"></div></div><span class="eqval p-xp-r" id="cfg-rxp">—</span></div>
-      <div class="eqrow"><span class="eqname">María B</span><div class="eqbarw"><div class="eqbar-m" id="cfg-eq-m" style="width:50%"></div></div><span class="eqval p-xp-m" id="cfg-mxp">—</span></div>
+      <div class="eqrow"><span class="eqname" id="cfg-eq-name-r">Rafa</span><div class="eqbarw"><div class="eqbar-r" id="cfg-eq-r" style="width:50%"></div></div><span class="eqval p-xp-r" id="cfg-rxp">—</span></div>
+      <div class="eqrow"><span class="eqname" id="cfg-eq-name-m">María</span><div class="eqbarw"><div class="eqbar-m" id="cfg-eq-m" style="width:50%"></div></div><span class="eqval p-xp-m" id="cfg-mxp">—</span></div>
       <div class="eqstatus" id="cfg-eq-status"></div>
     </div>
 
@@ -568,6 +573,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div style="font-size:14px;font-weight:700;color:white;">¡Día completado entre los dos!</div>
   <div style="font-size:13px;color:white;font-weight:600;padding:0 12px;" id="daily-reward-text"></div>
   <button onclick="document.getElementById('daily-reward-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.25);border:none;border-radius:8px;color:white;padding:5px 14px;font-size:11px;cursor:pointer;font-family:inherit;">Cerrar</button>
+</div>
+
+<div id="group-rotation-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:linear-gradient(135deg,#6366F1,#3B82F6);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:6px;text-align:center;">
+  <div style="font-size:22px;">🔄</div>
+  <div style="font-size:14px;font-weight:700;color:white;">¡Los grupos han rotado!</div>
+  <div style="font-size:12px;color:rgba(255,255,255,0.9);" id="group-rotation-text"></div>
+  <button onclick="document.getElementById('group-rotation-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.25);border:none;border-radius:8px;color:white;padding:5px 14px;font-size:11px;cursor:pointer;font-family:inherit;">Cerrar</button>
 </div>
 
 <nav class="nav" id="main-nav" style="display:none;">
@@ -691,13 +703,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <!-- REWARD EDITOR MODAL -->
 <div class="modal-overlay hidden" id="reward-modal">
   <div class="modal">
-    <div class="modal-title">Nuevo premio</div>
+    <div class="modal-title" id="reward-modal-title">Nuevo premio</div>
     <div class="fg"><label class="fl">Nombre del premio</label><input class="fi" id="reward-name" placeholder="Ej: Elegir cena 🍕"></div>
     <div class="fg"><label class="fl">Descripción (opcional)</label><input class="fi" id="reward-desc" placeholder="Ej: Tú eliges el restaurante"></div>
     <div class="fg"><label class="fl">Coste en XP de wallet</label><input class="fi" id="reward-cost" type="number" placeholder="Ej: 50"></div>
     <div class="m-acts">
       <button class="btn-c" onclick="closeRewardModal()">Cancelar</button>
-      <button class="btn-p" onclick="saveReward()">+ Añadir</button>
+      <button class="btn-p" id="reward-save-btn" onclick="saveReward()">+ Añadir</button>
     </div>
   </div>
 </div>
@@ -1159,6 +1171,7 @@ let userTheme={Rafa:'hogar',María:'hogar'};
 let userLevelOverride={Rafa:0,María:0}; // XP "perdido" tras resetear avatar (resta solo visual del nivel)
 let streakData={Rafa:{count:0,lastDate:null},María:{count:0,lastDate:null}};
 let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso diario CONJUNTO (no individual)
+let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null}; // quién tiene el Grupo A/B actualmente, y si rota sola
 let dailyRewardShown={date:null}; // evita repetir el mensaje de "100% conseguido" más de una vez al día
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
 let personalCatalog={Rafa:[],María:[]};
@@ -1206,6 +1219,7 @@ async function finishInit(){
     if(d.id==='streak_María')streakData.María={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='coupleStreak')coupleStreakData={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='dailyRewardShown')dailyRewardShown={date:data.date||null};
+    if(d.id==='groupRotation')groupRotation={mode:data.mode||'manual',assignment:data.assignment||{Rafa:'A',María:'B'},lastRotationKey:data.lastRotationKey||null};
   });
   // Datos de tema y offset de nivel por persona
   const metaSnap=await getDocs(collection(db,'users_meta'));
@@ -1228,6 +1242,7 @@ async function finishInit(){
   checkMonthlyReset();
   checkWeeklyXPReset();
   checkDailyReset();
+  checkGroupRotation();
   // (catálogo de pareja ya iniciado por initPersonalRewards arriba)
   // Real-time listeners FIRST
   unsubTasks=onSnapshot(collection(db,'tasks'),snap=>{
@@ -1385,6 +1400,63 @@ function getWeekKey(d){
   const firstThursday=new Date(Date.UTC(date.getUTCFullYear(),0,4));
   const weekNum=1+Math.round(((date-firstThursday)/86400000-3+((firstThursday.getUTCDay()+6)%7))/7);
   return date.getUTCFullYear()+'-W'+weekNum;
+}
+
+// ─── ROTACIÓN AUTOMÁTICA DE GRUPOS A/B ───
+function getMonthKey(d){return d.getFullYear()+'-M'+(d.getMonth()+1);}
+
+async function checkGroupRotation(){
+  if(groupRotation.mode==='manual')return; // rotación desactivada, no hacer nada
+  const now=new Date();
+  const currentKey=groupRotation.mode==='weekly'?getWeekKey(now):getMonthKey(now);
+  if(!groupRotation.lastRotationKey){
+    // Primera vez que se activa: fijamos la clave actual sin rotar todavía
+    groupRotation.lastRotationKey=currentKey;
+    await setDoc(doc(db,'state','groupRotation'),groupRotation);
+    return;
+  }
+  if(groupRotation.lastRotationKey!==currentKey){
+    // Toca rotar: invertimos la asignación
+    const newAssignment={
+      Rafa:groupRotation.assignment.Rafa==='A'?'B':'A',
+      María:groupRotation.assignment.María==='A'?'B':'A',
+    };
+    groupRotation.assignment=newAssignment;
+    groupRotation.lastRotationKey=currentKey;
+    await setDoc(doc(db,'state','groupRotation'),groupRotation);
+    showGroupRotationBanner(newAssignment);
+    updateWeekIndicator();
+  }
+}
+
+function showGroupRotationBanner(newAssignment){
+  const banner=document.getElementById('group-rotation-banner');
+  const textEl=document.getElementById('group-rotation-text');
+  if(!banner||!textEl)return;
+  textEl.textContent=`Rafa pasa al Grupo ${newAssignment.Rafa} · María pasa al Grupo ${newAssignment.María}`;
+  banner.style.display='flex';
+  setTimeout(()=>{banner.style.display='none';},9000);
+}
+
+window.setGroupRotationMode=async(mode)=>{
+  groupRotation.mode=mode;
+  if(mode!=='manual'){
+    // Al activar, fijamos la clave actual como punto de partida (no rota inmediatamente)
+    const now=new Date();
+    groupRotation.lastRotationKey=mode==='weekly'?getWeekKey(now):getMonthKey(now);
+  }
+  await setDoc(doc(db,'state','groupRotation'),groupRotation);
+  showToast('Modo de rotación actualizado ✓');
+  renderGroupRotationSettings();
+  updateWeekIndicator();
+};
+
+function renderGroupRotationSettings(){
+  const el=document.getElementById('group-rotation-mode-selector');if(!el)return;
+  const modes=[['manual','Manual (fijo)'],['weekly','Cada semana'],['monthly','Cada mes']];
+  el.innerHTML=modes.map(([key,label])=>`
+    <button onclick="setGroupRotationMode('${key}')" class="fb${groupRotation.mode===key?' active':''}" style="flex:1;">${label}</button>
+  `).join('');
 }
 
 
@@ -1652,9 +1724,9 @@ window.closeAssignModal=()=>document.getElementById('assign-modal').classList.ad
 window.setAssign=async(person)=>{
   if(!assigningTaskId)return;
   const t=tasks.find(t=>t.id===assigningTaskId);if(!t)return;
-  let group=t.group;
-  if(t.freq==='Semanal')group=person==='Rafa'?'A':person==='María'?'B':group;
-  await updateDoc(doc(db,'tasks',assigningTaskId),{person,group});
+  // El grupo (A/B) es independiente de la persona asignada — no se toca aquí.
+  // Se cambia solo desde el selector explícito de grupo al crear/editar la tarea.
+  await updateDoc(doc(db,'tasks',assigningTaskId),{person});
   closeAssignModal();
   showToast('Asignación actualizada ✓');
 };
@@ -2018,6 +2090,8 @@ function updateEq(){
   const diff=Math.abs(xpA-xpB);
   const pct=Math.round(diff/max*100);
   const status=diff===0?'✅ Grupos perfectamente equilibrados':pct<=15?`⚖️ Diferencia de ${diff} XP — bien equilibrado`:`⚠️ Diferencia de ${diff} XP — considera reequilibrar`;
+  const personA=groupRotation.assignment.Rafa==='A'?'Rafa':'María';
+  const personB=groupRotation.assignment.Rafa==='A'?'María':'Rafa';
   ['','cfg-'].forEach(pfx=>{
     const er=document.getElementById(pfx+'eq-r');if(er)er.style.width=Math.round(xpA/max*100)+'%';
     const em=document.getElementById(pfx+'eq-m');if(em)em.style.width=Math.round(xpB/max*100)+'%';
@@ -2025,6 +2099,8 @@ function updateEq(){
     const emv=document.getElementById(pfx+'eq-mxp');if(emv)emv.textContent=xpB+' XP';
     const es=document.getElementById(pfx+'eq-status');if(es)es.textContent=status;
   });
+  const nameR=document.getElementById('cfg-eq-name-r');if(nameR)nameR.textContent=personA+' A';
+  const nameM=document.getElementById('cfg-eq-name-m');if(nameM)nameM.textContent=personB+' B';
 }
 
 // ─── NAV ───
@@ -2123,8 +2199,7 @@ window.saveEdit=async()=>{
 };
 
 function getUserGroup(){
-  if(currentUser==='Rafa')return'A';
-  if(currentUser==='María')return'B';
+  if(currentUser==='Rafa'||currentUser==='María')return groupRotation.assignment[currentUser];
   const now=new Date();
   const startOfYear=new Date(now.getFullYear(),0,1);
   const weekNum=Math.ceil(((now-startOfYear)/86400000+startOfYear.getDay()+1)/7);
@@ -2135,7 +2210,7 @@ function updateWeekIndicator(){
   const group=getUserGroup();
   const el=document.getElementById('week-indicator-val');
   if(!el)return;
-  const myGroup=currentUser==='Rafa'?'A':currentUser==='María'?'B':null;
+  const myGroup=currentUser==='Rafa'||currentUser==='María'?groupRotation.assignment[currentUser]:null;
   if(myGroup){
     const color=myGroup==='A'?'#60A5FA':'#C084FC';
     const bg=myGroup==='A'?'rgba(59,130,246,0.15)':'rgba(168,85,247,0.15)';
@@ -2145,9 +2220,11 @@ function updateWeekIndicator(){
   }
   const titleA=document.getElementById('sem-title-a');
   const titleB=document.getElementById('sem-title-b');
-  const myWeek=currentUser==='Rafa'?'A':currentUser==='María'?'B':null;
-  if(titleA)titleA.innerHTML=`Grupo A — Rafa ${myWeek==='A'?'<span style="font-size:10px;background:rgba(59,130,246,0.15);color:#60A5FA;padding:2px 8px;border-radius:10px;font-weight:500;text-transform:none;letter-spacing:0;">Tu grupo</span>':''}`;
-  if(titleB)titleB.innerHTML=`Grupo B — María ${myWeek==='B'?'<span style="font-size:10px;background:rgba(168,85,247,0.15);color:#C084FC;padding:2px 8px;border-radius:10px;font-weight:500;text-transform:none;letter-spacing:0;">Tu grupo</span>':''}`;
+  const personA=groupRotation.assignment.Rafa==='A'?'Rafa':'María';
+  const personB=groupRotation.assignment.Rafa==='A'?'María':'Rafa';
+  const myWeek=currentUser==='Rafa'||currentUser==='María'?groupRotation.assignment[currentUser]:null;
+  if(titleA)titleA.innerHTML=`Grupo A — ${personA} ${myWeek==='A'?'<span style="font-size:10px;background:rgba(59,130,246,0.15);color:#60A5FA;padding:2px 8px;border-radius:10px;font-weight:500;text-transform:none;letter-spacing:0;">Tu grupo</span>':''}`;
+  if(titleB)titleB.innerHTML=`Grupo B — ${personB} ${myWeek==='B'?'<span style="font-size:10px;background:rgba(168,85,247,0.15);color:#C084FC;padding:2px 8px;border-radius:10px;font-weight:500;text-transform:none;letter-spacing:0;">Tu grupo</span>':''}`;
 }
 
 window.openModalSmart=()=>{
@@ -2388,6 +2465,8 @@ function renderProfile(){
   renderRewardsFor(p);
   renderPendingFor(p);
   renderTrash();
+  renderGroupRotationSettings();
+  updateEq();
 }
 
 window.confirmResetAvatar=()=>{
@@ -2536,6 +2615,7 @@ function renderRewardsFor(person){
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
         <button onclick="redeemReward('${person}','${r.id}')" ${myWallet<r.cost?'disabled style="opacity:.4;"':''} style="background:var(--c1);border:none;border-radius:8px;color:white;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Canjear</button>
         ${isGoal?'':`<button onclick="setActiveGoal('${person}','${r.id}','${escForAttr(r.name)}',${r.cost})" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 10px;font-size:10px;cursor:pointer;font-family:inherit;">🎯 Objetivo</button>`}
+        <button onclick="openRewardEditor('${r.id}')" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 10px;font-size:10px;cursor:pointer;font-family:inherit;">✎ Editar</button>
         <button onclick="deleteReward('${person}','${r.id}')" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 10px;font-size:10px;cursor:pointer;font-family:inherit;">Eliminar</button>
       </div>
     </div>
@@ -2572,21 +2652,37 @@ function renderPendingFor(person){
   `).join('');
 }
 
-window.openRewardEditor=()=>{
-  document.getElementById('reward-name').value='';
-  document.getElementById('reward-desc').value='';
-  document.getElementById('reward-cost').value='';
+let editingRewardId=null; // si no es null, saveReward actualiza en vez de crear
+
+window.openRewardEditor=(id)=>{
+  editingRewardId=id||null;
+  if(id&&profileViewing){
+    const r=(personalCatalog[profileViewing]||[]).find(r=>r.id===id);
+    document.getElementById('reward-name').value=r?.name||'';
+    document.getElementById('reward-desc').value=r?.desc||'';
+    document.getElementById('reward-cost').value=r?.cost||'';
+    document.getElementById('reward-modal-title').textContent='Editar premio';
+    document.getElementById('reward-save-btn').textContent='Guardar cambios';
+  }else{
+    document.getElementById('reward-name').value='';
+    document.getElementById('reward-desc').value='';
+    document.getElementById('reward-cost').value='';
+    document.getElementById('reward-modal-title').textContent='Nuevo premio';
+    document.getElementById('reward-save-btn').textContent='+ Añadir';
+  }
   document.getElementById('reward-modal').classList.remove('hidden');
 };
-window.closeRewardModal=()=>document.getElementById('reward-modal').classList.add('hidden');
+window.closeRewardModal=()=>{document.getElementById('reward-modal').classList.add('hidden');editingRewardId=null;};
 window.saveReward=async()=>{
   if(!profileViewing)return;
   const name=document.getElementById('reward-name').value.trim();
   const cost=parseInt(document.getElementById('reward-cost').value);
   if(!name||!cost)return;
-  const id='r'+Date.now();
-  await setDoc(doc(db,'catalog_'+profileViewing,id),{id,name,desc:document.getElementById('reward-desc').value.trim(),cost});
+  const desc=document.getElementById('reward-desc').value.trim();
+  const id=editingRewardId||('r'+Date.now());
+  await setDoc(doc(db,'catalog_'+profileViewing,id),{id,name,desc,cost});
   closeRewardModal();
+  showToast(editingRewardId?'Premio actualizado ✓':'Premio añadido ✓');
 };
 window.deleteReward=async(person,id)=>{
   if(!confirm('¿Eliminar este premio?'))return;
