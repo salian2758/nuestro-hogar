@@ -597,7 +597,18 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <!-- ROTACIÓN DE GRUPOS A/B -->
     <div class="stitle mt">Rotación de grupos A/B</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Quién tiene cada grupo puede rotar solo, o quedarse fijo y cambiarlo a mano cuando quieras.</div>
-    <div class="filters" id="group-rotation-mode-selector" style="margin-bottom:14px;"></div>
+    <div class="filters" id="group-rotation-mode-selector" style="margin-bottom:10px;"></div>
+    <div id="group-rotation-interval" style="display:none;margin-bottom:14px;">
+      <label class="fl">Repetir cada</label>
+      <div class="frow">
+        <input class="fi" id="rotation-num" type="number" min="1" max="52" value="1" style="width:80px;" onchange="saveRotationInterval()">
+        <select class="fs" id="rotation-unit" style="flex:1;" onchange="saveRotationInterval()">
+          <option value="semanas">semanas</option>
+          <option value="meses">meses</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="swapGroupsNow()" style="width:100%;background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:14px;">🔄 Intercambiar grupos ahora</button>
 
     <!-- EQUILIBRIO SEMANAL -->
     <div class="stitle mt">Equilibrio semanal</div>
@@ -1257,7 +1268,7 @@ let userTheme={Rafa:'hogar',María:'hogar'};
 let userLevelOverride={Rafa:0,María:0}; // XP "perdido" tras resetear avatar (resta solo visual del nivel)
 let streakData={Rafa:{count:0,lastDate:null},María:{count:0,lastDate:null}};
 let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso diario CONJUNTO (no individual)
-let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null}; // quién tiene el Grupo A/B actualmente, y si rota sola
+let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null,intervalNum:1,intervalUnit:'semanas'}; // quién tiene el Grupo A/B actualmente, y si rota sola
 let dailyRewardShown={date:null}; // evita repetir el mensaje de "100% conseguido" más de una vez al día
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
 let personalCatalog={Rafa:[],María:[]};
@@ -1305,7 +1316,7 @@ async function finishInit(){
     if(d.id==='streak_María')streakData.María={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='coupleStreak')coupleStreakData={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='dailyRewardShown')dailyRewardShown={date:data.date||null};
-    if(d.id==='groupRotation')groupRotation={mode:data.mode||'manual',assignment:data.assignment||{Rafa:'A',María:'B'},lastRotationKey:data.lastRotationKey||null};
+    if(d.id==='groupRotation')groupRotation={mode:data.mode||'manual',assignment:data.assignment||{Rafa:'A',María:'B'},lastRotationKey:data.lastRotationKey||null,intervalNum:data.intervalNum||1,intervalUnit:data.intervalUnit||'semanas'};
   });
   // Datos de tema y offset de nivel por persona
   const metaSnap=await getDocs(collection(db,'users_meta'));
@@ -1494,22 +1505,23 @@ function getMonthKey(d){return d.getFullYear()+'-M'+(d.getMonth()+1);}
 
 async function checkGroupRotation(){
   if(groupRotation.mode==='manual')return; // rotación desactivada, no hacer nada
-  const now=new Date();
-  const currentKey=groupRotation.mode==='weekly'?getWeekKey(now):getMonthKey(now);
+  const msPerUnit={'semanas':604800000,'meses':2592000000};
+  const intervalMs=(groupRotation.intervalNum||1)*(msPerUnit[groupRotation.intervalUnit]||604800000);
+  const now=Date.now();
   if(!groupRotation.lastRotationKey){
-    // Primera vez que se activa: fijamos la clave actual sin rotar todavía
-    groupRotation.lastRotationKey=currentKey;
+    // Primera vez que se activa: fijamos el momento actual sin rotar todavía
+    groupRotation.lastRotationKey=now;
     await setDoc(doc(db,'state','groupRotation'),groupRotation);
     return;
   }
-  if(groupRotation.lastRotationKey!==currentKey){
+  if(now-groupRotation.lastRotationKey>=intervalMs){
     // Toca rotar: invertimos la asignación
     const newAssignment={
       Rafa:groupRotation.assignment.Rafa==='A'?'B':'A',
       María:groupRotation.assignment.María==='A'?'B':'A',
     };
     groupRotation.assignment=newAssignment;
-    groupRotation.lastRotationKey=currentKey;
+    groupRotation.lastRotationKey=now;
     await setDoc(doc(db,'state','groupRotation'),groupRotation);
     showGroupRotationBanner(newAssignment);
     updateWeekIndicator();
@@ -1527,10 +1539,9 @@ function showGroupRotationBanner(newAssignment){
 
 window.setGroupRotationMode=async(mode)=>{
   groupRotation.mode=mode;
-  if(mode!=='manual'){
-    // Al activar, fijamos la clave actual como punto de partida (no rota inmediatamente)
-    const now=new Date();
-    groupRotation.lastRotationKey=mode==='weekly'?getWeekKey(now):getMonthKey(now);
+  if(mode==='automatic'&&!groupRotation.lastRotationKey){
+    // Al activar por primera vez, fijamos el momento actual como punto de partida (no rota inmediatamente)
+    groupRotation.lastRotationKey=Date.now();
   }
   await setDoc(doc(db,'state','groupRotation'),groupRotation);
   showToast('Modo de rotación actualizado ✓');
@@ -1538,12 +1549,39 @@ window.setGroupRotationMode=async(mode)=>{
   updateWeekIndicator();
 };
 
+window.saveRotationInterval=async()=>{
+  const num=parseInt(document.getElementById('rotation-num').value)||1;
+  const unit=document.getElementById('rotation-unit').value;
+  groupRotation.intervalNum=num;
+  groupRotation.intervalUnit=unit;
+  await setDoc(doc(db,'state','groupRotation'),groupRotation);
+  showToast(`Rotación cada ${num} ${unit} ✓`);
+};
+
+window.swapGroupsNow=async()=>{
+  if(!confirm('¿Intercambiar ahora quién tiene el Grupo A y quién el Grupo B?'))return;
+  const newAssignment={
+    Rafa:groupRotation.assignment.Rafa==='A'?'B':'A',
+    María:groupRotation.assignment.María==='A'?'B':'A',
+  };
+  groupRotation.assignment=newAssignment;
+  groupRotation.lastRotationKey=Date.now(); // reinicia el contador del intervalo automático también
+  await setDoc(doc(db,'state','groupRotation'),groupRotation);
+  showToast('Grupos intercambiados ✓');
+  updateWeekIndicator();
+  updateEq();
+};
+
 function renderGroupRotationSettings(){
   const el=document.getElementById('group-rotation-mode-selector');if(!el)return;
-  const modes=[['manual','Manual (fijo)'],['weekly','Cada semana'],['monthly','Cada mes']];
+  const modes=[['manual','Manual (fijo)'],['automatic','Automático']];
   el.innerHTML=modes.map(([key,label])=>`
     <button onclick="setGroupRotationMode('${key}')" class="fb${groupRotation.mode===key?' active':''}" style="flex:1;">${label}</button>
   `).join('');
+  const intervalBox=document.getElementById('group-rotation-interval');
+  if(intervalBox)intervalBox.style.display=groupRotation.mode==='automatic'?'block':'none';
+  const numEl=document.getElementById('rotation-num');if(numEl)numEl.value=groupRotation.intervalNum||1;
+  const unitEl=document.getElementById('rotation-unit');if(unitEl)unitEl.value=groupRotation.intervalUnit||'semanas';
 }
 
 
