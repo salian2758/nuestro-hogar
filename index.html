@@ -412,6 +412,55 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <div id="sc-hist" class="screen" style="display:none;">
   <div class="content">
+    <!-- DASHBOARD DE EVOLUCIÓN -->
+    <div class="stitle">Evolución</div>
+    <div class="filters" id="dash-tab-selector" style="margin-bottom:12px;">
+      <button class="fb active" onclick="setDashTab('dia',this)">Día</button>
+      <button class="fb" onclick="setDashTab('semana',this)">Semana</button>
+      <button class="fb" onclick="setDashTab('mes',this)">Mes</button>
+    </div>
+
+    <!-- Reparto Rafa/María del periodo -->
+    <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px 14px;margin-bottom:12px;">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Reparto del periodo</div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:6px;">
+        <div id="dash-split-r" style="background:#60A5FA;width:50%;transition:width .4s;"></div>
+        <div id="dash-split-m" style="background:#C084FC;width:50%;transition:width .4s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;">
+        <span style="color:#60A5FA;font-weight:600;" id="dash-split-r-label">Rafa 50%</span>
+        <span style="color:#C084FC;font-weight:600;" id="dash-split-m-label">María 50%</span>
+      </div>
+    </div>
+
+    <!-- Comparativa actual vs anterior -->
+    <div style="display:flex;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px;" id="dash-current-label">Hoy</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text);" id="dash-current-val">0</div>
+        <div style="font-size:10px;color:var(--text2);">XP conjunto</div>
+      </div>
+      <div style="flex:1;background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;text-align:center;">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:4px;" id="dash-prev-label">Ayer</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text2);" id="dash-prev-val">0</div>
+        <div style="font-size:10px;color:var(--text2);">XP conjunto</div>
+      </div>
+      <div style="flex:0.7;background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:18px;font-weight:700;" id="dash-trend-val">—</div>
+        <div style="font-size:9px;color:var(--text2);">vs anterior</div>
+      </div>
+    </div>
+
+    <!-- Gráfica de evolución (barras SVG, Rafa vs María) -->
+    <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:14px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px;" id="dash-chart-title">Últimos 14 días</div>
+      <div id="dash-chart-svg-container" style="width:100%;overflow-x:auto;"></div>
+      <div style="display:flex;gap:14px;margin-top:8px;justify-content:center;">
+        <div style="font-size:10px;color:#60A5FA;display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:#60A5FA;border-radius:2px;display:inline-block;"></span>Rafa</div>
+        <div style="font-size:10px;color:#C084FC;display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;background:#C084FC;border-radius:2px;display:inline-block;"></span>María</div>
+      </div>
+    </div>
+
     <div class="stitle">Esta semana</div>
     <div class="resumen-card" id="resumen-card">
       <div class="resumen-title">📊 Resumen semanal</div>
@@ -1256,6 +1305,7 @@ async function finishInit(){
     snap.forEach(d=>history.push({...d.data(),id:d.id}));
     renderHist();
     renderResumen();
+    renderDashboard();
   });
   // Trash listener
   onSnapshot(collection(db,'trash'),snap=>{
@@ -1990,6 +2040,181 @@ function renderAll(){
   if(badge&&currentUser)badge.textContent=currentUser==='Rafa'?'👤 Rafa':'👤 María';
 }
 
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD DE EVOLUCIÓN — agregados diarios/semanales/mensuales
+// con comparativa y gráfica, a partir del historial real
+// ═══════════════════════════════════════════════════════════
+let dashTab='dia';
+
+window.setDashTab=(tab,btn)=>{
+  dashTab=tab;
+  document.querySelectorAll('#dash-tab-selector .fb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderDashboard();
+};
+
+function xpForPersonInEntry(h,person){
+  // Si la entrada tiene xpFor (reparto real guardado), usamos ESE valor exacto,
+  // incluso si es 0 (ej: modo "Solo el otro" deja a quien marca en 0 XP).
+  // Solo si xpFor no existe en absoluto (entradas antiguas) usamos el fallback
+  // de "todo el pts fue para quien aparece como person".
+  if(h.xpFor&&typeof h.xpFor[person]==='number')return h.xpFor[person];
+  return h.person===person?(h.pts||0):0;
+}
+
+function dateKeyFromHistDate(dateStr){
+  // h.date ya viene como 'dd/mm/yyyy' (toLocaleDateString('es-ES'))
+  return dateStr;
+}
+
+function histDateToDate(dateStr){
+  const [d,m,y]=dateStr.split('/').map(Number);
+  return new Date(y,m-1,d);
+}
+
+function aggregateByDay(daysBack){
+  // Devuelve un array de {label, dateKey, Rafa, María} para los últimos N días
+  const result=[];
+  const today=new Date();
+  for(let i=daysBack-1;i>=0;i--){
+    const d=new Date(today);
+    d.setDate(d.getDate()-i);
+    const dateKey=d.toLocaleDateString('es-ES');
+    const dayHist=history.filter(h=>h.date===dateKey);
+    const rXP=dayHist.reduce((s,h)=>s+(xpForPersonInEntry(h,'Rafa')),0);
+    const mXP=dayHist.reduce((s,h)=>s+(xpForPersonInEntry(h,'María')),0);
+    const label=d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+    result.push({label,dateKey,Rafa:rXP,María:mXP});
+  }
+  return result;
+}
+
+function aggregateByWeek(weeksBack){
+  const result=[];
+  const today=new Date();
+  for(let i=weeksBack-1;i>=0;i--){
+    const weekStart=new Date(today);
+    weekStart.setDate(weekStart.getDate()-(i*7)-6);
+    const weekEnd=new Date(today);
+    weekEnd.setDate(weekEnd.getDate()-(i*7));
+    const weekHist=history.filter(h=>{
+      const hd=histDateToDate(h.date);
+      return hd>=weekStart&&hd<=weekEnd;
+    });
+    const rXP=weekHist.reduce((s,h)=>s+(xpForPersonInEntry(h,'Rafa')),0);
+    const mXP=weekHist.reduce((s,h)=>s+(xpForPersonInEntry(h,'María')),0);
+    const label=weekStart.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+    result.push({label,Rafa:rXP,María:mXP});
+  }
+  return result;
+}
+
+function aggregateByMonth(monthsBack){
+  const result=[];
+  const today=new Date();
+  for(let i=monthsBack-1;i>=0;i--){
+    const monthDate=new Date(today.getFullYear(),today.getMonth()-i,1);
+    const monthHist=history.filter(h=>{
+      const hd=histDateToDate(h.date);
+      return hd.getFullYear()===monthDate.getFullYear()&&hd.getMonth()===monthDate.getMonth();
+    });
+    const rXP=monthHist.reduce((s,h)=>s+(xpForPersonInEntry(h,'Rafa')),0);
+    const mXP=monthHist.reduce((s,h)=>s+(xpForPersonInEntry(h,'María')),0);
+    const label=monthDate.toLocaleDateString('es-ES',{month:'short'});
+    result.push({label,Rafa:rXP,María:mXP});
+  }
+  return result;
+}
+
+function buildBarChartSVG(data,width){
+  // data: array de {label, Rafa, María}. Genera un SVG simple de barras agrupadas.
+  const h=140,barGap=4,groupGap=10,barW=14;
+  const maxVal=Math.max(1,...data.map(d=>Math.max(d.Rafa,d.María)));
+  const groupW=barW*2+barGap;
+  const totalW=Math.max(width,data.length*(groupW+groupGap));
+  let bars='';
+  data.forEach((d,i)=>{
+    const x=i*(groupW+groupGap)+groupGap/2;
+    const hR=Math.round((d.Rafa/maxVal)*(h-24));
+    const hM=Math.round((d.María/maxVal)*(h-24));
+    bars+=`<rect x="${x}" y="${h-24-hR}" width="${barW}" height="${hR}" rx="2" fill="#60A5FA"/>`;
+    bars+=`<rect x="${x+barW+barGap}" y="${h-24-hM}" width="${barW}" height="${hM}" rx="2" fill="#C084FC"/>`;
+    bars+=`<text x="${x+groupW/2}" y="${h-8}" font-size="9" fill="#A0A0A0" text-anchor="middle">${d.label}</text>`;
+  });
+  return `<svg width="${totalW}" height="${h}" viewBox="0 0 ${totalW} ${h}">${bars}</svg>`;
+}
+
+function renderDashboard(){
+  const splitR=document.getElementById('dash-split-r');
+  const splitM=document.getElementById('dash-split-m');
+  const splitRLabel=document.getElementById('dash-split-r-label');
+  const splitMLabel=document.getElementById('dash-split-m-label');
+  const currentLabel=document.getElementById('dash-current-label');
+  const currentVal=document.getElementById('dash-current-val');
+  const prevLabel=document.getElementById('dash-prev-label');
+  const prevVal=document.getElementById('dash-prev-val');
+  const trendVal=document.getElementById('dash-trend-val');
+  const chartTitle=document.getElementById('dash-chart-title');
+  const chartContainer=document.getElementById('dash-chart-svg-container');
+  if(!splitR||!chartContainer)return;
+
+  let data,current,prev,periodLabel,prevLabelTxt;
+  if(dashTab==='dia'){
+    data=aggregateByDay(14);
+    current=data[data.length-1];
+    prev=data[data.length-2]||{Rafa:0,María:0};
+    periodLabel='Últimos 14 días';
+    currentLabel.textContent='Hoy';
+    prevLabel.textContent='Ayer';
+  }else if(dashTab==='semana'){
+    data=aggregateByWeek(10);
+    current=data[data.length-1];
+    prev=data[data.length-2]||{Rafa:0,María:0};
+    periodLabel='Últimas 10 semanas';
+    currentLabel.textContent='Esta semana';
+    prevLabel.textContent='Semana pasada';
+  }else{
+    data=aggregateByMonth(8);
+    current=data[data.length-1];
+    prev=data[data.length-2]||{Rafa:0,María:0};
+    periodLabel='Últimos 8 meses';
+    currentLabel.textContent='Este mes';
+    prevLabel.textContent='Mes pasado';
+  }
+
+  // Reparto del periodo completo mostrado (suma de todo el rango)
+  const totalR=data.reduce((s,d)=>s+d.Rafa,0);
+  const totalM=data.reduce((s,d)=>s+d.María,0);
+  const totalAll=Math.max(1,totalR+totalM);
+  const pctR=Math.round(totalR/totalAll*100);
+  const pctM=100-pctR;
+  splitR.style.width=pctR+'%';
+  splitM.style.width=pctM+'%';
+  splitRLabel.textContent=`Rafa ${pctR}%`;
+  splitMLabel.textContent=`María ${pctM}%`;
+
+  // Comparativa actual vs anterior
+  const currentTotal=current.Rafa+current.María;
+  const prevTotal=prev.Rafa+prev.María;
+  currentVal.textContent=currentTotal;
+  prevVal.textContent=prevTotal;
+  if(prevTotal===0&&currentTotal===0){
+    trendVal.textContent='—';trendVal.style.color='var(--text2)';
+  }else if(currentTotal>prevTotal){
+    const diff=prevTotal>0?Math.round((currentTotal-prevTotal)/prevTotal*100):100;
+    trendVal.textContent='▲'+diff+'%';trendVal.style.color='#34D399';
+  }else if(currentTotal<prevTotal){
+    const diff=Math.round((prevTotal-currentTotal)/prevTotal*100);
+    trendVal.textContent='▼'+diff+'%';trendVal.style.color='#F87171';
+  }else{
+    trendVal.textContent='= igual';trendVal.style.color='var(--text2)';
+  }
+
+  // Gráfica
+  chartTitle.textContent=periodLabel;
+  chartContainer.innerHTML=buildBarChartSVG(data,320);
+}
+
 function renderHist(){
   const el=document.getElementById('list-hist');if(!el)return;
   if(!history.length){el.innerHTML='<div class="empty">Las tareas completadas aparecerán aquí</div>';return;}
@@ -2110,7 +2335,7 @@ window.goTo=(name,btn)=>{
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   const sc=document.getElementById('sc-'+name);if(sc)sc.classList.add('active');
   if(btn)btn.classList.add('active');
-  if(name==='hist'){renderHist();renderResumen();}
+  if(name==='hist'){renderHist();renderResumen();renderDashboard();}
   if(name==='sem'){updateWeekIndicator();}
   if(name==='compra'){renderShoppingList();renderMealPlan();}
 };
