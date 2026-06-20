@@ -343,6 +343,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div id="list-d-maria" class="drop-zone" data-drop-person="María" data-drop-freq="Diaria"></div>
     <div class="stitle mt">Rotativas <span class="sb sb-g" id="rxp-rot"></span></div>
     <div id="list-d-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Diaria"></div>
+    <div class="stitle mt" id="daily-title-none" style="display:none;">Sin asignar</div>
+    <div id="list-d-none" class="drop-zone" data-drop-person="none" data-drop-freq="Diaria"></div>
   </div>
 </div>
 
@@ -2012,6 +2014,7 @@ function renderAll(){
   const dr=daily.filter(t=>t.person==='Rafa');
   const dm=daily.filter(t=>t.person==='María');
   const drot=daily.filter(t=>t.person==='Rotativa');
+  const dnone=daily.filter(t=>t.person==='none'||!t.person);
   const getFiltered=(list)=>{
     if(fh==='all')return list;
     if(fh==='Rafa')return list.filter(t=>t.person==='Rafa');
@@ -2022,6 +2025,9 @@ function renderAll(){
   setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[]);
   setList('list-d-maria',fh==='all'||fh==='María'?dm:[]);
   setList('list-d-rot',fh==='all'||fh==='Rotativa'?drot:[]);
+  setList('list-d-none',fh==='all'?dnone:[]);
+  const noneTitle=document.getElementById('daily-title-none');
+  if(noneTitle)noneTitle.style.display=(fh==='all'&&dnone.length)?'':'none';
   const rdEl=document.getElementById('rxp-d');if(rdEl)rdEl.textContent=dr.reduce((s,t)=>s+getXP(t),0)+' XP/día';
   const mdEl=document.getElementById('mxp-d');if(mdEl)mdEl.textContent=dm.reduce((s,t)=>s+getXP(t),0)+' XP/día';
   const rotEl=document.getElementById('rxp-rot');if(rotEl)rotEl.textContent=drot.reduce((s,t)=>s+getXP(t),0)+' XP/día';
