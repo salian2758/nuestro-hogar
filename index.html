@@ -468,7 +468,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div id="theme-options-list"></div>
 
     <!-- RESET AVATAR -->
-    <button onclick="confirmResetAvatar()" style="width:100%;background:var(--bg3);border:0.5px dashed var(--border);border-radius:10px;color:var(--text2);padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;">↺ Reiniciar nivel y avatar (mantiene XP, wallet, racha e historial)</button>
+    <button onclick="confirmResetAvatar()" style="width:100%;background:var(--bg3);border:0.5px dashed var(--border);border-radius:10px;color:var(--text2);padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:10px;">↺ Reiniciar nivel y avatar (mantiene XP, wallet, racha e historial)</button>
+    <button onclick="confirmResetAllXP()" style="width:100%;background:rgba(239,68,68,0.1);border:0.5px dashed rgba(239,68,68,0.4);border-radius:10px;color:#F87171;padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;">⚠️ Resetear XP total de los dos (irreversible)</button>
 
     <!-- WALLET / CATÁLOGO DE PAREJA -->
     <div id="active-goal-box" style="display:none;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:14px;"></div>
@@ -769,7 +770,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ═══ SISTEMA DE TEMÁTICAS Y AVATARES (15 niveles, curva pronunciada) ═══
-const LEVEL_XP_CURVE=[0,40,86,139,199,268,348,439,544,664,802,961,1143,1352,1592];
+const LEVEL_XP_CURVE=[0,100,215,348,498,670,870,1098,1360,1660,2005,2402,2858,3380,3980];
 
 const THEMES={
   hogar:{
@@ -1304,20 +1305,45 @@ window.cancelComplete=()=>{
 
 window.undoToggle=async(id)=>{
   const t=tasks.find(t=>t.id===id);if(!t||!t.done)return;
-  const earned=getXP(t);
-  const whoCompleted=t.completedBy;
   await updateDoc(doc(db,'tasks',id),{done:false,completedNote:'',completedBy:''});
-  if(whoCompleted==='Rafa'||whoCompleted==='María'){
-    xpState[whoCompleted]=Math.max(0,(xpState[whoCompleted]||0)-earned);
-    xpWeekly[whoCompleted]=Math.max(0,(xpWeekly[whoCompleted]||0)-earned);
-    xpMonthly[whoCompleted]=Math.max(0,(xpMonthly[whoCompleted]||0)-earned);
-    await setDoc(doc(db,'state','xp'),xpState);
-    await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
-    await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
-  }
+  // Buscar la entrada real del historial para saber EXACTAMENTE cómo se repartió
+  // el XP (Solo yo / Compartido / Solo el otro) y revertir a cada persona lo
+  // que de verdad recibió — no asumir que todo fue a una sola persona.
   const histSnap=await getDocs(collection(db,'history'));
+  let xpToRevert={Rafa:0,María:0};
+  let foundEntry=false;
+  histSnap.forEach(d=>{
+    if(d.data().taskId===id){
+      foundEntry=true;
+      const entry=d.data();
+      if(entry.xpFor){
+        xpToRevert.Rafa+=entry.xpFor.Rafa||0;
+        xpToRevert.María+=entry.xpFor.María||0;
+      }
+    }
+  });
+  // Fallback para tareas completadas ANTES de que existiera el reparto/wallet
+  // (entradas antiguas de historial sin el campo xpFor)
+  if(foundEntry&&xpToRevert.Rafa===0&&xpToRevert.María===0){
+    const earned=getXP(t);
+    const whoCompleted=t.completedBy;
+    if(whoCompleted==='Rafa'||whoCompleted==='María')xpToRevert[whoCompleted]=earned;
+  }
+  for(const person of ['Rafa','María']){
+    const amount=xpToRevert[person]||0;
+    if(amount>0){
+      xpState[person]=Math.max(0,(xpState[person]||0)-amount);
+      xpWeekly[person]=Math.max(0,(xpWeekly[person]||0)-amount);
+      xpMonthly[person]=Math.max(0,(xpMonthly[person]||0)-amount);
+      wallet[person]=Math.max(0,(wallet[person]||0)-amount);
+    }
+  }
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
   histSnap.forEach(async d=>{if(d.data().taskId===id){await deleteDoc(doc(db,'history',d.id));}});
-  showToast('Tarea desmarcada — XP revertido');
+  showToast('Tarea desmarcada — XP y wallet revertidos');
 };
 let splitMode='mine'; // 'mine' | 'shared' | 'other'
 window.setSplitMode=(mode)=>{
@@ -1973,6 +1999,33 @@ async function resetAvatarVisual(person){
   await setDoc(doc(db,'users_meta',person),{levelResetOffset:currentXP},{merge:true});
   userLevelOverride[person]=currentXP;
   showToast(`Avatar de ${person} reiniciado ✓`);
+  renderProfile();
+  updateHeader();
+}
+
+window.confirmResetAllXP=()=>{
+  if(!confirm('⚠️ Esto pondrá a CERO el XP total de Rafa Y María, y borrará todo el historial de tareas completadas.\n\nEsta acción NO se puede deshacer. ¿Seguro que quieres continuar?'))return;
+  if(!confirm('Última confirmación: se perderá el nivel, el XP total y el historial de los dos para siempre. ¿Confirmas el reseteo?'))return;
+  resetAllXP();
+};
+async function resetAllXP(){
+  // Reset de XP total para ambos (nivel/avatar vuelven a 0 de forma real, no solo visual)
+  xpState={Rafa:0,María:0};
+  xpWeekly={Rafa:0,María:0};
+  xpMonthly={Rafa:0,María:0};
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  // Quitar cualquier offset de reseteo visual de avatar — ya no tiene sentido, el XP real ya es 0
+  userLevelOverride={Rafa:0,María:0};
+  await setDoc(doc(db,'users_meta','Rafa'),{levelResetOffset:0},{merge:true});
+  await setDoc(doc(db,'users_meta','María'),{levelResetOffset:0},{merge:true});
+  // Borrar historial completo de tareas completadas
+  const histSnap=await getDocs(collection(db,'history'));
+  const batch=writeBatch(db);
+  histSnap.forEach(d=>batch.delete(doc(db,'history',d.id)));
+  await batch.commit();
+  showToast('XP total e historial reseteados para los dos ✓');
   renderProfile();
   updateHeader();
 }
