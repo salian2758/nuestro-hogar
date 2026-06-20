@@ -94,15 +94,19 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .tc.done-card .tname{text-decoration:line-through;color:var(--text2);}
 .tcheck{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;margin-top:1px;}
 .tcheck.done{background:var(--c4);border-color:var(--c4);animation:checkPop .35s cubic-bezier(.34,1.56,.64,1);}
-.tcheck.bubble-pop{animation:bubbleGrow .38s ease-out forwards;}
-@keyframes bubbleGrow{
-  0%{transform:scale(1);background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);box-shadow:0 0 0 0 rgba(16,185,129,.6),inset 0 0 8px rgba(255,255,255,.3);}
-  55%{transform:scale(1.45);background:rgba(16,185,129,0.35);border-color:rgba(16,185,129,0.7);box-shadow:0 0 0 6px rgba(16,185,129,.18),inset 0 0 10px rgba(255,255,255,.5);}
-  75%{transform:scale(0.85);box-shadow:0 0 0 12px rgba(16,185,129,0);}
-  100%{transform:scale(1);background:var(--c4);border-color:var(--c4);box-shadow:0 0 0 0 rgba(16,185,129,0);}
-}
 .tcheck-holding{animation:holdGrow .4s ease-out forwards;}
 @keyframes holdGrow{0%{transform:scale(1);}100%{transform:scale(1.18);box-shadow:0 0 0 6px rgba(255,255,255,.08);}}
+.card-bubble-pop{animation:cardBubble .48s cubic-bezier(.34,1.56,.64,1) forwards;position:relative;z-index:5;}
+@keyframes cardBubble{
+  0%{transform:scale(1);}
+  40%{transform:scale(1.18);box-shadow:0 12px 40px rgba(16,185,129,.5);}
+  68%{transform:scale(0.94);}
+  100%{transform:scale(1);box-shadow:none;}
+}
+@keyframes particleFly{
+  0%{transform:translate(-50%,-50%) translate(0,0) scale(1);opacity:.95;}
+  100%{transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(0.2);opacity:0;}
+}
 .tcheck.done svg{stroke-dasharray:24;stroke-dashoffset:24;animation:checkDraw .3s ease-out .05s forwards;}
 @keyframes checkPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,.5);}40%{transform:scale(1.25);box-shadow:0 0 0 8px rgba(16,185,129,.15);}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,0);}}
 @keyframes checkDraw{to{stroke-dashoffset:0;}}
@@ -2907,12 +2911,48 @@ async function reassignTaskFromDrop(taskId,dropZone){
   });
 })();
 
-// Toque corto: completa al 100% para quien marca, sin modal, con animación de burbuja
+// Toque corto: completa al 100% para quien marca, sin modal — la tarjeta entera
+// se infla como una burbuja y "explota" en partículas del color de su tema.
 window.quickComplete=async(id,checkEl)=>{
   const t=tasks.find(t=>t.id===id);if(!t||t.done)return;
-  if(checkEl)checkEl.classList.add('bubble-pop');
+  const card=checkEl?checkEl.closest('.tc'):null;
+  if(card)triggerBubblePop(card);
   await toggle(id);
 };
+
+function triggerBubblePop(card){
+  card.classList.add('card-bubble-pop');
+  const theme=THEMES[userTheme[currentUser]||'hogar']||THEMES.hogar;
+  const colors=[theme.c1,theme.c2,theme.c3];
+  const rect=card.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  const burst=document.createElement('div');
+  burst.style.position='fixed';burst.style.left='0';burst.style.top='0';
+  burst.style.width='100%';burst.style.height='100%';burst.style.pointerEvents='none';
+  burst.style.zIndex='350';
+  const N=22;
+  for(let i=0;i<N;i++){
+    const p=document.createElement('div');
+    const angle=(Math.PI*2*i/N)+(Math.random()*0.4-0.2);
+    const dist=100+Math.random()*90;
+    const size=6+Math.random()*8;
+    const color=colors[i%colors.length];
+    p.style.position='absolute';
+    p.style.left=cx+'px';p.style.top=cy+'px';
+    p.style.width=size+'px';p.style.height=size+'px';
+    p.style.borderRadius='50%';
+    p.style.background=color;
+    p.style.opacity='0.95';
+    p.style.transform='translate(-50%,-50%)';
+    p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
+    p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
+    p.style.animation=`particleFly .55s cubic-bezier(.25,.8,.4,1) forwards`;
+    burst.appendChild(p);
+  }
+  document.body.appendChild(burst);
+  setTimeout(()=>{burst.remove();},650);
+  setTimeout(()=>{card.classList.remove('card-bubble-pop');},420);
+}
 
 // Mantener pulsado: abre el modal de reparto y nota de siempre (lo que antes hacía cualquier toque)
 window.openSplitModal=(id)=>{
