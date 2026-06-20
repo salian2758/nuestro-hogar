@@ -1928,7 +1928,6 @@ function renderHist(){
   }).join('');
 }
 window.undoFromHistory=async(taskId)=>{
-  if(!confirm('¿Desmarcar esta tarea? Se revertirá el XP, wallet y racha asociados.'))return;
   await undoToggle(taskId);
 };
 
