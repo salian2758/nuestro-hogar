@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg2" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#2a1520"/>
+      <stop offset="100%" stop-color="#160a10"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF8E6B" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#FF8E6B" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="subtle">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="clipL"><rect x="168" y="258" width="46" height="42" rx="5"/></clipPath>
+    <clipPath id="clipR"><rect x="298" y="258" width="46" height="42" rx="5"/></clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg2)"/>
+  <circle cx="256" cy="270" r="170" fill="url(#glow2)"/>
+
+  <!-- Casa: tejado -->
+  <polygon points="256,108 388,230 124,230"
+    fill="none" stroke="#FF8E6B" stroke-width="6"
+    stroke-linejoin="round" filter="url(#subtle)" opacity="0.95"/>
+
+  <!-- Casa: cuerpo -->
+  <rect x="152" y="228" width="208" height="168" rx="6"
+    fill="none" stroke="#FF8E6B" stroke-width="6" opacity="0.95" filter="url(#subtle)"/>
+
+  <!-- Puerta centrada, con un pequeño corazón como pomo: el único acento
+       "de pareja" explícito, discreto, no protagonista -->
+  <rect x="222" y="306" width="68" height="90" rx="6"
+    fill="none" stroke="#FF8E6B" stroke-width="5" opacity="0.8"/>
+  <path d="M 256 344 C 251 339 245 339 245 345 C 245 350 256 357 256 357 C 256 357 267 350 267 345 C 267 339 261 339 256 344 Z"
+        fill="#FF8E6B" opacity="0.9"/>
+
+  <!-- Ventana izquierda con silueta asomando -->
+  <rect x="168" y="258" width="46" height="42" rx="5"
+    fill="none" stroke="#FF8E6B" stroke-width="4" opacity="0.6"/>
+  <g clip-path="url(#clipL)">
+    <circle cx="191" cy="284" r="11" fill="#FF8E6B" opacity="0.9"/>
+    <path d="M 174 300 Q 174 282 191 282 Q 208 282 208 300 Z" fill="#FF8E6B" opacity="0.9"/>
+  </g>
+
+  <!-- Ventana derecha con silueta asomando -->
+  <rect x="298" y="258" width="46" height="42" rx="5"
+    fill="none" stroke="#FF8E6B" stroke-width="4" opacity="0.6"/>
+  <g clip-path="url(#clipR)">
+    <circle cx="321" cy="284" r="11" fill="#FF8E6B" opacity="0.9"/>
+    <path d="M 304 300 Q 304 282 321 282 Q 338 282 338 300 Z" fill="#FF8E6B" opacity="0.9"/>
+  </g>
+</svg>
