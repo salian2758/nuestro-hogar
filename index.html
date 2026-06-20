@@ -345,6 +345,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div id="list-d-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-none" style="display:none;">Sin asignar</div>
     <div id="list-d-none" class="drop-zone" data-drop-person="none" data-drop-freq="Diaria"></div>
+    <div class="stitle mt" id="daily-title-cadax" style="display:none;">Cada X días</div>
+    <div id="list-d-cadax"></div>
   </div>
 </div>
 
@@ -2044,6 +2046,10 @@ function renderAll(){
   setList('list-d-none',fh==='all'?dnone:[]);
   const noneTitle=document.getElementById('daily-title-none');
   if(noneTitle)noneTitle.style.display=(fh==='all'&&dnone.length)?'':'none';
+  const cadaXDaily=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='CadaX'&&t.cadaxUnit==='días'));
+  setList('list-d-cadax',fh==='all'?cadaXDaily:[]);
+  const cadaxTitle=document.getElementById('daily-title-cadax');
+  if(cadaxTitle)cadaxTitle.style.display=(fh==='all'&&cadaXDaily.length)?'':'none';
   const rdEl=document.getElementById('rxp-d');if(rdEl)rdEl.textContent=dr.reduce((s,t)=>s+getXP(t),0)+' XP/día';
   const mdEl=document.getElementById('mxp-d');if(mdEl)mdEl.textContent=dm.reduce((s,t)=>s+getXP(t),0)+' XP/día';
   const rotEl=document.getElementById('rxp-rot');if(rotEl)rotEl.textContent=drot.reduce((s,t)=>s+getXP(t),0)+' XP/día';
@@ -2053,7 +2059,7 @@ function renderAll(){
   const weeklyB=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='Semanal'&&t.group==='B'));
   const weeklyNone=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='Semanal'&&!t.group));
   // Cada X semanas/días — siempre sin grupo (no tienen A/B asignable)
-  const cadaXWeekly=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='CadaX'&&t.cadaxUnit!=='meses'));
+  const cadaXWeekly=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='CadaX'&&t.cadaxUnit==='semanas'));
 
   const filterByZona=(list)=>fs==='all'?list:list.filter(t=>t.zona===fs);
 
