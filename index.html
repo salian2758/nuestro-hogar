@@ -96,6 +96,22 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .tcheck.done{background:var(--c4);border-color:var(--c4);animation:checkPop .35s cubic-bezier(.34,1.56,.64,1);}
 .tcheck-holding{animation:holdGrow .4s ease-out forwards;}
 @keyframes holdGrow{0%{transform:scale(1);}100%{transform:scale(1.18);box-shadow:0 0 0 6px rgba(255,255,255,.08);}}
+.tcheck.filling{animation:checkFill 1.1s cubic-bezier(.34,1.2,.64,1) forwards;}
+.tcheck.filling svg{display:block;stroke-dasharray:24;stroke-dashoffset:24;animation:checkDrawSlow 1.1s ease-out forwards;}
+@keyframes checkFill{
+  0%{background:rgba(16,185,129,0);border-color:rgba(255,255,255,0.2);}
+  20%{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.35);}
+  55%{background:rgba(16,185,129,.45);border-color:rgba(16,185,129,.6);}
+  78%{background:rgba(16,185,129,.75);border-color:var(--c4);}
+  86%{background:var(--c4);border-color:var(--c4);transform:scale(1.2);}
+  100%{background:var(--c4);border-color:var(--c4);transform:scale(1);}
+}
+@keyframes checkDrawSlow{
+  0%{stroke-dashoffset:24;opacity:0;}
+  60%{stroke-dashoffset:24;opacity:0;}
+  86%{stroke-dashoffset:0;opacity:1;}
+  100%{stroke-dashoffset:0;opacity:1;}
+}
 .card-bubble-pop{animation:cardBubble 1.1s cubic-bezier(.34,1.2,.64,1) forwards;position:relative;z-index:5;}
 @keyframes cardBubble{
   0%{transform:scale(1);box-shadow:none;}
@@ -2572,6 +2588,9 @@ window.goTo=(name,btn)=>{
   if(name==='hist'){renderHist();renderResumen();renderDashboard();}
   if(name==='sem'){updateWeekIndicator();}
   if(name==='compra'){renderShoppingList();renderMealPlan();}
+  // El botón + de crear tarea solo tiene sentido en Hoy/Semana/Mes
+  const quickAddBtn=document.getElementById('quick-add-btn');
+  if(quickAddBtn)quickAddBtn.style.display=['hoy','sem','mes'].includes(name)?'':'none';
 };
 
 function renderTrash(){
@@ -2919,6 +2938,10 @@ async function reassignTaskFromDrop(taskId,dropZone){
 window.quickComplete=async(id,checkEl)=>{
   const t=tasks.find(t=>t.id===id);if(!t||t.done)return;
   const card=checkEl?checkEl.closest('.tc'):null;
+  if(checkEl){
+    checkEl.innerHTML=chkSVG(); // insertamos el check ya, para que se dibuje en sincronía con la burbuja
+    checkEl.classList.add('filling');
+  }
   if(card){
     await triggerBubblePop(card); // esperamos a que termine la animación completa...
   }
