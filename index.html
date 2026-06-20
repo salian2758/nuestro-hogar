@@ -328,6 +328,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div class="pbox-title">Progreso del día <span id="couple-streak-badge" style="font-weight:700;margin-left:4px;"></span></div>
       <div class="pbox-msg" id="day-msg">¡Arrancamos! 💪</div>
       <div class="pbar"><div class="pbar-fill" id="day-bar" style="width:0%"></div></div>
+      <div id="couple-streak-zone" style="font-size:10px;color:var(--text2);margin-top:6px;"></div>
     </div>
     <div class="filters" id="filt-hoy">
       <button class="fb active" data-f="all">Todas</button>
@@ -929,6 +930,14 @@ const DAILY_GOAL_REWARDS=[
   'Un brindis improvisado por el equipazo que sois 🥂',
   'Abrazo largo de esos que no se cuentan en segundos 🤗',
   'Elegid juntos algo random de la lista de deseos para hacer pronto ✨',
+  'Una foto random juntos para recordar este día 📸',
+  'Café o infusión calentita charlando sin prisa 30 minutos ☕',
+  'Elegid juntos una canción que os represente hoy y bailad un poco 💃',
+  'Noche de juegos de mesa o cartas, sin móvil de por medio 🎲',
+  'Escribíos una nota corta el uno al otro, de esas que se guardan 💛',
+  'Un rato en el balcón o terraza, solo charlando 🌤️',
+  'Plan sorpresa: que uno elija algo pequeño para el otro sin avisar 🎁',
+  'Desayuno especial mañana, algo que no soláis hacer entre semana 🥐',
 ];
 
 function maybeShowDailyGoalReward(pct){
@@ -1913,9 +1922,15 @@ function renderHist(){
   if(!history.length){el.innerHTML='<div class="empty">Las tareas completadas aparecerán aquí</div>';return;}
   el.innerHTML=history.map(h=>{
     const whoLine=h.extra?`${h.person} ↗ <span style="color:var(--text2)">${h.extra}</span>`:h.person;
-    return`<div class="hist-item"><div class="hi-icon">${chkSVG()}</div><div class="hi-info"><div class="hi-name">${h.name}</div><div class="hi-meta">${whoLine} · ${h.zona} · ${h.date}${h.note?` · 💬 ${h.note}`:''}</div></div><div class="hi-pts">+${h.pts} XP</div></div>`;
+    const taskStillExists=tasks.some(t=>t.id===h.taskId);
+    const undoBtn=taskStillExists?`<button onclick="undoFromHistory('${h.taskId}')" title="Desmarcar esta tarea" style="background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text2);padding:4px 8px;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0;">↺</button>`:'';
+    return`<div class="hist-item"><div class="hi-icon">${chkSVG()}</div><div class="hi-info"><div class="hi-name">${escHtml(h.name)}</div><div class="hi-meta">${whoLine} · ${h.zona} · ${h.date}${h.note?` · 💬 ${escHtml(h.note)}`:''}</div></div><div class="hi-pts">+${h.pts} XP</div>${undoBtn}</div>`;
   }).join('');
 }
+window.undoFromHistory=async(taskId)=>{
+  if(!confirm('¿Desmarcar esta tarea? Se revertirá el XP, wallet y racha asociados.'))return;
+  await undoToggle(taskId);
+};
 
 function renderResumen(){
   const el=document.getElementById('resumen-stats');if(!el)return;
@@ -1972,6 +1987,21 @@ function updateHeader(){
   const wpct=document.getElementById('wpct');if(wpct)wpct.textContent=pct+'%';
   const bar=document.getElementById('day-bar');if(bar)bar.style.width=pct+'%';
   maybeShowDailyGoalReward(pct);
+  const zoneEl=document.getElementById('couple-streak-zone');
+  if(zoneEl){
+    if(totalDailyXP>=COUPLE_STREAK_GOOD_MIN){
+      zoneEl.textContent=`🔥 Racha asegurada hoy (${totalDailyXP}/${COUPLE_STREAK_GOOD_MIN} XP para mantenerla)`;
+      zoneEl.style.color='#34D399';
+    }else if(totalDailyXP>=COUPLE_STREAK_NEUTRAL_MIN){
+      const falta=COUPLE_STREAK_GOOD_MIN-totalDailyXP;
+      zoneEl.textContent=`⚪ Día neutro — ${falta} XP más para activar la racha 🔥`;
+      zoneEl.style.color='var(--text2)';
+    }else{
+      const falta=COUPLE_STREAK_NEUTRAL_MIN-totalDailyXP;
+      zoneEl.textContent=`${falta} XP más para evitar racha negativa`;
+      zoneEl.style.color='#F87171';
+    }
+  }
   const msg=document.getElementById('day-msg');
   if(msg){
     if(currentUser==='Rafa'||currentUser==='María'){
