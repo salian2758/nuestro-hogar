@@ -579,6 +579,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         </select>
       </div>
     </div>
+    <div id="group-create" style="display:none;margin-bottom:12px;">
+      <label class="fl">Grupo (vista Semana)</label>
+      <select class="fs" id="fgroup" style="width:100%;">
+        <option value="">Sin grupo (aparece en "sin asignar")</option>
+        <option value="A">Grupo A</option>
+        <option value="B">Grupo B</option>
+      </select>
+    </div>
     <div id="cadax-create" style="display:none;margin-bottom:12px;">
       <label class="fl">Repetir cada</label>
       <div style="display:flex;align-items:center;gap:8px;">
@@ -727,6 +735,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           <option value="Rotativa">Rotativa</option>
         </select>
       </div>
+    </div>
+    <div id="group-edit" style="display:none;margin-bottom:12px;">
+      <label class="fl">Grupo (vista Semana)</label>
+      <select class="fs" id="egroup" style="width:100%;">
+        <option value="">Sin grupo (aparece en "sin asignar")</option>
+        <option value="A">Grupo A</option>
+        <option value="B">Grupo B</option>
+      </select>
     </div>
     <div id="cadax-edit" style="display:none;margin-bottom:12px;">
       <label class="fl">Repetir cada</label>
@@ -1347,6 +1363,21 @@ window.undoToggle=async(id)=>{
       xpWeekly[person]=Math.max(0,(xpWeekly[person]||0)-amount);
       xpMonthly[person]=Math.max(0,(xpMonthly[person]||0)-amount);
       wallet[person]=Math.max(0,(wallet[person]||0)-amount);
+      // Revertir también el progreso de racha de HOY (solo si la tarea se completó hoy)
+      const today=new Date().toLocaleDateString('es-ES');
+      const sd=streakData[person];
+      if(sd&&sd.lastDate===today){
+        sd.todayXP=Math.max(0,(sd.todayXP||0)-amount);
+        if(sd.todayXP<STREAK_MIN_DAILY_XP&&sd.streakCountedToday){
+          // Ya no llega al mínimo — deshacer el incremento de racha contado hoy
+          sd.count=Math.max(0,(sd.count||1)-1);
+          sd.streakCountedToday=false;
+          sd.lastCountedDate=sd.lastCountedDate===today?null:sd.lastCountedDate;
+        }
+        streakData[person]=sd;
+        await setDoc(doc(db,'state','streak_'+person),sd);
+        updateStreakBadge(person);
+      }
     }
   }
   await setDoc(doc(db,'state','xp'),xpState);
@@ -1412,7 +1443,7 @@ window.confirmComplete=async()=>{
       xpWeekly[person]=(xpWeekly[person]||0)+amount;
       xpMonthly[person]=(xpMonthly[person]||0)+amount;
       wallet[person]=(wallet[person]||0)+amount;
-      await updateStreak(person);
+      await updateStreak(person,amount);
     }
   }
   await setDoc(doc(db,'state','xp'),xpState);
@@ -1498,6 +1529,10 @@ window.onFreqChange=(selId,cadaxId)=>{
   const val=document.getElementById(selId).value;
   const row=document.getElementById(cadaxId);
   if(row)row.style.display=val==='CadaX'?'block':'none';
+  // El selector de grupo solo tiene sentido para tareas Semanales
+  const groupRowId=cadaxId==='cadax-create'?'group-create':'group-edit';
+  const groupRow=document.getElementById(groupRowId);
+  if(groupRow)groupRow.style.display=val==='Semanal'?'block':'none';
   updateXPPrev();
   updateEditXPPrev();
 };
@@ -1513,7 +1548,7 @@ window.addTask=async()=>{
   const person=document.getElementById('fp').value;
   const custom=document.getElementById('fxp').value;
   let group='';
-  if(freq==='Semanal')group=person==='Rafa'?'A':person==='María'?'B':'';
+  if(freq==='Semanal')group=document.getElementById('fgroup').value;
   let cadaxNum=null,cadaxUnit=null,freqLabel=freq;
   if(freq==='CadaX'){
     cadaxNum=parseInt(document.getElementById('cadax-num').value)||2;
@@ -1700,7 +1735,7 @@ function renderAll(){
   const fs=activeFilter.sem;
   const semA=deduplicateTasks(allTasksDeduped.filter(t=>(t.freq==='Semanal'||(t.freq==='CadaX'&&t.cadaxUnit!=='meses'))&&t.group==='A'));
   const semB=deduplicateTasks(allTasksDeduped.filter(t=>(t.freq==='Semanal'||(t.freq==='CadaX'&&t.cadaxUnit!=='meses'))&&t.group==='B'));
-  const semNone=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='CadaX'&&t.cadaxUnit!=='meses'&&!t.group));
+  const semNone=deduplicateTasks(allTasksDeduped.filter(t=>(t.freq==='Semanal'||(t.freq==='CadaX'&&t.cadaxUnit!=='meses'))&&!t.group));
   const titleNone=document.getElementById('sem-title-none');
   if(titleNone)titleNone.style.display=semNone.length?'':'none';
   setList('list-s-none',semNone);
@@ -1856,6 +1891,9 @@ window.openEditModal=(id)=>{
   }else{
     if(cadaxRow)cadaxRow.style.display='none';
   }
+  const groupRow=document.getElementById('group-edit');
+  if(groupRow)groupRow.style.display=t.freq==='Semanal'?'block':'none';
+  const groupEl=document.getElementById('egroup');if(groupEl)groupEl.value=t.group||'';
   updateEditXPPrev();
   document.getElementById('edit-modal').classList.remove('hidden');
 };
@@ -1873,8 +1911,8 @@ window.saveEdit=async()=>{
   const person=document.getElementById('ep').value;
   const custom=document.getElementById('exp').value;
   let group=t.group;
-  if(freq==='Semanal')group=person==='Rafa'?'A':person==='María'?'B':group;
-  else if(freq!=='Semanal')group='';
+  if(freq==='Semanal')group=document.getElementById('egroup').value;
+  else group='';
   let cadaxNum=t.cadaxNum||null,cadaxUnit=t.cadaxUnit||null,freqLabel=freq;
   if(freq==='CadaX'){
     cadaxNum=parseInt(document.getElementById('edit-cadax-num').value)||2;
@@ -2191,14 +2229,29 @@ window.fulfillPending=async(id)=>{
 };
 
 // ─── RACHAS ───
-async function updateStreak(person){
+const STREAK_MIN_DAILY_XP=30; // XP individual mínimo en el día para que cuente como "racha mantenida"
+
+async function updateStreak(person,xpEarnedNow){
   const today=new Date().toLocaleDateString('es-ES');
-  const data=streakData[person]||{count:0,lastDate:null};
-  if(data.lastDate===today)return; // ya contado hoy
-  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
-  const yesterdayStr=yesterday.toLocaleDateString('es-ES');
-  if(data.lastDate===yesterdayStr){data.count=(data.count||0)+1;}
-  else if(data.lastDate!==today){data.count=1;}
+  const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
+  // Si ya es un día nuevo respecto al último registrado, reseteamos el acumulado de hoy
+  if(data.lastDate!==today)data.todayXP=0;
+  data.todayXP=(data.todayXP||0)+(xpEarnedNow||0);
+  // Si ya se contabilizó la racha de hoy, no hace falta volver a evaluar
+  if(data.lastDate===today&&data.streakCountedToday){
+    streakData[person]=data;
+    await setDoc(doc(db,'state','streak_'+person),data);
+    return;
+  }
+  if(data.todayXP>=STREAK_MIN_DAILY_XP){
+    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    const yesterdayStr=yesterday.toLocaleDateString('es-ES');
+    const lastCountedDate=data.lastCountedDate;
+    if(lastCountedDate===yesterdayStr){data.count=(data.count||0)+1;}
+    else if(lastCountedDate!==today){data.count=1;}
+    data.lastCountedDate=today;
+    data.streakCountedToday=true;
+  }
   data.lastDate=today;
   streakData[person]=data;
   await setDoc(doc(db,'state','streak_'+person),data);
