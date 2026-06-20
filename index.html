@@ -337,11 +337,11 @@ input,textarea{-webkit-user-select:text;user-select:text;}
       <button class="fb" data-f="María">María</button>
       <button class="fb" data-f="Rotativa">Rotativas</button>
     </div>
-    <div class="stitle">Fijas de Rafa <span class="sb sb-r" id="rxp-d"></span></div>
+    <div class="stitle" id="daily-title-rafa">Fijas de Rafa <span class="sb sb-r" id="rxp-d"></span></div>
     <div id="list-d-rafa" class="drop-zone" data-drop-person="Rafa" data-drop-freq="Diaria"></div>
-    <div class="stitle mt">Fijas de María <span class="sb sb-m" id="mxp-d"></span></div>
+    <div class="stitle mt" id="daily-title-maria">Fijas de María <span class="sb sb-m" id="mxp-d"></span></div>
     <div id="list-d-maria" class="drop-zone" data-drop-person="María" data-drop-freq="Diaria"></div>
-    <div class="stitle mt">Rotativas <span class="sb sb-g" id="rxp-rot"></span></div>
+    <div class="stitle mt" id="daily-title-rot">Rotativas <span class="sb sb-g" id="rxp-rot"></span></div>
     <div id="list-d-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-none" style="display:none;">Sin asignar</div>
     <div id="list-d-none" class="drop-zone" data-drop-person="none" data-drop-freq="Diaria"></div>
@@ -2023,8 +2023,14 @@ function renderAll(){
     return list;
   };
   setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[]);
+  const rafaTitle=document.getElementById('daily-title-rafa');
+  if(rafaTitle)rafaTitle.style.display=((fh==='all'||fh==='Rafa')&&dr.length)?'':'none';
   setList('list-d-maria',fh==='all'||fh==='María'?dm:[]);
+  const mariaTitle=document.getElementById('daily-title-maria');
+  if(mariaTitle)mariaTitle.style.display=((fh==='all'||fh==='María')&&dm.length)?'':'none';
   setList('list-d-rot',fh==='all'||fh==='Rotativa'?drot:[]);
+  const rotTitle=document.getElementById('daily-title-rot');
+  if(rotTitle)rotTitle.style.display=((fh==='all'||fh==='Rotativa')&&drot.length)?'':'none';
   setList('list-d-none',fh==='all'?dnone:[]);
   const noneTitle=document.getElementById('daily-title-none');
   if(noneTitle)noneTitle.style.display=(fh==='all'&&dnone.length)?'':'none';
