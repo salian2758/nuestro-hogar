@@ -320,7 +320,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div id="sc-hoy" class="screen" style="display:none;">
   <div class="content">
     <div class="pbox">
-      <div class="pbox-title">Progreso del día</div>
+      <div class="pbox-title">Progreso del día <span id="couple-streak-badge" style="font-weight:700;margin-left:4px;"></span></div>
       <div class="pbox-msg" id="day-msg">¡Arrancamos! 💪</div>
       <div class="pbar"><div class="pbar-fill" id="day-bar" style="width:0%"></div></div>
     </div>
@@ -1084,6 +1084,7 @@ let wallet={Rafa:0,María:0};
 let userTheme={Rafa:'hogar',María:'hogar'};
 let userLevelOverride={Rafa:0,María:0}; // XP "perdido" tras resetear avatar (resta solo visual del nivel)
 let streakData={Rafa:{count:0,lastDate:null},María:{count:0,lastDate:null}};
+let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso diario CONJUNTO (no individual)
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
 let personalCatalog={Rafa:[],María:[]};
 let activeGoal={Rafa:null,María:null}; // {rewardId, name, cost} — premio marcado como objetivo de ahorro
@@ -1126,8 +1127,9 @@ async function finishInit(){
     if(d.id==='xpWeekly')xpWeekly={Rafa:data.Rafa||0,María:data.María||0};
     if(d.id==='xpMonthly')xpMonthly={Rafa:data.Rafa||0,María:data.María||0};
     if(d.id==='wallet')wallet={Rafa:data.Rafa||0,María:data.María||0};
-    if(d.id==='streak_Rafa')streakData.Rafa={count:data.count||0,lastDate:data.lastDate||null};
-    if(d.id==='streak_María')streakData.María={count:data.count||0,lastDate:data.lastDate||null};
+    if(d.id==='streak_Rafa')streakData.Rafa={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
+    if(d.id==='streak_María')streakData.María={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
+    if(d.id==='coupleStreak')coupleStreakData={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
   });
   // Datos de tema y offset de nivel por persona
   const metaSnap=await getDocs(collection(db,'users_meta'));
@@ -1141,6 +1143,7 @@ async function finishInit(){
   if(currentUser==='Rafa'||currentUser==='María')applyPersonTheme(currentUser);
   updateStreakBadge('Rafa');
   updateStreakBadge('María');
+  updateCoupleStreakBadge();
   // Catálogo de pareja por persona + pendientes cruzados
   initPersonalRewards();
   // Lista de la compra y menú semanal
@@ -1430,6 +1433,16 @@ window.undoToggle=async(id)=>{
   await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
   await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
   await setDoc(doc(db,'state','wallet'),wallet);
+  // Revertir también la racha CONJUNTA del día, si la tarea se completó hoy
+  const totalAmountRevert=(xpToRevert.Rafa||0)+(xpToRevert.María||0);
+  if(totalAmountRevert>0){
+    const todayForCouple=new Date().toLocaleDateString('es-ES');
+    if(coupleStreakData&&coupleStreakData.lastDate===todayForCouple){
+      coupleStreakData.todayXP=Math.max(0,(coupleStreakData.todayXP||0)-totalAmountRevert);
+      await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
+      updateCoupleStreakBadge();
+    }
+  }
   histSnap.forEach(async d=>{if(d.data().taskId===id){await deleteDoc(doc(db,'history',d.id));}});
   showToast('Tarea desmarcada — XP y wallet revertidos');
 };
@@ -1510,6 +1523,16 @@ window.confirmComplete=async()=>{
     histEntry.extra=`Asignada a ${t.person}`;
   }
   await setDoc(doc(db,'history',histId),histEntry);
+  // Actualizar racha conjunta del progreso diario (sobre el XP combinado de hoy).
+  // Excluimos la tarea actual (id) del recálculo del array 'tasks' porque ese
+  // array puede no haberse actualizado todavía vía onSnapshot — sumamos su XP
+  // una sola vez de forma manual, evitando doble conteo.
+  const todayStr=new Date().toLocaleDateString('es-ES');
+  const dailyTasksNow=tasks.filter(t=>t.freq==='Diaria'&&t.id!==id);
+  const xpFromDailyNow=dailyTasksNow.filter(t=>t.done).reduce((s,t)=>s+getXP(t),0);
+  const xpFromOthersTodayNow=history.filter(h=>h.date===todayStr&&h.taskId!==id&&!dailyTasksNow.some(dt=>dt.id===h.taskId)).reduce((s,h)=>s+(h.pts||0),0);
+  const todayTotalXP=xpFromDailyNow+xpFromOthersTodayNow+earned;
+  await updateCoupleStreak(todayTotalXP);
   const toastMsg=splitMode==='shared'?`+${earned} XP repartido ✓`:splitMode==='other'?`+${earned} XP para ${other} ✓`:`+${earned} XP para ${me||whoDidIt}! ✓`;
   showToast(toastMsg);
   pendingCompleteId=null;
@@ -2499,29 +2522,51 @@ async function updateStreak(person,xpEarnedNow){
   // anterior (evaluamos si fue bueno/neutro/malo) y rellenamos huecos de días
   // totalmente inactivos antes de empezar a acumular el XP de hoy.
   if(data.lastDate&&data.lastDate!==today){
-    closeOutPastDays(data,today);
+    closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=(data.todayXP||0)+(xpEarnedNow||0);
-  applyTodayResultIfDecided(data);
   streakData[person]=data;
   await setDoc(doc(db,'state','streak_'+person),data);
   updateStreakBadge(person);
 }
 
-function closeOutPastDays(data,today){
+// ─── RACHA CONJUNTA del progreso diario (sobre el objetivo de 140 XP entre los dos) ───
+const COUPLE_STREAK_GOOD_MIN=100;
+const COUPLE_STREAK_NEUTRAL_MIN=70;
+
+async function updateCoupleStreak(xpEarnedTodayTotal){
+  const today=new Date().toLocaleDateString('es-ES');
+  const data=coupleStreakData||{count:0,lastDate:null,todayXP:0};
+  if(data.lastDate&&data.lastDate!==today){
+    closeOutPastDays(data,today,COUPLE_STREAK_GOOD_MIN,COUPLE_STREAK_NEUTRAL_MIN);
+  }
+  if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
+  data.todayXP=xpEarnedTodayTotal; // aquí pasamos el total ya calculado de hoy, no un incremento
+  coupleStreakData=data;
+  await setDoc(doc(db,'state','coupleStreak'),data);
+  updateCoupleStreakBadge();
+}
+
+function updateCoupleStreakBadge(){
+  const el=document.getElementById('couple-streak-badge');
+  const count=coupleStreakData?.count||0;
+  if(el)el.textContent=count!==0?streakEmoji(count)+' '+(count>0?count:Math.abs(count)):'';
+}
+
+function closeOutPastDays(data,today,goodMin,neutralMin){
   // Cierra el último día registrado con el resultado que tuviera, y por cada
   // día completamente saltado entre medias (sin ninguna actividad) lo cuenta
   // como "malo" (0 XP ese día).
-  finalizeDayResult(data,data.todayXP||0);
+  finalizeDayResult(data,data.todayXP||0,goodMin,neutralMin);
   let gapDays=daysBetween(data.lastDate,today)-1; // días totalmente vacíos entre el último registrado y hoy
-  while(gapDays>0){finalizeDayResult(data,0);gapDays--;}
+  while(gapDays>0){finalizeDayResult(data,0,goodMin,neutralMin);gapDays--;}
 }
 
-function finalizeDayResult(data,xpThatDay){
-  if(xpThatDay>=STREAK_GOOD_MIN){
+function finalizeDayResult(data,xpThatDay,goodMin,neutralMin){
+  if(xpThatDay>=goodMin){
     data.count=(data.count||0)>0?data.count+1:1; // si venía negativo o en 0, arranca en +1
-  }else if(xpThatDay>=STREAK_NEUTRAL_MIN){
+  }else if(xpThatDay>=neutralMin){
     data.count=0; // neutro: corta lo negativo, no construye positivo
   }else{
     data.count=(data.count||0)<0?data.count-1:-1; // si venía positivo o en 0, arranca en -1
