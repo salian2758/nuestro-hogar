@@ -461,6 +461,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           <div style="font-size:10px;color:var(--text2);">wallet</div>
         </div>
       </div>
+      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:10px;line-height:1.5;">
+        🔥 La racha cuenta días seguidos completando al menos una tarea.<br>Si un día no completas ninguna, vuelve a empezar desde 1.
+      </div>
     </div>
 
     <!-- TEMÁTICA -->
@@ -1108,13 +1111,21 @@ async function checkWeeklyXPReset(){
   const now=new Date();
   const snap=await getDocs(collection(db,'state'));
   let lastWeeklyXP=null;
-  snap.forEach(d=>{if(d.id==='lastWeeklyXPReset')lastWeeklyXP=d.data().date;});
+  let storedWeekKey=null;
+  snap.forEach(d=>{
+    if(d.id==='lastWeeklyXPReset'){lastWeeklyXP=d.data().date;storedWeekKey=d.data().weekKey;}
+  });
+  const currentWeekKey=getWeekKey(now);
   if(!lastWeeklyXP){
-    await setDoc(doc(db,'state','lastWeeklyXPReset'),{date:now.toISOString()});
+    await setDoc(doc(db,'state','lastWeeklyXPReset'),{date:now.toISOString(),weekKey:currentWeekKey});
     return;
   }
-  const monday=getMonday(new Date());monday.setHours(0,0,0,0);
-  if(new Date(lastWeeklyXP)<monday){
+  if(!storedWeekKey){
+    // Migración: documento antiguo sin weekKey — solo lo añadimos, NO declaramos ganador esta vez
+    await setDoc(doc(db,'state','lastWeeklyXPReset'),{date:now.toISOString(),weekKey:currentWeekKey});
+    return;
+  }
+  if(storedWeekKey!==currentWeekKey){
     // Declare winner
     const wr=xpWeekly.Rafa||0;const wm=xpWeekly.María||0;
     if(wr>0||wm>0){
@@ -1132,7 +1143,7 @@ async function checkWeeklyXPReset(){
     // Reset weekly XP
     xpWeekly={Rafa:0,María:0};
     await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
-    await setDoc(doc(db,'state','lastWeeklyXPReset'),{date:now.toISOString()});
+    await setDoc(doc(db,'state','lastWeeklyXPReset'),{date:now.toISOString(),weekKey:currentWeekKey});
     // Show winner banner
     showWeekWinner();
   }
@@ -1755,7 +1766,7 @@ function updateHeader(){
       }
     }
   });
-  const DAILY_XP_GOAL=95; // Objetivo de XP diario conjunto — diarias de los dos (85) + un poco más
+  const DAILY_XP_GOAL=140; // Objetivo de XP diario conjunto — las diarias solas (~85-95) no llegan al 100%, hace falta algo extra (semanal/CadaX) para completarlo
   const dailyTasks=tasks.filter(t=>t.freq==='Diaria');
   const xpFromDaily=dailyTasks.filter(t=>t.done).reduce((s,t)=>s+getXP(t),0);
   // Cuenta también XP de semanales/CadaX completadas HOY (suma puntual, no resta del pool total)
