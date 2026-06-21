@@ -3228,8 +3228,8 @@ async function resetAvatarVisual(person){
 }
 
 window.confirmResetAllXP=()=>{
-  if(!confirm('⚠️ Esto pondrá a CERO el XP total de Rafa Y María, y borrará todo el historial de tareas completadas.\n\nEsta acción NO se puede deshacer. ¿Seguro que quieres continuar?'))return;
-  if(!confirm('Última confirmación: se perderá el nivel, el XP total y el historial de los dos para siempre. ¿Confirmas el reseteo?'))return;
+  if(!confirm('⚠️ Esto pondrá a CERO el XP total de Rafa Y María, reiniciará sus rachas, y borrará todo el historial de tareas completadas.\n\nEsta acción NO se puede deshacer. ¿Seguro que quieres continuar?'))return;
+  if(!confirm('Última confirmación: se perderá el nivel, el XP total, las rachas y el historial de los dos para siempre. ¿Confirmas el reseteo?'))return;
   resetAllXP();
 };
 async function resetAllXP(){
@@ -3244,12 +3244,22 @@ async function resetAllXP(){
   userLevelOverride={Rafa:0,María:0};
   await setDoc(doc(db,'users_meta','Rafa'),{levelResetOffset:0},{merge:true});
   await setDoc(doc(db,'users_meta','María'),{levelResetOffset:0},{merge:true});
+  // Resetear también las rachas — no tiene sentido conservar una racha de
+  // constancia sobre un progreso que ya no existe tras el reseteo
+  streakData={Rafa:{count:0,lastDate:null,todayXP:0},María:{count:0,lastDate:null,todayXP:0}};
+  coupleStreakData={count:0,lastDate:null,todayXP:0};
+  await setDoc(doc(db,'state','streak_Rafa'),streakData.Rafa);
+  await setDoc(doc(db,'state','streak_María'),streakData.María);
+  await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
+  updateStreakBadge('Rafa');
+  updateStreakBadge('María');
+  updateCoupleStreakBadge();
   // Borrar historial completo de tareas completadas
   const histSnap=await getDocs(collection(db,'history'));
   const batch=writeBatch(db);
   histSnap.forEach(d=>batch.delete(doc(db,'history',d.id)));
   await batch.commit();
-  showToast('XP total e historial reseteados para los dos ✓');
+  showToast('XP total, racha e historial reseteados para los dos ✓');
   renderProfile();
   updateHeader();
 }
