@@ -1785,19 +1785,10 @@ window.handleCheck=(id)=>{
 window.toggle=async(id)=>{
   const t=tasks.find(t=>t.id===id);if(!t)return;
   if(t.done){return;}
-  const isRotativa=t.person==='Rotativa';
-  const isUnassigned=!isRotativa&&t.person!=='Rafa'&&t.person!=='María';
-  if(isUnassigned&&currentUser){
-    // Tarea sin asignar: se asigna automáticamente y de forma PERMANENTE a
-    // quien la marca, además de completarse al instante.
-    try{
-      await updateDoc(doc(db,'tasks',id),{person:currentUser});
-      t.person=currentUser; // actualizar en memoria de inmediato, sin esperar al snapshot
-    }catch(e){
-      showToast('Error al guardar — comprueba la conexión');
-      return;
-    }
-  }
+  // Las tareas sin asignar y las Rotativas se completan al 100% para quien
+  // las marca, pero SIN cambiar su campo person — la próxima vez vuelven a
+  // aparecer igual (sin asignar / rotativa), hasta que alguien las asigne
+  // manualmente desde el selector.
   pendingCompleteId=id;
   splitMode='mine';
   document.getElementById('complete-note').value='';
