@@ -1386,6 +1386,7 @@ async function finishInit(){
   checkWeeklyXPReset();
   checkDailyReset();
   checkGroupRotation();
+  checkStreakGaps();
   // (catálogo de pareja ya iniciado por initPersonalRewards arriba)
   // Real-time listeners FIRST
   unsubTasks=onSnapshot(collection(db,'tasks'),snap=>{
@@ -3387,6 +3388,35 @@ async function updateStreak(person,xpEarnedNow){
   streakData[person]=data;
   await setDoc(doc(db,'state','streak_'+person),data);
   updateStreakBadge(person);
+}
+
+// Cierra los huecos de inactividad de la racha INDIVIDUAL de cada persona,
+// sin depender de que esa persona gane XP — si no hace nada en todo un día,
+// updateStreak nunca se llama para ella, así que su racha se quedaría
+// "congelada" en el último valor bueno sin enterarse de los días vacíos.
+// Esto se ejecuta al abrir la app, evaluando a AMBAS personas (no solo quien
+// ha iniciado sesión), porque la otra persona puede no abrir la app en días.
+async function checkStreakGaps(){
+  const today=new Date().toLocaleDateString('es-ES');
+  for(const person of ['Rafa','María']){
+    const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
+    if(data.lastDate&&data.lastDate!==today){
+      closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
+      data.todayXP=0;
+      data.lastDate=today;
+      streakData[person]=data;
+      await setDoc(doc(db,'state','streak_'+person),data);
+      updateStreakBadge(person);
+    }
+  }
+  // Lo mismo para la racha CONJUNTA del progreso diario
+  if(coupleStreakData.lastDate&&coupleStreakData.lastDate!==today){
+    closeOutPastDays(coupleStreakData,today,COUPLE_STREAK_GOOD_MIN,COUPLE_STREAK_NEUTRAL_MIN);
+    coupleStreakData.todayXP=0;
+    coupleStreakData.lastDate=today;
+    await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
+    updateCoupleStreakBadge();
+  }
 }
 
 // ─── RACHA CONJUNTA del progreso diario (sobre el objetivo de 140 XP entre los dos) ───
