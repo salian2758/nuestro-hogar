@@ -437,11 +437,9 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     </div>
     <div class="filters" id="filt-sem">
       <button class="fb active" data-f="all">Todas</button>
-      <button class="fb" data-f="A">Grupo A</button>
-      <button class="fb" data-f="B">Grupo B</button>
-      <button class="fb" data-f="Cocina">Cocina</button>
-      <button class="fb" data-f="Baño">Baño</button>
-      <button class="fb" data-f="General">General</button>
+      <button class="fb" data-f="Rafa">Rafa</button>
+      <button class="fb" data-f="María">María</button>
+      <button class="fb" data-f="none">Sin asignar</button>
     </div>
     <div class="stitle" id="sem-title-weekly-none" style="display:none;">Sin asignar</div>
     <div id="list-s-weekly-none" class="drop-zone" data-drop-group="" data-drop-freq="Semanal"></div>
@@ -467,7 +465,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <button class="fb active" data-f="all">Todas</button>
       <button class="fb" data-f="Rafa">Rafa</button>
       <button class="fb" data-f="María">María</button>
-      <button class="fb" data-f="Rotativa">Rotativas</button>
+      <button class="fb" data-f="none">Sin asignar</button>
     </div>
     <div class="stitle" id="mes-title-none" style="display:none;">Mensuales — sin asignar</div>
     <div id="list-mes-none" class="drop-zone" data-drop-person="none" data-drop-freq="Mensual"></div>
@@ -2275,11 +2273,17 @@ function renderAll(){
   const weeklyB=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='Semanal'&&t.group==='B'));
   const weeklyNone=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='Semanal'&&!t.group));
 
-  const filterByZona=(list)=>fs==='all'?list:list.filter(t=>t.zona===fs);
+  // El filtro usa nombres de persona (Rafa/María/Sin asignar), que traducimos
+  // al grupo A/B real según quién lo tenga asignado ahora mismo (rotación).
+  const rafaGroup=groupRotation.assignment.Rafa; // 'A' o 'B'
+  const mariaGroup=groupRotation.assignment.María;
+  const showA=fs==='all'||(fs==='Rafa'&&rafaGroup==='A')||(fs==='María'&&mariaGroup==='A');
+  const showB=fs==='all'||(fs==='Rafa'&&rafaGroup==='B')||(fs==='María'&&mariaGroup==='B');
+  const showNone=fs==='all'||fs==='none';
 
-  const weeklyNoneFiltered=fs==='A'||fs==='B'?[]:filterByZona(weeklyNone);
-  const weeklyAFiltered=fs==='B'?[]:filterByZona(weeklyA);
-  const weeklyBFiltered=fs==='A'?[]:filterByZona(weeklyB);
+  const weeklyNoneFiltered=showNone?weeklyNone:[];
+  const weeklyAFiltered=showA?weeklyA:[];
+  const weeklyBFiltered=showB?weeklyB:[];
 
   setList('list-s-weekly-none',weeklyNoneFiltered,true);
   const titleWeeklyNone=document.getElementById('sem-title-weekly-none');
@@ -2295,14 +2299,16 @@ function renderAll(){
 
   // Cada X semanas — subdividido por persona, igual que las tareas normales
   const cadaXWeeklyAll=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='CadaX'&&t.cadaxUnit==='semanas'));
-  const cadaXAllowed=fs==='all'||fs==='Cocina'||fs==='Baño'||fs==='General'; // no tiene sentido con A/B
-  const cadaXBase=cadaXAllowed?filterByZona(cadaXWeeklyAll):[];
-  const cwNone=cadaXBase.filter(t=>t.person==='none'||!t.person);
-  const cwRafa=cadaXBase.filter(t=>t.person==='Rafa');
-  const cwMaria=cadaXBase.filter(t=>t.person==='María');
-  const cwRot=cadaXBase.filter(t=>t.person==='Rotativa');
+  const cwNoneAll=cadaXWeeklyAll.filter(t=>t.person==='none'||!t.person);
+  const cwRafaAll=cadaXWeeklyAll.filter(t=>t.person==='Rafa');
+  const cwMariaAll=cadaXWeeklyAll.filter(t=>t.person==='María');
+  const cwRotAll=cadaXWeeklyAll.filter(t=>t.person==='Rotativa');
+  const cwNone=(fs==='all'||fs==='none')?cwNoneAll:[];
+  const cwRafa=(fs==='all'||fs==='Rafa')?cwRafaAll:[];
+  const cwMaria=(fs==='all'||fs==='María')?cwMariaAll:[];
+  const cwRot=fs==='all'?cwRotAll:[];
   const cadaxHeader=document.getElementById('sem-cadax-header');
-  if(cadaxHeader)cadaxHeader.style.display=cadaXBase.length?'':'none';
+  if(cadaxHeader)cadaxHeader.style.display=(cwNone.length||cwRafa.length||cwMaria.length||cwRot.length)?'':'none';
   setList('list-s-cadax-none',cwNone,true);
   const tCwNone=document.getElementById('sem-title-cadax-none');if(tCwNone)tCwNone.style.display=cwNone.length?'':'none';
   setList('list-s-cadax-rafa',cwRafa,true);
