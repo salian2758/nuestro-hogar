@@ -13,7 +13,14 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <title>Nuestro Hogar</title>
 <style>
-:root{--c1:#FF6B6B;--c2:#FF8E53;--c4:#10B981;--c6:#F59E0B;--bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#242424;--text:#F5F5F5;--text2:#A0A0A0;--border:rgba(255,255,255,0.08);}
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&display=swap');
+:root{--c1:#FF6B6B;--c2:#FF8E53;--c4:#10B981;--c6:#F59E0B;--bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#242424;--text:#F5F5F5;--text2:#A0A0A0;--border:rgba(255,255,255,0.08);--font-display:-apple-system,BlinkMacSystemFont,sans-serif;}
+body[data-app-theme="pulido"]{
+  --c1:#E8714A;--c2:#F0A868;--c4:#5FAE8C;--c6:#F0A868;
+  --bg:#15120F;--bg2:#1E1A16;--bg3:#28221C;
+  --text:#F2EDE6;--text2:#A89A8C;--border:rgba(242,237,230,0.07);
+  --font-display:'Fraunces',Georgia,serif;
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;position:fixed;width:100%;top:0;left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 input,textarea{-webkit-user-select:text;user-select:text;}
@@ -36,13 +43,15 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 /* HEADER */
 .header{background:var(--bg2);padding:env(safe-area-inset-top,14px) 14px 10px;border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:10;}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:4px;}
-.app-title{font-size:15px;font-weight:700;color:var(--text);}
+.app-title{font-size:15px;font-weight:700;color:var(--text);font-family:var(--font-display);}
 .header-right{display:flex;align-items:center;gap:8px;}
 .week-pill{background:rgba(16,185,129,0.15);border-radius:20px;padding:3px 10px;}
 .week-pct{font-size:12px;font-weight:700;color:var(--c4);}
 .logout-btn{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;border:0.5px solid var(--border);}
 .profiles{display:flex;gap:8px;}
 .profile-chip{flex:1;background:linear-gradient(135deg,var(--bg3),var(--bg2));border-radius:14px;padding:9px 11px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:transform .15s;}
+body[data-app-theme="pulido"] .profile-chip{border-radius:18px;position:relative;overflow:hidden;border:1px solid var(--border);}
+body[data-app-theme="pulido"] .profile-chip::before{content:'';position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg,transparent,rgba(232,113,74,0.45),transparent);}
 .profile-chip:active{transform:scale(0.97);}
 .avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
 .av-r{background:rgba(59,130,246,0.25);color:#60A5FA;}
@@ -54,7 +63,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .xp-fill{height:100%;border-radius:2px;transition:width .4s;}
 .xp-fill-r{background:#3B82F6;}
 .xp-fill-m{background:#A855F7;}
-.p-xp{font-size:10px;font-weight:600;}
+.p-xp{font-size:10px;font-weight:600;font-family:var(--font-display);}
+body[data-app-theme="pulido"] .p-xp{font-size:15px;}
 .p-xp-r{color:#60A5FA;}
 .p-xp-m{color:#C084FC;}
 
@@ -73,8 +83,11 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 
 /* PROGRESS */
 .pbox{background:linear-gradient(135deg,var(--bg2),var(--bg3));border-radius:14px;border:0.5px solid var(--border);padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+body[data-app-theme="pulido"] .pbox{border-radius:20px;position:relative;overflow:hidden;}
+body[data-app-theme="pulido"] .pbox::after{content:'';position:absolute;top:-40%;right:-20%;width:160px;height:160px;background:radial-gradient(circle,rgba(232,113,74,0.06),transparent 70%);pointer-events:none;}
 .pbox-title{font-size:11px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;}
-.pbox-msg{font-size:13px;color:var(--text);margin-bottom:8px;}
+.pbox-msg{font-size:13px;color:var(--text);margin-bottom:8px;font-family:var(--font-display);}
+body[data-app-theme="pulido"] .pbox-msg{font-size:16px;font-weight:600;margin-bottom:9px;letter-spacing:-0.01em;}
 .pbar{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
 .pbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(255,107,107,.4);}
 
@@ -87,6 +100,7 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 
 /* TASK */
 .tc{background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:11px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:9px;transition:opacity .2s,transform .15s,box-shadow .15s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+body[data-app-theme="pulido"] .tc{border-radius:15px;padding:14px 15px;box-shadow:0 1px 3px rgba(0,0,0,0.25);}
 .tc:active{transform:scale(0.985);}
 .tdraghandle{color:var(--text2);font-size:16px;line-height:1;cursor:grab;touch-action:none;padding:4px 2px;flex-shrink:0;align-self:center;opacity:.5;}
 .tdraghandle:active{cursor:grabbing;opacity:1;}
@@ -152,7 +166,8 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .tag-gb{background:rgba(168,85,247,0.15);color:#C084FC;}
 .tnote{font-size:11px;color:var(--text2);margin-top:4px;font-style:italic;}
 .tright{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
-.tpts{font-size:11px;color:var(--c6);font-weight:600;}
+.tpts{font-size:11px;color:var(--c6);font-weight:600;font-family:var(--font-display);}
+body[data-app-theme="pulido"] .tpts{font-size:14px;color:var(--c2);}
 .tacts{display:flex;gap:4px;}
 .tact{background:none;border:none;cursor:pointer;color:var(--text2);padding:3px;line-height:1;}
 .tact svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
@@ -639,6 +654,11 @@ input,textarea{-webkit-user-select:text;user-select:text;}
     <div id="pending-rewards-list"><div class="empty">Nada pendiente por ahora</div></div>
 
     <!-- ROTACIÓN DE GRUPOS A/B -->
+    <!-- ESTILO VISUAL DE LA APP -->
+    <div class="stitle">Estilo visual de la app</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Puedes cambiar entre el estilo clásico y uno más pulido cuando quieras.</div>
+    <div class="filters" id="app-theme-selector" style="margin-bottom:14px;"></div>
+
     <div class="stitle mt">Rotación de grupos A/B</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Quién tiene cada grupo puede rotar solo, o quedarse fijo y cambiarlo a mano cuando quieras.</div>
     <div class="filters" id="group-rotation-mode-selector" style="margin-bottom:10px;"></div>
@@ -1320,6 +1340,7 @@ let userLevelOverride={Rafa:0,María:0}; // XP "perdido" tras resetear avatar (r
 let streakData={Rafa:{count:0,lastDate:null},María:{count:0,lastDate:null}};
 let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso diario CONJUNTO (no individual)
 let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null,intervalNum:1,intervalUnit:'semanas'}; // quién tiene el Grupo A/B actualmente, y si rota sola
+let appThemeMode={Rafa:'clasico',María:'clasico'}; // estilo visual de la app, individual por persona ('clasico' o 'pulido')
 let dailyRewardShown={date:null}; // evita repetir el mensaje de "100% conseguido" más de una vez al día
 let lastSeenLevel={Rafa:null,María:null}; // para detectar subidas de nivel y celebrarlas solo una vez
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
@@ -1377,9 +1398,13 @@ async function finishInit(){
     if(data.theme&&(d.id==='Rafa'||d.id==='María'))userTheme[d.id]=data.theme;
     if(data.levelResetOffset!==undefined&&(d.id==='Rafa'||d.id==='María'))userLevelOverride[d.id]=data.levelResetOffset;
     if(data.activeGoal&&(d.id==='Rafa'||d.id==='María'))activeGoal[d.id]=data.activeGoal;
+    if(data.appThemeMode&&(d.id==='Rafa'||d.id==='María'))appThemeMode[d.id]=data.appThemeMode;
   });
   // Aplicar la paleta de color de la temática elegida por quien ha iniciado sesión
-  if(currentUser==='Rafa'||currentUser==='María')applyPersonTheme(currentUser);
+  if(currentUser==='Rafa'||currentUser==='María'){
+    applyPersonTheme(currentUser);
+    applyAppThemeMode(appThemeMode[currentUser]||'clasico');
+  }
   updateStreakBadge('Rafa');
   updateStreakBadge('María');
   updateCoupleStreakBadge();
@@ -1635,6 +1660,28 @@ window.swapGroupsNow=async()=>{
   updateWeekIndicator();
   updateEq();
 };
+
+function applyAppThemeMode(mode){
+  appThemeMode[currentUser]=mode;
+  document.body.setAttribute('data-app-theme',mode);
+}
+
+window.setAppThemeMode=async(mode)=>{
+  if(!currentUser)return;
+  applyAppThemeMode(mode);
+  await setDoc(doc(db,'users_meta',currentUser),{appThemeMode:mode},{merge:true});
+  showToast(mode==='pulido'?'Estilo pulido activado ✓':'Estilo clásico restaurado ✓');
+  renderAppThemeSelector();
+};
+
+function renderAppThemeSelector(){
+  const el=document.getElementById('app-theme-selector');if(!el)return;
+  const current=appThemeMode[currentUser]||'clasico';
+  const modes=[['clasico','Clásico'],['pulido','Pulido ✨']];
+  el.innerHTML=modes.map(([key,label])=>`
+    <button onclick="setAppThemeMode('${key}')" class="fb${current===key?' active':''}" style="flex:1;">${label}</button>
+  `).join('');
+}
 
 function renderGroupRotationSettings(){
   const el=document.getElementById('group-rotation-mode-selector');if(!el)return;
@@ -3142,6 +3189,7 @@ function renderProfile(){
   renderPendingFor(p);
   renderTrash();
   renderGroupRotationSettings();
+  renderAppThemeSelector();
   updateEq();
 }
 
