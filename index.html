@@ -612,6 +612,7 @@ body[data-app-theme="pulido"] .tpts{font-size:14px;color:var(--c2);}
         <div style="text-align:center;">
           <div id="profile-streak" style="font-size:15px;font-weight:700;color:var(--c6);">🔥 0</div>
           <div style="font-size:10px;color:var(--text2);">racha</div>
+          <div id="profile-streak-debug" style="font-size:8px;color:var(--text2);opacity:0.6;margin-top:2px;"></div>
         </div>
         <div style="text-align:center;">
           <div id="profile-wallet" style="font-size:15px;font-weight:700;color:#34D399;">0</div>
@@ -655,8 +656,8 @@ body[data-app-theme="pulido"] .tpts{font-size:14px;color:var(--c2);}
 
     <!-- ROTACIÓN DE GRUPOS A/B -->
     <!-- ESTILO VISUAL DE LA APP -->
-    <div class="stitle">Estilo visual de la app</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Puedes cambiar entre el estilo clásico y uno más pulido cuando quieras.</div>
+    <div class="stitle" id="app-theme-title">Estilo visual de la app</div>
+    <div id="app-theme-desc" style="font-size:11px;color:var(--text2);margin-bottom:8px;">Puedes cambiar entre el estilo clásico y uno más pulido cuando quieras.</div>
     <div class="filters" id="app-theme-selector" style="margin-bottom:14px;"></div>
 
     <div class="stitle mt">Rotación de grupos A/B</div>
@@ -1676,6 +1677,19 @@ window.setAppThemeMode=async(mode)=>{
 
 function renderAppThemeSelector(){
   const el=document.getElementById('app-theme-selector');if(!el)return;
+  const title=document.getElementById('app-theme-title');
+  const desc=document.getElementById('app-theme-desc');
+  const isOwnProfile=profileViewing===currentUser;
+  if(!isOwnProfile){
+    // El estilo visual es individual: no tiene sentido cambiar el del otro
+    // desde aquí, cada uno solo puede cambiar el suyo en su propio móvil.
+    el.innerHTML='';
+    if(title)title.style.display='none';
+    if(desc)desc.style.display='none';
+    return;
+  }
+  if(title)title.style.display='';
+  if(desc)desc.style.display='';
   const current=appThemeMode[currentUser]||'clasico';
   const modes=[['clasico','Clásico'],['pulido','Pulido ✨']];
   el.innerHTML=modes.map(([key,label])=>`
@@ -3183,6 +3197,11 @@ function renderProfile(){
   const streakCount=streakData[p]?.count||0;
   document.getElementById('profile-streak').textContent=streakCount===0?'— 0':streakEmoji(streakCount)+' '+(streakCount>0?streakCount:Math.abs(streakCount));
   document.getElementById('profile-streak').style.color=streakCount<0?'#F87171':'var(--c6)';
+  const debugEl=document.getElementById('profile-streak-debug');
+  if(debugEl){
+    const sd=streakData[p]||{};
+    debugEl.textContent=`(${sd.lastDate||'?'} · ${sd.todayXP||0}XP)`;
+  }
   document.getElementById('profile-wallet').textContent=wallet[p]||0;
   renderThemeOptions(p);
   renderRewardsFor(p);
