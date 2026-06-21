@@ -113,6 +113,12 @@ input,textarea{-webkit-user-select:text;user-select:text;}
   100%{stroke-dashoffset:0;opacity:1;}
 }
 .card-bubble-pop{animation:cardBubble 1.1s cubic-bezier(.34,1.2,.64,1) forwards;position:relative;z-index:5;}
+.real-bubble{position:fixed;width:22px;height:22px;transform:translate(-50%,-50%);pointer-events:none;z-index:355;animation:realBubbleGrow .92s cubic-bezier(.22,.8,.32,1) forwards;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25));}
+@keyframes realBubbleGrow{
+  0%{width:22px;height:22px;opacity:0;}
+  10%{opacity:1;}
+  100%{width:108px;height:108px;opacity:1;}
+}
 @keyframes cardBubble{
   0%{transform:scale(1);box-shadow:none;}
   20%{transform:scale(1.04);box-shadow:0 4px 14px rgba(16,185,129,.18);}
@@ -2977,49 +2983,74 @@ window.quickComplete=async(id,checkEl)=>{
     checkEl.innerHTML=chkSVG(); // insertamos el check ya, para que se dibuje en sincronía con la burbuja
     checkEl.classList.add('filling');
   }
-  if(card){
-    await triggerBubblePop(card); // esperamos a que termine la animación completa...
+  if(checkEl){
+    await triggerBubblePop(checkEl,card); // esperamos a que termine la animación completa...
   }
   await toggle(id); // ...antes de escribir en Firestore, para que el re-render no la corte a mitad
 };
 
-function triggerBubblePop(card){
+const BUBBLE_SVG=`<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+  <defs>
+    <radialGradient id="bbBody" cx="38%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.9)"/>
+      <stop offset="18%" stop-color="rgba(200,240,230,0.45)"/>
+      <stop offset="45%" stop-color="rgba(150,220,200,0.22)"/>
+      <stop offset="75%" stop-color="rgba(100,200,180,0.12)"/>
+      <stop offset="100%" stop-color="rgba(80,180,160,0.05)"/>
+    </radialGradient>
+    <radialGradient id="bbRim" cx="50%" cy="50%" r="50%">
+      <stop offset="85%" stop-color="rgba(255,255,255,0)"/>
+      <stop offset="94%" stop-color="rgba(180,255,230,0.5)"/>
+      <stop offset="100%" stop-color="rgba(120,255,200,0.7)"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="95" fill="url(#bbBody)"/>
+  <circle cx="100" cy="100" r="95" fill="url(#bbRim)"/>
+  <ellipse cx="65" cy="55" rx="22" ry="14" fill="rgba(255,255,255,0.85)" transform="rotate(-25 65 55)"/>
+  <ellipse cx="135" cy="140" rx="10" ry="6" fill="rgba(255,255,255,0.5)" transform="rotate(20 135 140)"/>
+</svg>`;
+
+function triggerBubblePop(checkEl,card){
   return new Promise(resolve=>{
-    card.classList.add('card-bubble-pop');
-    const theme=THEMES[userTheme[currentUser]||'hogar']||THEMES.hogar;
-    const colors=[theme.c1,theme.c2,theme.c3];
-    const POP_DELAY=920; // momento del estallido, sincronizado con el ~86% de cardBubble (1.1s)
+    const rect=checkEl.getBoundingClientRect();
+    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+    // Pompa real creciendo desde el centro del check, anclada a la pantalla
+    // (no a la tarjeta) para que pueda crecer libremente por encima de todo.
+    const bubble=document.createElement('div');
+    bubble.className='real-bubble';
+    bubble.style.left=cx+'px';bubble.style.top=cy+'px';
+    bubble.innerHTML=BUBBLE_SVG;
+    document.body.appendChild(bubble);
+    if(card)card.classList.add('card-bubble-pop');
+    const POP_DELAY=920; // momento del estallido, sincronizado con el ~86% del crecimiento (1.1s)
     setTimeout(()=>{
-      const rect=card.getBoundingClientRect();
-      const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+      bubble.remove();
+      // Fragmentos de pompa (mismo SVG, en miniatura) saliendo disparados al estallar
       const burst=document.createElement('div');
       burst.style.position='fixed';burst.style.left='0';burst.style.top='0';
       burst.style.width='100%';burst.style.height='100%';burst.style.pointerEvents='none';
       burst.style.zIndex='350';
-      const N=22;
+      const N=14;
       for(let i=0;i<N;i++){
         const p=document.createElement('div');
         const angle=(Math.PI*2*i/N)+(Math.random()*0.4-0.2);
-        const dist=100+Math.random()*90;
-        const size=6+Math.random()*8;
-        const color=colors[i%colors.length];
+        const dist=90+Math.random()*80;
+        const size=14+Math.random()*14;
         p.style.position='absolute';
         p.style.left=cx+'px';p.style.top=cy+'px';
         p.style.width=size+'px';p.style.height=size+'px';
-        p.style.borderRadius='50%';
-        p.style.background=color;
-        p.style.opacity='0.95';
         p.style.transform='translate(-50%,-50%)';
         p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
         p.style.setProperty('--dy',Math.sin(angle)*dist+'px');
         p.style.animation=`particleFly .55s cubic-bezier(.25,.8,.4,1) forwards`;
+        p.innerHTML=BUBBLE_SVG;
         burst.appendChild(p);
       }
       document.body.appendChild(burst);
       setTimeout(()=>{burst.remove();},650);
     },POP_DELAY);
     setTimeout(()=>{
-      card.classList.remove('card-bubble-pop');
+      if(card)card.classList.remove('card-bubble-pop');
       resolve();
     },1100);
   });
