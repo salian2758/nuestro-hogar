@@ -462,6 +462,24 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
 <div id="sc-mes" class="screen" style="display:none;">
   <div class="content">
+    <!-- PLANES — calendario compartido del mes -->
+    <div class="stitle">Planes del mes</div>
+    <div style="background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);padding:14px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <button onclick="shiftPlanMonth(-1)" style="background:none;border:none;color:var(--text2);font-size:18px;padding:4px 8px;cursor:pointer;">‹</button>
+        <div id="plan-month-label" style="font-size:14px;font-weight:600;">—</div>
+        <button onclick="shiftPlanMonth(1)" style="background:none;border:none;color:var(--text2);font-size:18px;padding:4px 8px;cursor:pointer;">›</button>
+      </div>
+      <div id="plan-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;"></div>
+    </div>
+    <div id="plan-day-detail" style="display:none;background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);padding:14px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div id="plan-day-detail-title" style="font-size:14px;font-weight:600;">—</div>
+        <button onclick="openAddPlanModal()" style="background:var(--c1);border:none;border-radius:8px;color:white;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Plan</button>
+      </div>
+      <div id="plan-day-detail-list"></div>
+    </div>
+
     <div class="filters" id="filt-mes">
       <button class="fb active" data-f="all">Todas</button>
       <button class="fb" data-f="Rafa">Rafa</button>
@@ -892,6 +910,26 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     </div>
   </div>
 </div>
+
+<div class="modal-overlay hidden" id="plan-modal">
+  <div class="modal">
+    <div class="modal-title" id="plan-modal-title">Nuevo plan</div>
+    <div class="fg"><label class="fl">Título</label><input class="fi" id="plan-title" placeholder="Ej: Cena con tus padres"></div>
+    <div class="fg"><label class="fl">Hora (opcional)</label><input class="fi" id="plan-time" type="time"></div>
+    <div class="fg"><label class="fl">¿A quién afecta?</label>
+      <select class="fs" id="plan-person" style="width:100%;">
+        <option value="ambos">Los dos</option>
+        <option value="Rafa">Rafa</option>
+        <option value="María">María</option>
+      </select>
+    </div>
+    <div class="m-acts">
+      <button class="btn-c" onclick="closePlanModal()">Cancelar</button>
+      <button class="btn-p" id="plan-save-btn" onclick="savePlan()">+ Añadir</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- SHOPPING ITEM MODAL -->
 <div class="modal-overlay hidden" id="shopping-modal">
@@ -2736,6 +2774,7 @@ window.goTo=(name,btn)=>{
   if(btn)btn.classList.add('active');
   if(name==='hist'){renderHist();renderResumen();renderDashboard();}
   if(name==='sem'){updateWeekIndicator();}
+  if(name==='mes'){renderPlanCalendar();}
   if(name==='compra'){renderShoppingList();renderMealPlan();}
   // El botón + de crear tarea solo tiene sentido en Hoy/Semana/Mes
   const quickAddBtn=document.getElementById('quick-add-btn');
@@ -3651,6 +3690,10 @@ function updateStreakBadge(person){
 // LISTA DE LA COMPRA Y MENÚ SEMANAL — sin gamificación, no toca XP/wallet
 // ═══════════════════════════════════════════════════════════
 let shoppingItems=[];
+let plans=[]; // {id,date,title,time,person} — planes del calendario compartido
+let planMonthOffset=0; // 0=mes actual, -1=mes anterior, +1=mes siguiente
+let planSelectedDate=null; // fecha (dd/mm/yyyy) seleccionada para ver/añadir detalle
+let editingPlanId=null;
 let mealPlan={lunes:'',martes:'',miércoles:'',jueves:'',viernes:'',sábado:'',domingo:''};
 let shoppingUnsub=null;
 
@@ -3667,7 +3710,130 @@ function initShoppingAndMeal(){
       renderMealPlan();
     }
   });
+  onSnapshot(collection(db,'plans'),snap=>{
+    plans=[];
+    snap.forEach(d=>plans.push({...d.data(),id:d.id}));
+    renderPlanCalendar();
+  });
 }
+
+// ═══════════════════════════════════════════════════════════
+// PLANES — calendario compartido del mes (estilo agenda visual)
+// ═══════════════════════════════════════════════════════════
+function pad2(n){return n<10?'0'+n:''+n;}
+function dateKeyFor(y,m,d){return `${pad2(d)}/${pad2(m+1)}/${y}`;}
+
+function getPlanMonthDate(){
+  const d=new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth()+planMonthOffset);
+  return d;
+}
+
+window.shiftPlanMonth=(delta)=>{
+  planMonthOffset+=delta;
+  planSelectedDate=null;
+  document.getElementById('plan-day-detail').style.display='none';
+  renderPlanCalendar();
+};
+
+function renderPlanCalendar(){
+  const grid=document.getElementById('plan-calendar-grid');
+  const label=document.getElementById('plan-month-label');
+  if(!grid||!label)return;
+  const monthDate=getPlanMonthDate();
+  const year=monthDate.getFullYear(),month=monthDate.getMonth();
+  label.textContent=monthDate.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+
+  const firstDay=new Date(year,month,1);
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  // Lunes=0 ... Domingo=6, para que la cuadrícula empiece en lunes como el resto de la app
+  const startOffset=(firstDay.getDay()+6)%7;
+
+  const todayKey=new Date().toLocaleDateString('es-ES');
+  const planDatesWithEvents=new Set(plans.map(p=>p.date));
+
+  let html='';
+  ['L','M','X','J','V','S','D'].forEach(d=>{
+    html+=`<div style="text-align:center;font-size:9px;color:var(--text2);font-weight:600;padding:4px 0;">${d}</div>`;
+  });
+  for(let i=0;i<startOffset;i++)html+='<div></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const key=dateKeyFor(year,month,day);
+    const isToday=key===todayKey;
+    const isSelected=key===planSelectedDate;
+    const hasEvents=planDatesWithEvents.has(key);
+    html+=`<div onclick="selectPlanDay('${key}')" style="text-align:center;padding:7px 0;border-radius:9px;cursor:pointer;font-size:12px;position:relative;
+      ${isSelected?'background:var(--c1);color:white;font-weight:700;':isToday?'background:var(--bg3);color:var(--c2);font-weight:700;':'color:var(--text);'}">
+      ${day}
+      ${hasEvents?`<div style="width:4px;height:4px;border-radius:50%;background:${isSelected?'white':'var(--c1)'};margin:2px auto 0;"></div>`:''}
+    </div>`;
+  }
+  grid.innerHTML=html;
+
+  if(planSelectedDate)renderPlanDayDetail();
+}
+
+window.selectPlanDay=(dateKey)=>{
+  planSelectedDate=dateKey;
+  renderPlanCalendar();
+  renderPlanDayDetail();
+  document.getElementById('plan-day-detail').style.display='block';
+};
+
+function renderPlanDayDetail(){
+  const titleEl=document.getElementById('plan-day-detail-title');
+  const listEl=document.getElementById('plan-day-detail-list');
+  if(!titleEl||!listEl||!planSelectedDate)return;
+  const [d,m,y]=planSelectedDate.split('/').map(Number);
+  const dateObj=new Date(y,m-1,d);
+  titleEl.textContent=dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const dayPlans=plans.filter(p=>p.date===planSelectedDate).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  if(!dayPlans.length){
+    listEl.innerHTML='<div style="font-size:12px;color:var(--text2);text-align:center;padding:10px 0;">Sin planes este día</div>';
+    return;
+  }
+  const personColor=(p)=>p==='Rafa'?'#60A5FA':p==='María'?'#C084FC':'#34D399';
+  const personLabel=(p)=>p==='ambos'?'Los dos':p;
+  listEl.innerHTML=dayPlans.map(p=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid var(--border);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${personColor(p.person)};flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${escHtml(p.title)}</div>
+        <div style="font-size:11px;color:var(--text2);">${p.time?p.time+' · ':''}${personLabel(p.person)}</div>
+      </div>
+      <button onclick="deletePlan('${p.id}')" style="background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;padding:4px;">🗑</button>
+    </div>
+  `).join('');
+}
+
+window.openAddPlanModal=()=>{
+  if(!planSelectedDate){showToast('Elige primero un día del calendario');return;}
+  editingPlanId=null;
+  document.getElementById('plan-title').value='';
+  document.getElementById('plan-time').value='';
+  document.getElementById('plan-person').value='ambos';
+  document.getElementById('plan-modal-title').textContent='Nuevo plan';
+  document.getElementById('plan-save-btn').textContent='+ Añadir';
+  document.getElementById('plan-modal').classList.remove('hidden');
+};
+window.closePlanModal=()=>{document.getElementById('plan-modal').classList.add('hidden');editingPlanId=null;};
+
+window.savePlan=async()=>{
+  const title=document.getElementById('plan-title').value.trim();
+  if(!title||!planSelectedDate)return;
+  const time=document.getElementById('plan-time').value;
+  const person=document.getElementById('plan-person').value;
+  const id=editingPlanId||('p'+Date.now());
+  await setDoc(doc(db,'plans',id),{date:planSelectedDate,title,time,person,createdAt:Date.now()});
+  closePlanModal();
+  showToast('Plan guardado ✓');
+};
+
+window.deletePlan=async(id)=>{
+  await deleteDoc(doc(db,'plans',id));
+  showToast('Plan eliminado');
+};
 
 window.showCompraTab=(tab,btn)=>{
   document.querySelectorAll('#filt-sem-compra .fb').forEach(b=>{});
