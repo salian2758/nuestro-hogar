@@ -2184,6 +2184,41 @@ function scheduleNotif(){
     scheduleNotif();
   },ms);
 }
+
+// Avisos de Planes — "mejor esfuerzo": solo funcionan mientras la app está
+// abierta (o en segundo plano reciente), ya que las PWA en iOS no tienen
+// notificaciones push reales sin servidor. Se reprograman cada vez que
+// cambian los planes. Si tiene hora, avisa 1h antes; si no, avisa a las 9:00
+// de ese mismo día.
+function schedulePlanReminders(){
+  planReminderTimeouts.forEach(t=>clearTimeout(t));
+  planReminderTimeouts=[];
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const now=new Date();
+  const horizonMs=24*60*60*1000; // solo programamos avisos dentro de las próximas 24h
+  plans.forEach(p=>{
+    if(planReminderShown.has(p.id))return;
+    const [d,mo,y]=p.date.split('/').map(Number);
+    let reminderTime;
+    if(p.time){
+      const [hh,mm]=p.time.split(':').map(Number);
+      reminderTime=new Date(y,mo-1,d,hh,mm,0);
+      reminderTime.setHours(reminderTime.getHours()-1); // 1 hora antes
+    }else{
+      reminderTime=new Date(y,mo-1,d,9,0,0); // 9:00 de ese día si no tiene hora
+    }
+    const msUntil=reminderTime-now;
+    if(msUntil>0&&msUntil<=horizonMs){
+      const timeoutId=setTimeout(()=>{
+        const personTxt=p.person==='ambos'?'':` (${p.person})`;
+        new Notification('🏠 Nuestro Hogar — Plan',{body:`${p.title}${personTxt}${p.time?' · '+p.time:''}`,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">📅</text></svg>'});
+        planReminderShown.add(p.id);
+      },msUntil);
+      planReminderTimeouts.push(timeoutId);
+    }
+  });
+}
+
 // Load notif prefs
 notifEnabled=safeGetItem('notifEnabled','false')==='true';
 notifTime=safeGetItem('notifTime','20:00');
@@ -3739,6 +3774,8 @@ let planView='mes'; // 'mes' | 'semana'
 let planWeekOffset=0; // 0=semana actual, -1=semana anterior, +1=semana siguiente
 let planSelectedDate=null; // fecha (dd/mm/yyyy) seleccionada para ver/añadir detalle
 let editingPlanId=null;
+let planReminderTimeouts=[]; // timeouts activos de avisos de planes, para poder limpiarlos al reprogramar
+let planReminderShown=new Set(); // IDs de plan ya avisados en esta sesión, para no repetir el aviso
 let mealPlan={lunes:'',martes:'',miércoles:'',jueves:'',viernes:'',sábado:'',domingo:''};
 let shoppingUnsub=null;
 
@@ -3759,6 +3796,7 @@ function initShoppingAndMeal(){
     plans=[];
     snap.forEach(d=>plans.push({...d.data(),id:d.id}));
     renderPlanCalendar();
+    schedulePlanReminders();
   });
 }
 
