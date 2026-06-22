@@ -515,14 +515,19 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   <div class="content">
     <!-- DASHBOARD DE EVOLUCIÓN -->
     <div class="stitle">Evolución</div>
-    <div class="filters" id="dash-tab-selector" style="margin-bottom:12px;">
+    <div class="filters" id="dash-tab-selector" style="margin-bottom:8px;">
       <button class="fb active" onclick="setDashTab('dia',this)">Día</button>
       <button class="fb" onclick="setDashTab('semana',this)">Semana</button>
       <button class="fb" onclick="setDashTab('mes',this)">Mes</button>
     </div>
+    <div class="filters" id="dash-person-selector" style="margin-bottom:12px;">
+      <button class="fb active" onclick="setDashPerson('all',this)">Todas</button>
+      <button class="fb" onclick="setDashPerson('Rafa',this)">Rafa</button>
+      <button class="fb" onclick="setDashPerson('María',this)">María</button>
+    </div>
 
     <!-- Reparto Rafa/María del periodo -->
-    <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px 14px;margin-bottom:12px;">
+    <div id="dash-split-box" style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px 14px;margin-bottom:12px;">
       <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Reparto del periodo</div>
       <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:6px;">
         <div id="dash-split-r" style="background:#60A5FA;width:50%;transition:width .4s;"></div>
@@ -539,12 +544,12 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <div style="flex:1;background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;text-align:center;">
         <div style="font-size:10px;color:var(--text2);margin-bottom:4px;" id="dash-current-label">Hoy</div>
         <div style="font-size:22px;font-weight:700;color:var(--text);" id="dash-current-val">0</div>
-        <div style="font-size:10px;color:var(--text2);">XP conjunto</div>
+        <div style="font-size:10px;color:var(--text2);" id="dash-current-xp-label">XP conjunto</div>
       </div>
       <div style="flex:1;background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;text-align:center;">
         <div style="font-size:10px;color:var(--text2);margin-bottom:4px;" id="dash-prev-label">Ayer</div>
         <div style="font-size:22px;font-weight:700;color:var(--text2);" id="dash-prev-val">0</div>
-        <div style="font-size:10px;color:var(--text2);">XP conjunto</div>
+        <div style="font-size:10px;color:var(--text2);" id="dash-prev-xp-label">XP conjunto</div>
       </div>
       <div style="flex:0.7;background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <div style="font-size:18px;font-weight:700;" id="dash-trend-val">—</div>
@@ -2360,10 +2365,18 @@ function renderAll(){
 // con comparativa y gráfica, a partir del historial real
 // ═══════════════════════════════════════════════════════════
 let dashTab='dia';
+let dashPerson='all'; // 'all' | 'Rafa' | 'María'
 
 window.setDashTab=(tab,btn)=>{
   dashTab=tab;
   document.querySelectorAll('#dash-tab-selector .fb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderDashboard();
+};
+
+window.setDashPerson=(person,btn)=>{
+  dashPerson=person;
+  document.querySelectorAll('#dash-person-selector .fb').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   renderDashboard();
 };
@@ -2441,9 +2454,28 @@ function aggregateByMonth(monthsBack){
   return result;
 }
 
-function buildBarChartSVG(data,width){
-  // data: array de {label, Rafa, María}. Genera un SVG simple de barras agrupadas.
-  const h=140,barGap=4,groupGap=10,barW=14;
+function buildBarChartSVG(data,width,personFilter){
+  // data: array de {label, Rafa, María}. Genera un SVG simple de barras.
+  // Si personFilter es 'Rafa' o 'María', dibuja una sola barra centrada por
+  // punto en vez de las dos agrupadas.
+  const h=140;
+  if(personFilter){
+    const barW=22,gap=14;
+    const maxVal=Math.max(1,...data.map(d=>d[personFilter]));
+    const groupW=barW;
+    const totalW=Math.max(width,data.length*(groupW+gap));
+    const color=personFilter==='Rafa'?'#60A5FA':'#C084FC';
+    let bars='';
+    data.forEach((d,i)=>{
+      const x=i*(groupW+gap)+gap/2;
+      const val=d[personFilter];
+      const hh=Math.round((val/maxVal)*(h-24));
+      bars+=`<rect x="${x}" y="${h-24-hh}" width="${barW}" height="${hh}" rx="3" fill="${color}"/>`;
+      bars+=`<text x="${x+groupW/2}" y="${h-8}" font-size="9" fill="#A0A0A0" text-anchor="middle">${d.label}</text>`;
+    });
+    return `<svg width="${totalW}" height="${h}" viewBox="0 0 ${totalW} ${h}">${bars}</svg>`;
+  }
+  const barGap=4,groupGap=10,barW=14;
   const maxVal=Math.max(1,...data.map(d=>Math.max(d.Rafa,d.María)));
   const groupW=barW*2+barGap;
   const totalW=Math.max(width,data.length*(groupW+groupGap));
@@ -2497,20 +2529,30 @@ function renderDashboard(){
     prevLabel.textContent='Mes pasado';
   }
 
-  // Reparto del periodo completo mostrado (suma de todo el rango)
-  const totalR=data.reduce((s,d)=>s+d.Rafa,0);
-  const totalM=data.reduce((s,d)=>s+d.María,0);
-  const totalAll=Math.max(1,totalR+totalM);
-  const pctR=Math.round(totalR/totalAll*100);
-  const pctM=100-pctR;
-  splitR.style.width=pctR+'%';
-  splitM.style.width=pctM+'%';
-  splitRLabel.textContent=`Rafa ${pctR}%`;
-  splitMLabel.textContent=`María ${pctM}%`;
+  // Reparto del periodo completo mostrado (suma de todo el rango) — solo
+  // tiene sentido cuando se ven los datos de ambos, no al filtrar por uno
+  const splitBox=document.getElementById('dash-split-box');
+  if(dashPerson==='all'){
+    if(splitBox)splitBox.style.display='';
+    const totalR=data.reduce((s,d)=>s+d.Rafa,0);
+    const totalM=data.reduce((s,d)=>s+d.María,0);
+    const totalAll=Math.max(1,totalR+totalM);
+    const pctR=Math.round(totalR/totalAll*100);
+    const pctM=100-pctR;
+    splitR.style.width=pctR+'%';
+    splitM.style.width=pctM+'%';
+    splitRLabel.textContent=`Rafa ${pctR}%`;
+    splitMLabel.textContent=`María ${pctM}%`;
+  }else{
+    if(splitBox)splitBox.style.display='none';
+  }
 
-  // Comparativa actual vs anterior
-  const currentTotal=current.Rafa+current.María;
-  const prevTotal=prev.Rafa+prev.María;
+  // Comparativa actual vs anterior (respeta el filtro de persona)
+  const currentTotal=dashPerson==='all'?current.Rafa+current.María:current[dashPerson];
+  const prevTotal=dashPerson==='all'?prev.Rafa+prev.María:prev[dashPerson];
+  const xpLabelText=dashPerson==='all'?'XP conjunto':'XP de '+dashPerson;
+  const curXpLabel=document.getElementById('dash-current-xp-label');if(curXpLabel)curXpLabel.textContent=xpLabelText;
+  const prevXpLabel=document.getElementById('dash-prev-xp-label');if(prevXpLabel)prevXpLabel.textContent=xpLabelText;
   currentVal.textContent=currentTotal;
   prevVal.textContent=prevTotal;
   if(prevTotal===0&&currentTotal===0){
@@ -2527,7 +2569,7 @@ function renderDashboard(){
 
   // Gráfica
   chartTitle.textContent=periodLabel;
-  chartContainer.innerHTML=buildBarChartSVG(data,320);
+  chartContainer.innerHTML=buildBarChartSVG(data,320,dashPerson==='all'?null:dashPerson);
 }
 
 function renderHist(){
