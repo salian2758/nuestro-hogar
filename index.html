@@ -463,14 +463,26 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 <div id="sc-mes" class="screen" style="display:none;">
   <div class="content">
     <!-- PLANES — calendario compartido del mes -->
-    <div class="stitle">Planes del mes</div>
-    <div style="background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);padding:14px;margin-bottom:18px;">
+    <div class="stitle">Planes</div>
+    <div class="filters" id="plan-view-selector" style="margin-bottom:10px;">
+      <button class="fb active" onclick="setPlanView('mes',this)">Vista mes</button>
+      <button class="fb" onclick="setPlanView('semana',this)">Vista semana</button>
+    </div>
+    <div id="plan-view-mes" style="background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);padding:14px;margin-bottom:18px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <button onclick="shiftPlanMonth(-1)" style="background:none;border:none;color:var(--text2);font-size:18px;padding:4px 8px;cursor:pointer;">‹</button>
         <div id="plan-month-label" style="font-size:14px;font-weight:600;">—</div>
         <button onclick="shiftPlanMonth(1)" style="background:none;border:none;color:var(--text2);font-size:18px;padding:4px 8px;cursor:pointer;">›</button>
       </div>
       <div id="plan-calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;"></div>
+    </div>
+    <div id="plan-view-semana" style="display:none;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <button onclick="shiftPlanWeek(-1)" style="background:none;border:none;color:var(--text2);font-size:18px;padding:4px 8px;cursor:pointer;">‹</button>
+        <div id="plan-week-label" style="font-size:13px;font-weight:600;color:var(--text2);">—</div>
+        <button onclick="shiftPlanWeek(1)" style="background:none;border:none;color:var(--text2);font-size:18px;padding:4px 8px;cursor:pointer;">›</button>
+      </div>
+      <div id="plan-week-list"></div>
     </div>
     <div id="plan-day-detail" style="display:none;background:var(--bg2);border-radius:14px;border:0.5px solid var(--border);padding:14px;margin-bottom:18px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -585,9 +597,9 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       </div>
     </div>
 
-    <div class="stitle">Esta semana</div>
+    <div class="stitle" id="resumen-section-title">Esta semana</div>
     <div class="resumen-card" id="resumen-card">
-      <div class="resumen-title">📊 Resumen semanal</div>
+      <div class="resumen-title" id="resumen-title">📊 Resumen semanal</div>
       <div id="resumen-stats"></div>
     </div>
     <div class="stitle">Historial</div>
@@ -2410,6 +2422,7 @@ window.setDashTab=(tab,btn)=>{
   document.querySelectorAll('#dash-tab-selector .fb').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   renderDashboard();
+  renderResumen();
 };
 
 window.setDashPerson=(person,btn)=>{
@@ -2652,19 +2665,49 @@ window.deleteHistoryEntry=async(histId)=>{
 
 function renderResumen(){
   const el=document.getElementById('resumen-stats');if(!el)return;
-  const total=history.length;
-  const xpR=history.filter(h=>h.person==='Rafa').reduce((s,h)=>s+h.pts,0);
-  const xpM=history.filter(h=>h.person==='María').reduce((s,h)=>s+h.pts,0);
-  const allWeek=tasks.filter(t=>t.freq==='Diaria'||t.freq==='Semanal');
-  const doneWeek=allWeek.filter(t=>t.done).length;
-  const pct=allWeek.length?Math.round(doneWeek/allWeek.length*100):0;
+  const today=new Date();
+  let rangeStart,rangeEnd,sectionTitle,resumenTitle,allTasksInRange,progressLabel;
+
+  if(dashTab==='dia'){
+    rangeStart=new Date(today);rangeStart.setHours(0,0,0,0);
+    rangeEnd=new Date(today);rangeEnd.setHours(23,59,59,999);
+    sectionTitle='Hoy';resumenTitle='📊 Resumen del día';progressLabel='Progreso del día';
+    allTasksInRange=tasks.filter(t=>t.freq==='Diaria');
+  }else if(dashTab==='mes'){
+    rangeStart=new Date(today.getFullYear(),today.getMonth(),1);
+    rangeEnd=new Date(today.getFullYear(),today.getMonth()+1,0,23,59,59,999);
+    sectionTitle='Este mes';resumenTitle='📊 Resumen del mes';progressLabel='Progreso mensual';
+    allTasksInRange=tasks.filter(t=>t.freq==='Mensual');
+  }else{
+    // Semana ISO actual (lunes a domingo), igual que el resto de la app
+    const dayNum=(today.getDay()+6)%7;
+    rangeStart=new Date(today);rangeStart.setDate(today.getDate()-dayNum);rangeStart.setHours(0,0,0,0);
+    rangeEnd=new Date(rangeStart);rangeEnd.setDate(rangeStart.getDate()+6);rangeEnd.setHours(23,59,59,999);
+    sectionTitle='Esta semana';resumenTitle='📊 Resumen semanal';progressLabel='Progreso semanal';
+    allTasksInRange=tasks.filter(t=>t.freq==='Diaria'||t.freq==='Semanal');
+  }
+
+  const historyInRange=history.filter(h=>{
+    const hd=histDateToDate(h.date);
+    return hd>=rangeStart&&hd<=rangeEnd;
+  });
+
+  const total=historyInRange.length;
+  const xpR=historyInRange.reduce((s,h)=>s+xpForPersonInEntry(h,'Rafa'),0);
+  const xpM=historyInRange.reduce((s,h)=>s+xpForPersonInEntry(h,'María'),0);
+  const doneInRange=allTasksInRange.filter(t=>t.done).length;
+  const pct=allTasksInRange.length?Math.round(doneInRange/allTasksInRange.length*100):0;
   const diff=Math.abs(xpR-xpM);
   const balance=diff===0?'✅ Perfectamente equilibrado':diff<30?`⚖️ Diferencia de ${diff} XP`:`⚠️ Diferencia de ${diff} XP`;
+
+  const sectionTitleEl=document.getElementById('resumen-section-title');if(sectionTitleEl)sectionTitleEl.textContent=sectionTitle;
+  const resumenTitleEl=document.getElementById('resumen-title');if(resumenTitleEl)resumenTitleEl.textContent=resumenTitle;
+
   el.innerHTML=`
     <div class="resumen-stat"><span class="resumen-label">Tareas completadas</span><span class="resumen-val">${total}</span></div>
     <div class="resumen-stat"><span class="resumen-label">XP de Rafa</span><span class="resumen-val p-xp-r">${xpR} XP</span></div>
     <div class="resumen-stat"><span class="resumen-label">XP de María</span><span class="resumen-val p-xp-m">${xpM} XP</span></div>
-    <div class="resumen-stat"><span class="resumen-label">Progreso semanal</span><span class="resumen-val">${pct}%</span></div>
+    <div class="resumen-stat"><span class="resumen-label">${progressLabel}</span><span class="resumen-val">${pct}%</span></div>
     <div class="resumen-stat"><span class="resumen-label">Equilibrio</span><span class="resumen-val" style="font-size:11px;">${balance}</span></div>
   `;
 }
@@ -3692,6 +3735,8 @@ function updateStreakBadge(person){
 let shoppingItems=[];
 let plans=[]; // {id,date,title,time,person} — planes del calendario compartido
 let planMonthOffset=0; // 0=mes actual, -1=mes anterior, +1=mes siguiente
+let planView='mes'; // 'mes' | 'semana'
+let planWeekOffset=0; // 0=semana actual, -1=semana anterior, +1=semana siguiente
 let planSelectedDate=null; // fecha (dd/mm/yyyy) seleccionada para ver/añadir detalle
 let editingPlanId=null;
 let mealPlan={lunes:'',martes:'',miércoles:'',jueves:'',viernes:'',sábado:'',domingo:''};
@@ -3737,6 +3782,63 @@ window.shiftPlanMonth=(delta)=>{
   renderPlanCalendar();
 };
 
+window.setPlanView=(view,btn)=>{
+  planView=view;
+  document.querySelectorAll('#plan-view-selector .fb').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('plan-view-mes').style.display=view==='mes'?'':'none';
+  document.getElementById('plan-view-semana').style.display=view==='semana'?'':'none';
+  if(view==='semana')renderPlanWeekView();
+};
+
+window.shiftPlanWeek=(delta)=>{
+  planWeekOffset+=delta;
+  planSelectedDate=null;
+  document.getElementById('plan-day-detail').style.display='none';
+  renderPlanWeekView();
+};
+
+function renderPlanWeekView(){
+  const listEl=document.getElementById('plan-week-list');
+  const labelEl=document.getElementById('plan-week-label');
+  if(!listEl)return;
+  const today=new Date();
+  const dayNum=(today.getDay()+6)%7; // lunes=0
+  const monday=new Date(today);
+  monday.setDate(today.getDate()-dayNum+(planWeekOffset*7));
+  monday.setHours(0,0,0,0);
+
+  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
+  if(labelEl){
+    const fmt=(d)=>d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    labelEl.textContent=`${fmt(monday)} – ${fmt(sunday)}`;
+  }
+
+  const todayKey=today.toLocaleDateString('es-ES');
+  const dayNames=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const personColor=(p)=>p==='Rafa'?'#60A5FA':p==='María'?'#C084FC':'#34D399';
+  const personLabel=(p)=>p==='ambos'?'Los dos':p;
+
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(monday);d.setDate(monday.getDate()+i);
+    const key=d.toLocaleDateString('es-ES');
+    const isToday=key===todayKey;
+    const dayPlans=plans.filter(p=>p.date===key).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+    html+=`<div onclick="selectPlanDay('${key}')" style="background:var(--bg2);border-radius:10px;border:0.5px solid ${isToday?'var(--c1)':'var(--border)'};padding:12px 14px;margin-bottom:8px;cursor:pointer;">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">${dayNames[i]} ${d.getDate()}${isToday?' · hoy':''}</div>
+      ${dayPlans.length?dayPlans.map(p=>`
+        <div style="display:flex;align-items:center;gap:7px;padding:3px 0;">
+          <div style="width:6px;height:6px;border-radius:50%;background:${personColor(p.person)};flex-shrink:0;"></div>
+          <div style="font-size:12.5px;flex:1;">${escHtml(p.title)}</div>
+          <div style="font-size:10.5px;color:var(--text2);">${p.time||''}</div>
+        </div>
+      `).join(''):'<div style="font-size:12px;color:var(--text2);opacity:0.6;">Sin planes</div>'}
+    </div>`;
+  }
+  listEl.innerHTML=html;
+}
+
 function renderPlanCalendar(){
   const grid=document.getElementById('plan-calendar-grid');
   const label=document.getElementById('plan-month-label');
@@ -3777,6 +3879,7 @@ function renderPlanCalendar(){
 window.selectPlanDay=(dateKey)=>{
   planSelectedDate=dateKey;
   renderPlanCalendar();
+  if(planView==='semana')renderPlanWeekView();
   renderPlanDayDetail();
   document.getElementById('plan-day-detail').style.display='block';
 };
