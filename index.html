@@ -3796,6 +3796,7 @@ function initShoppingAndMeal(){
     plans=[];
     snap.forEach(d=>plans.push({...d.data(),id:d.id}));
     renderPlanCalendar();
+    if(planView==='semana')renderPlanWeekView();
     schedulePlanReminders();
   });
 }
@@ -3863,8 +3864,12 @@ function renderPlanWeekView(){
     const key=d.toLocaleDateString('es-ES');
     const isToday=key===todayKey;
     const dayPlans=plans.filter(p=>p.date===key).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
-    html+=`<div onclick="selectPlanDay('${key}')" style="background:var(--bg2);border-radius:10px;border:0.5px solid ${isToday?'var(--c1)':'var(--border)'};padding:12px 14px;margin-bottom:8px;cursor:pointer;">
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">${dayNames[i]} ${d.getDate()}${isToday?' · hoy':''}</div>
+    html+=`<div style="background:var(--bg2);border-radius:10px;border:0.5px solid ${isToday?'var(--c1)':'var(--border)'};padding:12px 14px;margin-bottom:8px;">
+      <div onclick="selectPlanDay('${key}')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:6px;">
+        <div style="font-size:11px;color:var(--text2);">${dayNames[i]} ${d.getDate()}${isToday?' · hoy':''}</div>
+        <button onclick="event.stopPropagation();quickAddPlan('${key}')" style="background:none;border:none;color:var(--c1);font-size:16px;font-weight:700;padding:0 4px;cursor:pointer;line-height:1;">+</button>
+      </div>
+      <div onclick="selectPlanDay('${key}')" style="cursor:pointer;">
       ${dayPlans.length?dayPlans.map(p=>`
         <div style="display:flex;align-items:center;gap:7px;padding:3px 0;">
           <div style="width:6px;height:6px;border-radius:50%;background:${personColor(p.person)};flex-shrink:0;"></div>
@@ -3872,6 +3877,7 @@ function renderPlanWeekView(){
           <div style="font-size:10.5px;color:var(--text2);">${p.time||''}</div>
         </div>
       `).join(''):'<div style="font-size:12px;color:var(--text2);opacity:0.6;">Sin planes</div>'}
+      </div>
     </div>`;
   }
   listEl.innerHTML=html;
@@ -3947,6 +3953,11 @@ function renderPlanDayDetail(){
     </div>
   `).join('');
 }
+
+window.quickAddPlan=(dateKey)=>{
+  planSelectedDate=dateKey; // se fija en segundo plano, sin abrir el panel de detalle de abajo
+  openAddPlanModal();
+};
 
 window.openAddPlanModal=()=>{
   if(!planSelectedDate){showToast('Elige primero un día del calendario');return;}
