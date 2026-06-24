@@ -1181,14 +1181,32 @@ const DAILY_GOAL_REWARDS=[
   'Desayuno especial mañana, algo que no soláis hacer entre semana 🥐',
 ];
 
+const DAILY_100_XP_REWARD=10; // XP extra a cada uno al completar el 100% del objetivo diario conjunto
+
 function maybeShowDailyGoalReward(pct){
   if(pct<100)return; // solo al alcanzar el 100%, no antes
   const today=new Date().toLocaleDateString('es-ES');
   if(dailyRewardShown.date===today)return; // ya se mostró hoy, no repetir
   dailyRewardShown.date=today;
   setDoc(doc(db,'state','dailyRewardShown'),dailyRewardShown); // persistir sin esperar, no bloquea la UI
+  // +10 XP a cada uno, además del capricho — no esperamos esta promesa para
+  // no retrasar el banner, que es lo que se ve al instante
+  giveDaily100XpReward();
   const msg=DAILY_GOAL_REWARDS[Math.floor(Math.random()*DAILY_GOAL_REWARDS.length)];
   showDailyGoalRewardBanner(msg);
+}
+
+async function giveDaily100XpReward(){
+  for(const person of ['Rafa','María']){
+    xpState[person]=(xpState[person]||0)+DAILY_100_XP_REWARD;
+    xpWeekly[person]=(xpWeekly[person]||0)+DAILY_100_XP_REWARD;
+    xpMonthly[person]=(xpMonthly[person]||0)+DAILY_100_XP_REWARD;
+    wallet[person]=(wallet[person]||0)+DAILY_100_XP_REWARD;
+  }
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
 }
 
 function showDailyGoalRewardBanner(msg){
@@ -3653,13 +3671,34 @@ async function updateStreak(person,xpEarnedNow){
   // anterior (evaluamos si fue bueno/neutro/malo) y rellenamos huecos de días
   // totalmente inactivos antes de empezar a acumular el XP de hoy.
   if(data.lastDate&&data.lastDate!==today){
-    closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
+    const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
+    await applyStreakXpReward(person,res);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=(data.todayXP||0)+(xpEarnedNow||0);
   streakData[person]=data;
   await setDoc(doc(db,'state','streak_'+person),data);
   updateStreakBadge(person);
+}
+
+const STREAK_XP_REWARD=5; // XP de premio/castigo por mantener (o romper) la racha, a partir del 2º día consecutivo
+
+// Aplica el pequeño premio (+5 XP) o castigo (-5 XP) por mantener la racha
+// INDIVIDUAL de una persona, solo a partir del segundo día consecutivo en la
+// misma dirección. Afecta a su XP total, semanal, mensual y wallet por igual,
+// ya que es XP real ganado (o perdido) por constancia, no un bono aparte.
+async function applyStreakXpReward(person,streakResult){
+  if(!streakResult||!streakResult.isContinuation)return;
+  const amount=streakResult.result==='good'?STREAK_XP_REWARD:-STREAK_XP_REWARD;
+  xpState[person]=Math.max(0,(xpState[person]||0)+amount);
+  xpWeekly[person]=Math.max(0,(xpWeekly[person]||0)+amount);
+  xpMonthly[person]=Math.max(0,(xpMonthly[person]||0)+amount);
+  wallet[person]=Math.max(0,(wallet[person]||0)+amount);
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
+  if(amount>0)showToast(`🔥 +${amount} XP por mantener la racha, ${person}`);
 }
 
 // Cierra los huecos de inactividad de la racha INDIVIDUAL de cada persona,
@@ -3673,21 +3712,23 @@ async function checkStreakGaps(){
   for(const person of ['Rafa','María']){
     const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
     if(data.lastDate&&data.lastDate!==today){
-      closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
+      const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
       data.todayXP=0;
       data.lastDate=today;
       streakData[person]=data;
       await setDoc(doc(db,'state','streak_'+person),data);
       updateStreakBadge(person);
+      await applyStreakXpReward(person,res);
     }
   }
   // Lo mismo para la racha CONJUNTA del progreso diario
   if(coupleStreakData.lastDate&&coupleStreakData.lastDate!==today){
-    closeOutPastDays(coupleStreakData,today,COUPLE_STREAK_GOOD_MIN,COUPLE_STREAK_NEUTRAL_MIN);
+    const res=closeOutPastDays(coupleStreakData,today,COUPLE_STREAK_GOOD_MIN,COUPLE_STREAK_NEUTRAL_MIN);
     coupleStreakData.todayXP=0;
     coupleStreakData.lastDate=today;
     await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
     updateCoupleStreakBadge();
+    await applyCoupleStreakXpReward(res);
   }
 }
 
@@ -3714,23 +3755,56 @@ function updateCoupleStreakBadge(){
   if(el)el.textContent=count!==0?streakEmoji(count)+' '+(count>0?count:Math.abs(count)):'';
 }
 
+// Aplica el premio (+5 XP a cada uno) o castigo (-5 XP a cada uno) por
+// mantener la racha CONJUNTA del progreso diario, a partir del segundo día
+// consecutivo. Se suma al premio del 100% si ese mismo día también se llegó
+// ahí — son conceptos relacionados pero distintos (100 XP mínimo vs 140 XP del 100%).
+async function applyCoupleStreakXpReward(streakResult){
+  if(!streakResult||!streakResult.isContinuation)return;
+  const amount=streakResult.result==='good'?STREAK_XP_REWARD:-STREAK_XP_REWARD;
+  for(const person of ['Rafa','María']){
+    xpState[person]=Math.max(0,(xpState[person]||0)+amount);
+    xpWeekly[person]=Math.max(0,(xpWeekly[person]||0)+amount);
+    xpMonthly[person]=Math.max(0,(xpMonthly[person]||0)+amount);
+    wallet[person]=Math.max(0,(wallet[person]||0)+amount);
+  }
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
+  if(amount>0)showToast(`🔥 +${amount} XP para cada uno por mantener la racha conjunta`);
+}
+
 function closeOutPastDays(data,today,goodMin,neutralMin){
   // Cierra el último día registrado con el resultado que tuviera, y por cada
   // día completamente saltado entre medias (sin ninguna actividad) lo cuenta
-  // como "malo" (0 XP ese día).
-  finalizeDayResult(data,data.todayXP||0,goodMin,neutralMin);
+  // como "malo" (0 XP ese día). Devuelve el resultado del ÚLTIMO día cerrado
+  // (el real, no los huecos vacíos intermedios), que es el que importa para
+  // decidir el reparto de XP por racha.
+  const lastResult=finalizeDayResult(data,data.todayXP||0,goodMin,neutralMin);
   let gapDays=daysBetween(data.lastDate,today)-1; // días totalmente vacíos entre el último registrado y hoy
   while(gapDays>0){finalizeDayResult(data,0,goodMin,neutralMin);gapDays--;}
+  return lastResult;
 }
 
 function finalizeDayResult(data,xpThatDay,goodMin,neutralMin){
+  const prevCount=data.count||0;
+  let result; // 'good' | 'neutral' | 'bad'
   if(xpThatDay>=goodMin){
-    data.count=(data.count||0)>0?data.count+1:1; // si venía negativo o en 0, arranca en +1
+    data.count=prevCount>0?prevCount+1:1; // si venía negativo o en 0, arranca en +1
+    result='good';
   }else if(xpThatDay>=neutralMin){
     data.count=0; // neutro: corta lo negativo, no construye positivo
+    result='neutral';
   }else{
-    data.count=(data.count||0)<0?data.count-1:-1; // si venía positivo o en 0, arranca en -1
+    data.count=prevCount<0?prevCount-1:-1; // si venía positivo o en 0, arranca en -1
+    result='bad';
   }
+  // "Continuación de racha" = ya había una racha en la misma dirección antes
+  // de este día (no es el primer día que arranca de cero) — el premio/castigo
+  // de XP por racha solo aplica a partir del segundo día consecutivo.
+  const isContinuation=(result==='good'&&prevCount>0)||(result==='bad'&&prevCount<0);
+  return {result,isContinuation};
 }
 
 function applyTodayResultIfDecided(data){
