@@ -421,6 +421,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div id="list-d-cadax-maria"></div>
     <div class="stitle mt" id="daily-title-cadax-rot" style="display:none;">Rotativas</div>
     <div id="list-d-cadax-rot"></div>
+    <div class="stitle mt" id="daily-title-done" style="display:none;">✓ Completadas</div>
+    <div id="list-d-done"></div>
   </div>
 </div>
 
@@ -457,6 +459,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div id="list-s-cadax-maria"></div>
     <div class="stitle mt" id="sem-title-cadax-rot" style="display:none;">Rotativas</div>
     <div id="list-s-cadax-rot"></div>
+    <div class="stitle mt" id="sem-title-done" style="display:none;">✓ Completadas</div>
+    <div id="list-s-done"></div>
   </div>
 </div>
 
@@ -515,6 +519,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div id="list-mes-cadax-maria"></div>
     <div class="stitle mt" id="mes-title-cadax-rot" style="display:none;">Rotativas</div>
     <div id="list-mes-cadax-rot"></div>
+    <div class="stitle mt" id="mes-title-done" style="display:none;">✓ Completadas</div>
+    <div id="list-mes-done"></div>
   </div>
 </div>
 
@@ -2279,15 +2285,20 @@ function renderTask(t){
 
 function setList(id,arr,hideWhenEmpty){
   const el=document.getElementById(id);if(!el)return;
-  if(!arr.length){el.innerHTML=hideWhenEmpty?'':'<div class="empty">Sin tareas</div>';return;}
   const pending=arr.filter(t=>!t.done);
+  if(!pending.length){el.innerHTML=hideWhenEmpty?'':'<div class="empty">Sin tareas</div>';return;}
+  el.innerHTML=pending.map(renderTask).join('');
+}
+
+// Renderiza UNA sección única con todas las completadas de una pantalla
+// entera (Hoy/Semana/Mes), sin importar de qué grupo/persona vinieran — para
+// que las pendientes de cada grupo se vean limpias arriba, y lo ya hecho no
+// estorbe mezclado dentro de cada bloque.
+function setCompletedSection(id,arr){
+  const el=document.getElementById(id);if(!el)return;
   const done=arr.filter(t=>t.done);
-  let html=pending.map(renderTask).join('');
-  if(done.length){
-    html+=`<div style="font-size:10px;color:var(--text2);margin:10px 0 6px;text-transform:uppercase;letter-spacing:.06em;">✓ Completadas hoy</div>`;
-    html+=done.map(renderTask).join('');
-  }
-  el.innerHTML=html;
+  if(!done.length){el.innerHTML='';return;}
+  el.innerHTML=done.map(renderTask).join('');
 }
 
 function filterArr(arr,f){
@@ -2364,6 +2375,19 @@ function renderAll(){
   setList('list-d-cadax-rot',cdRot,true);
   const tCdRot=document.getElementById('daily-title-cadax-rot');if(tCdRot)tCdRot.style.display=cdRot.length?'':'none';
 
+  // Completadas de Hoy — todas juntas al final, sin importar de qué grupo
+  // vinieran, para que las pendientes de cada sección queden limpias arriba
+  const hoyAllShown=[
+    ...(fh==='all'||fh==='Rafa'?dr:[]),
+    ...(fh==='all'||fh==='María'?dm:[]),
+    ...(fh==='all'?drot:[]),
+    ...(fh==='all'||fh==='none'?dnone:[]),
+    ...cdNone,...cdRafa,...cdMaria,...cdRot,
+  ];
+  setCompletedSection('list-d-done',hoyAllShown);
+  const doneTitleHoy=document.getElementById('daily-title-done');
+  if(doneTitleHoy)doneTitleHoy.style.display=hoyAllShown.some(t=>t.done)?'':'none';
+
   const rdEl=document.getElementById('rxp-d');if(rdEl)rdEl.textContent=dr.reduce((s,t)=>s+getXP(t),0)+' XP/día';
   const mdEl=document.getElementById('mxp-d');if(mdEl)mdEl.textContent=dm.reduce((s,t)=>s+getXP(t),0)+' XP/día';
   const rotEl=document.getElementById('rxp-rot');if(rotEl)rotEl.textContent=drot.reduce((s,t)=>s+getXP(t),0)+' XP/día';
@@ -2418,6 +2442,15 @@ function renderAll(){
   setList('list-s-cadax-rot',cwRot,true);
   const tCwRot=document.getElementById('sem-title-cadax-rot');if(tCwRot)tCwRot.style.display=cwRot.length?'':'none';
 
+  // Completadas de Semana — todas juntas al final
+  const semAllShown=[
+    ...weeklyNoneFiltered,...weeklyAFiltered,...weeklyBFiltered,
+    ...cwNone,...cwRafa,...cwMaria,...cwRot,
+  ];
+  setCompletedSection('list-s-done',semAllShown);
+  const doneTitleSem=document.getElementById('sem-title-done');
+  if(doneTitleSem)doneTitleSem.style.display=semAllShown.some(t=>t.done)?'':'none';
+
   const fm=activeFilter.mes;
   const mensualNone=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='Mensual'&&(t.person==='none'||!t.person)));
   const mensualRafa=deduplicateTasks(allTasksDeduped.filter(t=>t.freq==='Mensual'&&t.person==='Rafa'));
@@ -2456,6 +2489,15 @@ function renderAll(){
   const tCmMaria=document.getElementById('mes-title-cadax-maria');if(tCmMaria)tCmMaria.style.display=cmMaria.length?'':'none';
   setList('list-mes-cadax-rot',cmRot,true);
   const tCmRot=document.getElementById('mes-title-cadax-rot');if(tCmRot)tCmRot.style.display=cmRot.length?'':'none';
+
+  // Completadas de Mes — todas juntas al final
+  const mesAllShown=[
+    ...mNoneF,...mRafaF,...mMariaF,...mRotF,
+    ...cmNone,...cmRafa,...cmMaria,...cmRot,
+  ];
+  setCompletedSection('list-mes-done',mesAllShown);
+  const doneTitleMes=document.getElementById('mes-title-done');
+  if(doneTitleMes)doneTitleMes.style.display=mesAllShown.some(t=>t.done)?'':'none';
 
   updateHeader();
   updateEq();
