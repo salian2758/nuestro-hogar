@@ -564,7 +564,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
     <!-- Reparto Rafa/María del periodo -->
     <div id="dash-split-box" style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px 14px;margin-bottom:12px;">
-      <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Reparto del periodo</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px;" id="dash-split-title">Reparto del periodo</div>
       <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:6px;">
         <div id="dash-split-r" style="background:#60A5FA;width:50%;transition:width .4s;"></div>
         <div id="dash-split-m" style="background:#C084FC;width:50%;transition:width .4s;"></div>
@@ -2762,13 +2762,16 @@ function renderDashboard(){
     prevLabel.textContent='Mes pasado';
   }
 
-  // Reparto del periodo completo mostrado (suma de todo el rango) — solo
-  // tiene sentido cuando se ven los datos de ambos, no al filtrar por uno
+  // Reparto del PERIODO ACTUAL seleccionado (hoy / esta semana / este mes,
+  // según la pestaña activa) — no de todo el rango histórico que se usa para
+  // dibujar la gráfica de evolución, que es un dato distinto.
   const splitBox=document.getElementById('dash-split-box');
+  const splitTitle=document.getElementById('dash-split-title');
+  if(splitTitle)splitTitle.textContent=`Reparto de ${currentLabel.textContent.toLowerCase()}`;
   if(dashPerson==='all'){
     if(splitBox)splitBox.style.display='';
-    const totalR=data.reduce((s,d)=>s+d.Rafa,0);
-    const totalM=data.reduce((s,d)=>s+d.María,0);
+    const totalR=current.Rafa;
+    const totalM=current.María;
     const totalAll=Math.max(1,totalR+totalM);
     const pctR=Math.round(totalR/totalAll*100);
     const pctM=100-pctR;
