@@ -1913,22 +1913,31 @@ window.undoToggle=async(id)=>{
     return;
   }
   await updateDoc(doc(db,'tasks',id),{done:false,completedNote:'',completedBy:''});
-  // Buscar la entrada real del historial para saber EXACTAMENTE cómo se repartió
-  // el XP (Solo yo / Compartido / Solo el otro) y revertir a cada persona lo
-  // que de verdad recibió — no asumir que todo fue a una sola persona.
+  // Buscar la entrada MÁS RECIENTE del historial para esta tarea, para saber
+  // EXACTAMENTE cómo se repartió el XP esta vez (Solo yo / Compartido / Solo
+  // el otro). Es importante quedarse solo con la más reciente: si la tarea es
+  // recurrente (Diaria/Semanal/etc.), puede tener completaciones antiguas en
+  // el historial con repartos distintos, y sumarlas todas mezclaría XP de
+  // ciclos pasados con el de ahora — exactamente el bug que revertía XP de la
+  // otra persona por algo que ganó en una ocasión anterior, no en esta.
   const histSnap=await getDocs(collection(db,'history'));
-  let xpToRevert={Rafa:0,María:0};
-  let foundEntry=false;
+  let latestEntry=null;
+  let latestDoc=null;
   histSnap.forEach(d=>{
     if(d.data().taskId===id){
-      foundEntry=true;
       const entry=d.data();
-      if(entry.xpFor){
-        xpToRevert.Rafa+=entry.xpFor.Rafa||0;
-        xpToRevert.María+=entry.xpFor.María||0;
+      if(!latestEntry||(entry.ts||0)>(latestEntry.ts||0)){
+        latestEntry=entry;
+        latestDoc=d;
       }
     }
   });
+  let xpToRevert={Rafa:0,María:0};
+  const foundEntry=!!latestEntry;
+  if(latestEntry&&latestEntry.xpFor){
+    xpToRevert.Rafa=latestEntry.xpFor.Rafa||0;
+    xpToRevert.María=latestEntry.xpFor.María||0;
+  }
   // Fallback para tareas completadas ANTES de que existiera el reparto/wallet
   // (entradas antiguas de historial sin el campo xpFor)
   if(foundEntry&&xpToRevert.Rafa===0&&xpToRevert.María===0){
@@ -1970,7 +1979,10 @@ window.undoToggle=async(id)=>{
       updateCoupleStreakBadge();
     }
   }
-  histSnap.forEach(async d=>{if(d.data().taskId===id){await deleteDoc(doc(db,'history',d.id));}});
+  // Borramos SOLO la entrada de historial de esta completación concreta
+  // (la más reciente que ya identificamos arriba), no todo el historial
+  // pasado de esta tarea si es recurrente.
+  if(latestDoc)await deleteDoc(doc(db,'history',latestDoc.id));
   showToast('Tarea desmarcada — XP y wallet revertidos');
 };
 let splitMode='mine'; // 'mine' | 'shared' | 'other'
