@@ -701,6 +701,14 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Premios que tu pareja canjeó y tienes que darle.</div>
     <div id="pending-rewards-list"><div class="empty">Nada pendiente por ahora</div></div>
 
+    <!-- MODO DE VIAJE -->
+    <div class="stitle" id="travel-mode-title">Modo de viaje ✈️</div>
+    <div id="travel-mode-desc" style="font-size:11px;color:var(--text2);margin-bottom:8px;">Si estás fuera unos días, tu racha individual se pausa (no sube ni baja) y la racha conjunta se ajusta a un mínimo más bajo, en vez de penalizaros por estar de viaje.</div>
+    <div class="notif-row" id="travel-mode-row" style="margin-bottom:14px;">
+      <div><div class="notif-label">Estoy de viaje</div><div class="notif-sub" id="travel-mode-status">Desactivado</div></div>
+      <div class="toggle-sw" id="travel-mode-toggle" onclick="toggleTravelMode()"><div class="toggle-knob"></div></div>
+    </div>
+
     <!-- ROTACIÓN DE GRUPOS A/B -->
     <!-- ESTILO VISUAL DE LA APP -->
     <div class="stitle" id="app-theme-title">Estilo visual de la app</div>
@@ -1427,6 +1435,7 @@ let streakData={Rafa:{count:0,lastDate:null},María:{count:0,lastDate:null}};
 let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso diario CONJUNTO (no individual)
 let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null,intervalNum:1,intervalUnit:'semanas'}; // quién tiene el Grupo A/B actualmente, y si rota sola
 let appThemeMode={Rafa:'clasico',María:'clasico'}; // estilo visual de la app, individual por persona ('clasico' o 'pulido')
+let travelMode={Rafa:false,María:false}; // si está activo, pausa su racha individual y reduce a la mitad la racha/objetivo conjunto
 let dailyRewardShown={date:null}; // evita repetir el mensaje de "100% conseguido" más de una vez al día
 let lastSeenLevel={Rafa:null,María:null}; // para detectar subidas de nivel y celebrarlas solo una vez
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
@@ -1485,6 +1494,7 @@ async function finishInit(){
     if(data.levelResetOffset!==undefined&&(d.id==='Rafa'||d.id==='María'))userLevelOverride[d.id]=data.levelResetOffset;
     if(data.activeGoal&&(d.id==='Rafa'||d.id==='María'))activeGoal[d.id]=data.activeGoal;
     if(data.appThemeMode&&(d.id==='Rafa'||d.id==='María'))appThemeMode[d.id]=data.appThemeMode;
+    if(data.travelMode!==undefined&&(d.id==='Rafa'||d.id==='María'))travelMode[d.id]=data.travelMode;
   });
   // Aplicar la paleta de color de la temática elegida por quien ha iniciado sesión
   if(currentUser==='Rafa'||currentUser==='María'){
@@ -2167,6 +2177,37 @@ window.acceptSpin=async()=>{
 };
 
 // ─── NOTIFICACIONES ───
+window.toggleTravelMode=async()=>{
+  if(!currentUser)return;
+  const newState=!travelMode[currentUser];
+  travelMode[currentUser]=newState;
+  await setDoc(doc(db,'users_meta',currentUser),{travelMode:newState},{merge:true});
+  renderTravelModeUI();
+  showToast(newState?'✈️ Modo de viaje activado':'Modo de viaje desactivado');
+};
+
+function renderTravelModeUI(){
+  const isOwnProfile=profileViewing===currentUser;
+  const titleEl=document.getElementById('travel-mode-title');
+  const descEl=document.getElementById('travel-mode-desc');
+  const rowEl=document.getElementById('travel-mode-row');
+  if(!isOwnProfile){
+    if(titleEl)titleEl.style.display='none';
+    if(descEl)descEl.style.display='none';
+    if(rowEl)rowEl.style.display='none';
+    return;
+  }
+  if(titleEl)titleEl.style.display='';
+  if(descEl)descEl.style.display='';
+  if(rowEl)rowEl.style.display='';
+  if(!currentUser)return;
+  const isOn=travelMode[currentUser];
+  const toggleEl=document.getElementById('travel-mode-toggle');
+  const statusEl=document.getElementById('travel-mode-status');
+  if(toggleEl)toggleEl.classList.toggle('on',isOn);
+  if(statusEl)statusEl.textContent=isOn?'Activado — tu racha está en pausa':'Desactivado';
+}
+
 window.toggleNotif=async()=>{
   if(!notifEnabled){
     if('Notification' in window){
@@ -2841,7 +2882,9 @@ function updateHeader(){
       }
     }
   });
-  const DAILY_XP_GOAL=140; // Objetivo de XP diario conjunto — las diarias solas (~85-95) no llegan al 100%, hace falta algo extra (semanal/CadaX) para completarlo
+  const bothTravelingNow=travelMode.Rafa&&travelMode.María;
+  const anyTravelingNow=travelMode.Rafa||travelMode.María;
+  const DAILY_XP_GOAL=anyTravelingNow&&!bothTravelingNow?70:140; // a la mitad si solo uno está de viaje
   const dailyTasks=tasks.filter(t=>t.freq==='Diaria');
   const xpFromDaily=dailyTasks.filter(t=>t.done).reduce((s,t)=>s+getXP(t),0);
   // Cuenta también XP de semanales/CadaX completadas HOY (suma puntual, no resta del pool total)
@@ -2855,22 +2898,28 @@ function updateHeader(){
   const zoneEl=document.getElementById('couple-streak-zone');
   if(zoneEl){
     const isLateInDay=new Date().getHours()>=20; // últimas 4 horas del día (20:00-23:59)
-    if(totalDailyXP>=COUPLE_STREAK_GOOD_MIN){
-      zoneEl.textContent=`🔥 Racha asegurada hoy (${totalDailyXP}/${COUPLE_STREAK_GOOD_MIN} XP para mantenerla)`;
+    const zoneGoodMin=anyTravelingNow&&!bothTravelingNow?COUPLE_STREAK_GOOD_MIN/2:COUPLE_STREAK_GOOD_MIN;
+    const zoneNeutralMin=anyTravelingNow&&!bothTravelingNow?COUPLE_STREAK_NEUTRAL_MIN/2:COUPLE_STREAK_NEUTRAL_MIN;
+    const travelNote=anyTravelingNow&&!bothTravelingNow?' ✈️':'';
+    if(bothTravelingNow){
+      zoneEl.textContent='✈️ Los dos de viaje — racha en pausa hoy';
+      zoneEl.style.color='var(--text2)';
+    }else if(totalDailyXP>=zoneGoodMin){
+      zoneEl.textContent=`🔥 Racha asegurada hoy (${totalDailyXP}/${zoneGoodMin} XP para mantenerla)${travelNote}`;
       zoneEl.style.color='#34D399';
-    }else if(totalDailyXP>=COUPLE_STREAK_NEUTRAL_MIN){
-      const falta=COUPLE_STREAK_GOOD_MIN-totalDailyXP;
-      zoneEl.textContent=`⚪ Día neutro — ${falta} XP más para activar la racha 🔥`;
+    }else if(totalDailyXP>=zoneNeutralMin){
+      const falta=zoneGoodMin-totalDailyXP;
+      zoneEl.textContent=`⚪ Día neutro — ${falta} XP más para activar la racha 🔥${travelNote}`;
       zoneEl.style.color='var(--text2)';
     }else if(isLateInDay){
       // Solo avisamos en rojo si quedan pocas horas para medianoche — antes de
       // eso, estar bajo el mínimo es normal y no debe sentirse alarmante.
-      const falta=COUPLE_STREAK_NEUTRAL_MIN-totalDailyXP;
-      zoneEl.textContent=`${falta} XP más para evitar racha negativa`;
+      const falta=zoneNeutralMin-totalDailyXP;
+      zoneEl.textContent=`${falta} XP más para evitar racha negativa${travelNote}`;
       zoneEl.style.color='#F87171';
     }else{
-      const falta=COUPLE_STREAK_NEUTRAL_MIN-totalDailyXP;
-      zoneEl.textContent=`Aún hay tiempo — ${falta} XP para asegurar el día`;
+      const falta=zoneNeutralMin-totalDailyXP;
+      zoneEl.textContent=`Aún hay tiempo — ${falta} XP para asegurar el día${travelNote}`;
       zoneEl.style.color='var(--text2)';
     }
   }
@@ -3433,6 +3482,7 @@ function renderProfile(){
   renderTrash();
   renderGroupRotationSettings();
   renderAppThemeSelector();
+  renderTravelModeUI();
   updateEq();
 }
 
@@ -3709,6 +3759,16 @@ function daysBetween(dateStrA,dateStrB){
 async function updateStreak(person,xpEarnedNow){
   const today=new Date().toLocaleDateString('es-ES');
   const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
+  // Si está de viaje, su racha queda en PAUSA: no se evalúa el día (ni bien ni
+  // mal), simplemente avanzamos la fecha para no acumular huecos pendientes
+  // de evaluar cuando vuelva.
+  if(travelMode[person]){
+    data.todayXP=0;data.lastDate=today;
+    streakData[person]=data;
+    await setDoc(doc(db,'state','streak_'+person),data);
+    updateStreakBadge(person);
+    return;
+  }
   // Si cambiamos de día respecto al último registrado, primero cerramos el día
   // anterior (evaluamos si fue bueno/neutro/malo) y rellenamos huecos de días
   // totalmente inactivos antes de empezar a acumular el XP de hoy.
@@ -3754,6 +3814,14 @@ async function checkStreakGaps(){
   for(const person of ['Rafa','María']){
     const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
     if(data.lastDate&&data.lastDate!==today){
+      if(travelMode[person]){
+        // De viaje: racha individual en pausa, no se evalúa el día
+        data.todayXP=0;data.lastDate=today;
+        streakData[person]=data;
+        await setDoc(doc(db,'state','streak_'+person),data);
+        updateStreakBadge(person);
+        continue;
+      }
       const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
       data.todayXP=0;
       data.lastDate=today;
@@ -3763,14 +3831,27 @@ async function checkStreakGaps(){
       await applyStreakXpReward(person,res);
     }
   }
-  // Lo mismo para la racha CONJUNTA del progreso diario
+  // Racha CONJUNTA del progreso diario — si AMBOS están de viaje, se pausa
+  // del todo; si solo UNO está de viaje, se evalúa igual pero con los
+  // umbrales a la mitad (el esfuerzo de quien se queda en casa, solo).
+  const bothTraveling=travelMode.Rafa&&travelMode.María;
   if(coupleStreakData.lastDate&&coupleStreakData.lastDate!==today){
-    const res=closeOutPastDays(coupleStreakData,today,COUPLE_STREAK_GOOD_MIN,COUPLE_STREAK_NEUTRAL_MIN);
-    coupleStreakData.todayXP=0;
-    coupleStreakData.lastDate=today;
-    await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
-    updateCoupleStreakBadge();
-    await applyCoupleStreakXpReward(res);
+    if(bothTraveling){
+      coupleStreakData.todayXP=0;
+      coupleStreakData.lastDate=today;
+      await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
+      updateCoupleStreakBadge();
+    }else{
+      const anyTraveling=travelMode.Rafa||travelMode.María;
+      const goodMin=anyTraveling?COUPLE_STREAK_GOOD_MIN/2:COUPLE_STREAK_GOOD_MIN;
+      const neutralMin=anyTraveling?COUPLE_STREAK_NEUTRAL_MIN/2:COUPLE_STREAK_NEUTRAL_MIN;
+      const res=closeOutPastDays(coupleStreakData,today,goodMin,neutralMin);
+      coupleStreakData.todayXP=0;
+      coupleStreakData.lastDate=today;
+      await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
+      updateCoupleStreakBadge();
+      await applyCoupleStreakXpReward(res);
+    }
   }
 }
 
@@ -3781,8 +3862,12 @@ const COUPLE_STREAK_NEUTRAL_MIN=40;
 async function updateCoupleStreak(xpEarnedTodayTotal){
   const today=new Date().toLocaleDateString('es-ES');
   const data=coupleStreakData||{count:0,lastDate:null,todayXP:0};
-  if(data.lastDate&&data.lastDate!==today){
-    closeOutPastDays(data,today,COUPLE_STREAK_GOOD_MIN,COUPLE_STREAK_NEUTRAL_MIN);
+  const bothTraveling=travelMode.Rafa&&travelMode.María;
+  if(data.lastDate&&data.lastDate!==today&&!bothTraveling){
+    const anyTraveling=travelMode.Rafa||travelMode.María;
+    const goodMin=anyTraveling?COUPLE_STREAK_GOOD_MIN/2:COUPLE_STREAK_GOOD_MIN;
+    const neutralMin=anyTraveling?COUPLE_STREAK_NEUTRAL_MIN/2:COUPLE_STREAK_NEUTRAL_MIN;
+    closeOutPastDays(data,today,goodMin,neutralMin);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=xpEarnedTodayTotal; // aquí pasamos el total ya calculado de hoy, no un incremento
