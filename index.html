@@ -704,9 +704,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <!-- MODO DE VIAJE -->
     <div class="stitle" id="travel-mode-title">Modo de viaje ✈️</div>
     <div id="travel-mode-desc" style="font-size:11px;color:var(--text2);margin-bottom:8px;">Si estás fuera unos días, tu racha individual se pausa (no sube ni baja) y la racha conjunta se ajusta a un mínimo más bajo, en vez de penalizaros por estar de viaje.</div>
-    <div class="notif-row" id="travel-mode-row" style="margin-bottom:14px;">
+    <div class="notif-row" id="travel-mode-row" style="margin-bottom:10px;">
       <div><div class="notif-label">Estoy de viaje</div><div class="notif-sub" id="travel-mode-status">Desactivado</div></div>
       <div class="toggle-sw" id="travel-mode-toggle" onclick="toggleTravelMode()"><div class="toggle-knob"></div></div>
+    </div>
+    <div class="fg" id="travel-message-box" style="margin-bottom:14px;">
+      <label class="fl" id="travel-message-label">Mensaje para cuando tu pareja se vaya de viaje</label>
+      <textarea class="fi" id="travel-message-input" rows="2" placeholder="Ej: Buen viaje, disfruta sin preocuparte. Yo me encargo de todo en casa ❤️" style="resize:none;font-family:inherit;" onblur="saveTravelMessage()"></textarea>
     </div>
 
     <!-- ROTACIÓN DE GRUPOS A/B -->
@@ -796,6 +800,12 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   <div style="font-size:15px;font-weight:800;color:#3D2A00;">¡Subiste de nivel!</div>
   <div style="font-size:13px;color:#3D2A00;font-weight:600;" id="level-up-text"></div>
   <button onclick="document.getElementById('level-up-banner').style.display='none'" style="margin-top:4px;background:rgba(0,0,0,0.15);border:none;border-radius:8px;color:#3D2A00;padding:5px 14px;font-size:11px;cursor:pointer;font-family:inherit;">Cerrar</button>
+</div>
+
+<div id="travel-message-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:450;background:linear-gradient(135deg,#3B82F6,#60A5FA);padding:20px 22px;padding-top:calc(20px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:8px;text-align:center;animation:levelUpDrop .4s cubic-bezier(.34,1.56,.64,1);">
+  <div style="font-size:30px;">✈️</div>
+  <div style="font-size:14px;font-weight:600;color:white;line-height:1.4;" id="travel-message-text"></div>
+  <button onclick="document.getElementById('travel-message-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.22);border:none;border-radius:8px;color:white;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;">Cerrar</button>
 </div>
 
 <div id="group-rotation-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:linear-gradient(135deg,#6366F1,#3B82F6);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:6px;text-align:center;">
@@ -1436,6 +1446,7 @@ let coupleStreakData={count:0,lastDate:null,todayXP:0}; // racha del progreso di
 let groupRotation={mode:'manual',assignment:{Rafa:'A',María:'B'},lastRotationKey:null,intervalNum:1,intervalUnit:'semanas'}; // quién tiene el Grupo A/B actualmente, y si rota sola
 let appThemeMode={Rafa:'clasico',María:'clasico'}; // estilo visual de la app, individual por persona ('clasico' o 'pulido')
 let travelMode={Rafa:false,María:false}; // si está activo, pausa su racha individual y reduce a la mitad la racha/objetivo conjunto
+let travelMessage={Rafa:'',María:''}; // mensaje que CADA persona escribe para que reciba el OTRO al activar su modo de viaje
 let dailyRewardShown={date:null}; // evita repetir el mensaje de "100% conseguido" más de una vez al día
 let lastSeenLevel={Rafa:null,María:null}; // para detectar subidas de nivel y celebrarlas solo una vez
 let pendingRewards={Rafa:[],María:[]}; // premios que el OTRO canjeó y tengo que cumplirle
@@ -1495,6 +1506,7 @@ async function finishInit(){
     if(data.activeGoal&&(d.id==='Rafa'||d.id==='María'))activeGoal[d.id]=data.activeGoal;
     if(data.appThemeMode&&(d.id==='Rafa'||d.id==='María'))appThemeMode[d.id]=data.appThemeMode;
     if(data.travelMode!==undefined&&(d.id==='Rafa'||d.id==='María'))travelMode[d.id]=data.travelMode;
+    if(data.travelMessage!==undefined&&(d.id==='Rafa'||d.id==='María'))travelMessage[d.id]=data.travelMessage;
   });
   // Aplicar la paleta de color de la temática elegida por quien ha iniciado sesión
   if(currentUser==='Rafa'||currentUser==='María'){
@@ -2183,7 +2195,33 @@ window.toggleTravelMode=async()=>{
   travelMode[currentUser]=newState;
   await setDoc(doc(db,'users_meta',currentUser),{travelMode:newState},{merge:true});
   renderTravelModeUI();
-  showToast(newState?'✈️ Modo de viaje activado':'Modo de viaje desactivado');
+  if(newState){
+    // Al activar MI modo de viaje, se muestra el mensaje que el OTRO escribió para mí
+    const other=currentUser==='Rafa'?'María':'Rafa';
+    const msg=travelMessage[other];
+    if(msg&&msg.trim()){
+      showTravelMessageBanner(msg);
+    }else{
+      showToast('✈️ Modo de viaje activado');
+    }
+  }else{
+    showToast('Modo de viaje desactivado');
+  }
+};
+
+function showTravelMessageBanner(msg){
+  const banner=document.getElementById('travel-message-banner');
+  const textEl=document.getElementById('travel-message-text');
+  if(!banner||!textEl)return;
+  textEl.textContent=msg;
+  banner.style.display='flex';
+}
+
+window.saveTravelMessage=async()=>{
+  if(!currentUser)return;
+  const msg=document.getElementById('travel-message-input').value;
+  travelMessage[currentUser]=msg;
+  await setDoc(doc(db,'users_meta',currentUser),{travelMessage:msg},{merge:true});
 };
 
 function renderTravelModeUI(){
@@ -2191,21 +2229,29 @@ function renderTravelModeUI(){
   const titleEl=document.getElementById('travel-mode-title');
   const descEl=document.getElementById('travel-mode-desc');
   const rowEl=document.getElementById('travel-mode-row');
+  const msgBox=document.getElementById('travel-message-box');
   if(!isOwnProfile){
     if(titleEl)titleEl.style.display='none';
     if(descEl)descEl.style.display='none';
     if(rowEl)rowEl.style.display='none';
+    if(msgBox)msgBox.style.display='none';
     return;
   }
   if(titleEl)titleEl.style.display='';
   if(descEl)descEl.style.display='';
   if(rowEl)rowEl.style.display='';
+  if(msgBox)msgBox.style.display='';
   if(!currentUser)return;
   const isOn=travelMode[currentUser];
   const toggleEl=document.getElementById('travel-mode-toggle');
   const statusEl=document.getElementById('travel-mode-status');
   if(toggleEl)toggleEl.classList.toggle('on',isOn);
   if(statusEl)statusEl.textContent=isOn?'Activado — tu racha está en pausa':'Desactivado';
+  const other=currentUser==='Rafa'?'María':'Rafa';
+  const labelEl=document.getElementById('travel-message-label');
+  if(labelEl)labelEl.textContent=`Mensaje para cuando ${other} se vaya de viaje`;
+  const inputEl=document.getElementById('travel-message-input');
+  if(inputEl&&document.activeElement!==inputEl)inputEl.value=travelMessage[currentUser]||'';
 }
 
 window.toggleNotif=async()=>{
