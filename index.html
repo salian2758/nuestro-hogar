@@ -3982,7 +3982,11 @@ function finalizeDayResult(data,xpThatDay,goodMin,neutralMin){
     data.count=prevCount>0?prevCount+1:1; // si venía negativo o en 0, arranca en +1
     result='good';
   }else if(xpThatDay>=neutralMin){
-    data.count=0; // neutro: corta lo negativo, no construye positivo
+    // Neutro: si la racha venía siendo POSITIVA, se queda exactamente igual
+    // (no avanza, pero tampoco se pierde lo construido). Si venía en 0 o
+    // negativa, sigue cortándola a 0 — el neutro solo "protege" lo bueno ya
+    // conseguido, no perdona una racha mala.
+    if(prevCount<=0)data.count=0;
     result='neutral';
   }else{
     data.count=prevCount<0?prevCount-1:-1; // si venía positivo o en 0, arranca en -1
