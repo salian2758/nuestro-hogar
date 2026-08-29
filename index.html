@@ -1403,6 +1403,15 @@ const DEFAULT_TASKS=[
 let tasks=[];
 let history=[];
 let xpState={Rafa:0,María:0};
+// ─── SISTEMA HP (SALUD DEL HOGAR) ────────────────────────────────────────
+const HP_MAX=100;
+const HP_INITIAL=80;
+const HP_LOSS_BAD=10;
+const HP_LOSS_NEUTRAL=4;
+const HP_GAIN_GOOD=3;
+const HP_GAIN_PERFECT=6;
+const HP_WEEKLY_BONUS=5;
+const HP_WEEKLY_PENALTY=8;
 let hpState={Rafa:HP_INITIAL,María:HP_INITIAL}; // salud individual, 0-100
 let hpDead={Rafa:false,María:false}; // true = KO, esperando resurrección
 let hpResurrectionDone={Rafa:{task:false,detail:false},María:{task:false,detail:false}};
@@ -4107,14 +4116,6 @@ window.fulfillPending=async(id)=>{
 const STREAK_NEUTRAL_MIN=20;
 // ─── SISTEMA HP (SALUD DEL HOGAR) ────────────────────────────────────────
 // Umbrales alineados con los de racha: malo <20 XP, neutro 20-49, bueno 50+
-const HP_MAX=100;
-const HP_INITIAL=80;      // empieza con presión desde el primer día
-const HP_LOSS_BAD=10;     // día malo (<20 XP individual)  → muere en ~8 días sin hacer nada
-const HP_LOSS_NEUTRAL=4;  // día neutro (20-49 XP)
-const HP_GAIN_GOOD=3;     // día bueno (50+ XP)
-const HP_GAIN_PERFECT=6;  // día 100% del objetivo conjunto
-const HP_WEEKLY_BONUS=5;  // ≥5 días buenos en la semana → +5 HP el domingo
-const HP_WEEKLY_PENALTY=8;// ≤2 días buenos en la semana → -8 HP el domingo
 const STREAK_GOOD_MIN=50;
 const STREAK_MIN_DAILY_XP=STREAK_GOOD_MIN; // alias por compatibilidad con código existente
 
