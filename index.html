@@ -362,13 +362,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   </div>
   <div class="profiles">
     <div class="profile-chip" onclick="openProfile('Rafa')" style="cursor:pointer;">
-      <div class="avatar av-r" id="rafa-avatar-emoji" style="font-size:16px;">🌱</div>
+      <div class="avatar av-r" id="rafa-avatar-emoji" onclick="goToVida('Rafa')" style="font-size:16px;cursor:pointer;">🌱</div>
       <div class="p-info">
         <div class="p-name">Rafa <span id="rafa-streak-flame" style="font-size:10px;"></span></div>
         <div class="p-level" id="rl">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-r" id="rxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-r" id="rxpn">0 XP</div>
-        <div id="rafa-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+        <div id="rafa-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="goToVida('Rafa')">
           <span style="font-size:9px;color:var(--text2);">❤️</span>
           <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="rafa-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
           <span style="font-size:9px;color:var(--text2);min-width:22px;" id="rafa-hp-label">100%</span>
@@ -382,13 +382,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div class="profile-chip" onclick="openProfile('María')" style="cursor:pointer;">
-      <div class="avatar av-m" id="maria-avatar-emoji" style="font-size:16px;">🌱</div>
+      <div class="avatar av-m" id="maria-avatar-emoji" onclick="goToVida('María')" style="font-size:16px;cursor:pointer;">🌱</div>
       <div class="p-info">
         <div class="p-name">María <span id="maria-streak-flame" style="font-size:10px;"></span></div>
         <div class="p-level" id="ml">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-m" id="mxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-m" id="mxpn">0 XP</div>
-        <div id="maria-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+        <div id="maria-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="goToVida('María')">
           <span style="font-size:9px;color:var(--text2);">❤️</span>
           <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="maria-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
           <span style="font-size:9px;color:var(--text2);min-width:22px;" id="maria-hp-label">100%</span>
@@ -805,6 +805,71 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       3. Selecciona <strong style="color:var(--text);">"Añadir a pantalla de inicio"</strong><br>
       4. ¡Listo! Aparece como app nativa
     </div>
+  </div>
+</div>
+
+<!-- PANTALLA DE VIDA — accesible pulsando la barra HP o el avatar -->
+<div id="sc-vida" class="screen" style="display:none;">
+  <div class="content">
+    <!-- CABECERA CON ESTADO HP -->
+    <div style="background:var(--bg2);border-radius:16px;border:0.5px solid var(--border);padding:20px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:6px;">Salud del hogar</div>
+      <div style="font-size:48px;font-weight:800;margin-bottom:8px;" id="vida-hp-number">80</div>
+      <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:10px;">
+        <div id="vida-hp-bar-big" style="height:100%;width:80%;background:#34D399;border-radius:5px;transition:width .6s,background .4s;"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);" id="vida-hp-status">Todo bien — sigue así</div>
+    </div>
+
+    <!-- CÓMO FUNCIONA -->
+    <div class="stitle">Cómo funciona ❤️</div>
+    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
+        Cada persona tiene su propia barra de vida, independiente de la otra. Se pierde salud cuando hay días flojos o de inactividad, y se recupera con días buenos.<br><br>
+        <strong style="color:var(--text);">Si llegas a 0 HP:</strong> pierdes tu cartera completa y retrocedes 2 niveles. Para resucitar, tendrás que completar una tarea del hogar y un detalle para tu pareja del catálogo de resurrección.
+      </div>
+    </div>
+
+    <!-- TABLA DE GANANCIAS Y PÉRDIDAS -->
+    <div class="stitle">Qué suma y qué resta</div>
+    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:16px;">
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">Día bueno</div><div style="font-size:10px;color:var(--text2);">50+ XP ese día</div></div>
+        <div style="color:#34D399;font-weight:700;font-size:14px;">+3 HP</div>
+      </div>
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">Día perfecto</div><div style="font-size:10px;color:var(--text2);">100% del objetivo conjunto</div></div>
+        <div style="color:#34D399;font-weight:700;font-size:14px;">+6 HP</div>
+      </div>
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">Semana buena</div><div style="font-size:10px;color:var(--text2);">≥5 días buenos esa semana</div></div>
+        <div style="color:#34D399;font-weight:700;font-size:14px;">+5 HP</div>
+      </div>
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">Día neutro</div><div style="font-size:10px;color:var(--text2);">20-49 XP ese día</div></div>
+        <div style="color:#F87171;font-weight:700;font-size:14px;">−4 HP</div>
+      </div>
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">Día malo</div><div style="font-size:10px;color:var(--text2);">Menos de 20 XP</div></div>
+        <div style="color:#F87171;font-weight:700;font-size:14px;">−10 HP</div>
+      </div>
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">Semana floja</div><div style="font-size:10px;color:var(--text2);">≤2 días buenos esa semana</div></div>
+        <div style="color:#F87171;font-weight:700;font-size:14px;">−8 HP</div>
+      </div>
+      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:12px;font-weight:600;">De viaje ✈️</div><div style="font-size:10px;color:var(--text2);">Modo viaje activo</div></div>
+        <div style="color:var(--text2);font-weight:700;font-size:14px;">sin cambio</div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL DE VIDA -->
+    <div class="stitle">Historial</div>
+    <div id="vida-historial" style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text2);">Cargando...</div>
+    </div>
+
+    <button onclick="goTo('hoy',null)" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:24px;">← Volver</button>
   </div>
 </div>
 
@@ -3324,6 +3389,63 @@ function updateEq(){
 }
 
 // ─── NAV ───
+window.goToVida=async(person)=>{
+  // Ocultar todas las pantallas y mostrar sc-vida
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  const sc=document.getElementById('sc-vida');if(sc)sc.style.display='';
+
+  const hp=hpState[person]??HP_INITIAL;
+  const dead=hpDead[person];
+
+  // Barra grande de HP
+  const bar=document.getElementById('vida-hp-bar-big');
+  const num=document.getElementById('vida-hp-number');
+  const status=document.getElementById('vida-hp-status');
+  if(num)num.textContent=dead?'💀':hp;
+  if(bar){
+    bar.style.width=(dead?0:hp)+'%';
+    bar.style.background=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
+  }
+  if(status){
+    if(dead)status.textContent='KO — completa tu penitencia para resucitar';
+    else if(hp>60)status.textContent='Todo bien — sigue así ✓';
+    else if(hp>30)status.textContent='Atención — el hogar necesita más cariño';
+    else if(hp>10)status.textContent='⚠️ Peligro — actúa hoy o pierdes tu progreso';
+    else status.textContent='🚨 Crítico — un día más y mueres';
+  }
+
+  // Historial de muertes + estado actual
+  const histEl=document.getElementById('vida-historial');
+  if(histEl){
+    let html='';
+    try{
+      const deathsSnap=await getDoc(doc(db,'state','deaths'));
+      if(deathsSnap.exists()){
+        const deaths=Object.values(deathsSnap.data())
+          .filter(d=>d.person===person)
+          .sort((a,b)=>b.ts-a.ts);
+        if(deaths.length){
+          html+=`<div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600;">💀 Muertes (${deaths.length} en total)</div>`;
+          html+=deaths.map(d=>`
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px;">
+              <span>${d.date}</span>
+              <span style="color:var(--text2);">Nivel ${d.levelBefore} → ${d.levelAfter}</span>
+            </div>
+          `).join('');
+        }else{
+          html='<div style="font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>';
+        }
+      }else{
+        html='<div style="font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>';
+      }
+    }catch(e){
+      html='<div style="font-size:12px;color:var(--text2);">Sin datos disponibles</div>';
+    }
+    histEl.innerHTML=html;
+  }
+};
+
 window.goTo=(name,btn)=>{
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
