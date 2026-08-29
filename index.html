@@ -154,6 +154,8 @@ body[data-app-theme="pulido"] .tc{border-radius:18px;padding:15px 16px;box-shado
 @keyframes checkPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,.5);}40%{transform:scale(1.25);box-shadow:0 0 0 8px rgba(16,185,129,.15);}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,0);}}
 @keyframes checkDraw{to{stroke-dashoffset:0;}}
 @keyframes levelUpDrop{0%{transform:translateY(-100%);}100%{transform:translateY(0);}}
+@keyframes hpPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.hp-critical{animation:hpPulse 0.8s ease-in-out infinite!important;}
 .tcheck svg{width:12px;height:12px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;display:none;}
 .tcheck.done svg{display:block;}
 .tinfo{flex:1;min-width:0;}
@@ -725,6 +727,24 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <textarea class="fi" id="travel-message-input" rows="2" placeholder="Ej: Buen viaje, disfruta sin preocuparte. Yo me encargo de todo en casa ❤️" style="resize:none;font-family:inherit;" onblur="saveTravelMessage()"></textarea>
     </div>
 
+    <!-- CATÁLOGOS DE RESURRECCIÓN -->
+    <div class="stitle" id="resurrection-section-title">Catálogos de resurrección ☠️</div>
+    <div id="resurrection-section-desc" style="font-size:11px;color:var(--text2);margin-bottom:10px;">Si llegas a 0 HP, para resucitar tendrás que completar una tarea y un detalle de estos catálogos. Que sean algo con sentido — que cuesten un poco, pero no demasiado.</div>
+    <div id="resurrection-task-section" style="margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">🏠 Tareas del hogar</div>
+      <div id="resurrection-task-list" style="margin-bottom:8px;"></div>
+      <button onclick="openResurrectionEditModal('task')" style="background:rgba(239,68,68,0.08);border:0.5px dashed rgba(239,68,68,0.3);border-radius:8px;color:#F87171;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;width:100%;">+ Añadir tarea de resurrección</button>
+    </div>
+    <div id="resurrection-detail-section" style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">❤️ Detalles para tu pareja</div>
+      <div id="resurrection-detail-list" style="margin-bottom:8px;"></div>
+      <button onclick="openResurrectionEditModal('detail')" style="background:rgba(239,68,68,0.08);border:0.5px dashed rgba(239,68,68,0.3);border-radius:8px;color:#F87171;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;width:100%;">+ Añadir detalle de resurrección</button>
+    </div>
+    <div id="death-history-section" style="margin-bottom:14px;display:none;">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;">💀 Historial de muertes</div>
+      <div id="death-history-list" style="font-size:11px;color:var(--text2);"></div>
+    </div>
+
     <!-- ROTACIÓN DE GRUPOS A/B -->
     <!-- ESTILO VISUAL DE LA APP -->
     <div class="stitle" id="app-theme-title">Estilo visual de la app</div>
@@ -820,44 +840,45 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   <button onclick="document.getElementById('travel-message-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.22);border:none;border-radius:8px;color:white;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;">Cerrar</button>
 </div>
 
-<!-- PANTALLA KO — bloquea toda la app hasta cumplir la penitencia de resurrección -->
-<div id="ko-screen" style="display:none;position:fixed;inset:0;z-index:900;background:#0a0806;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
+<!-- BANNER DE AVISO PROGRESIVO DE HP — aparece en umbrales 50/30/15 -->
+<div id="hp-warning-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:440;background:linear-gradient(135deg,#B45309,#F59E0B);padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:4px;text-align:center;animation:levelUpDrop .3s ease;">
+  <div style="font-size:13px;font-weight:700;color:white;" id="hp-warning-title">⚠️ Salud bajando</div>
+  <div style="font-size:12px;color:rgba(255,255,255,0.9);" id="hp-warning-msg"></div>
+  <button onclick="document.getElementById('hp-warning-banner').style.display='none'" style="margin-top:4px;background:rgba(0,0,0,0.15);border:none;border-radius:6px;color:white;padding:4px 12px;font-size:10px;cursor:pointer;font-family:inherit;">Cerrar</button>
+</div>
+
+<!-- PANTALLA KO — bloquea ganar XP y acceder a premios, pero NO el calendario/tareas -->
+<div id="ko-screen" style="display:none;position:fixed;inset:0;z-index:900;background:#0a0806;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;overflow-y:auto;">
   <div style="font-size:64px;margin-bottom:16px;">💀</div>
   <div style="font-size:22px;font-weight:800;color:#F87171;margin-bottom:8px;">Has caído</div>
-  <div style="font-size:14px;color:#A89A8C;line-height:1.6;margin-bottom:24px;" id="ko-message">El hogar ha quedado desatendido demasiado tiempo. Has perdido tu XP, nivel y cartera.<br><br>Para volver a jugar necesitas cumplir tu penitencia.</div>
+  <div style="font-size:13px;color:#A89A8C;line-height:1.6;margin-bottom:8px;" id="ko-message">El hogar ha quedado desatendido. Has perdido 2 niveles y tu cartera.</div>
+  <div style="font-size:11px;color:rgba(248,113,113,0.7);margin-bottom:20px;" id="ko-death-count"></div>
+  <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:8px 14px;margin-bottom:20px;font-size:12px;color:#A89A8C;">
+    📅 Puedes seguir viendo el calendario y las tareas — solo están bloqueados ganar XP y acceder a premios.
+  </div>
   <div style="background:#1E1A16;border-radius:16px;border:1px solid rgba(248,113,113,0.2);padding:18px;width:100%;max-width:340px;margin-bottom:20px;">
     <div style="font-size:12px;color:#F87171;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;">Penitencia de resurrección</div>
     <div id="ko-task-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
       <div id="ko-task-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
       <div style="flex:1;text-align:left;">
         <div style="font-size:13px;font-weight:600;color:var(--text);">Tarea del hogar</div>
-        <div style="font-size:11px;color:var(--text2);">Completa una tarea de tu catálogo de resurrección</div>
+        <div style="font-size:11px;color:var(--text2);">Una tarea algo más profunda de lo normal</div>
       </div>
-      <button onclick="openResurrectionCatalog('task')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver catálogo</button>
+      <button onclick="openResurrectionCatalog('task')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver</button>
     </div>
     <div id="ko-detail-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;">
       <div id="ko-detail-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
       <div style="flex:1;text-align:left;">
         <div style="font-size:13px;font-weight:600;color:var(--text);">Detalle para tu pareja</div>
-        <div style="font-size:11px;color:var(--text2);">Haz algo bonito del catálogo de detalles</div>
+        <div style="font-size:11px;color:var(--text2);">Algo bonito que a ella le importe</div>
       </div>
-      <button onclick="openResurrectionCatalog('detail')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver catálogo</button>
+      <button onclick="openResurrectionCatalog('detail')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver</button>
     </div>
   </div>
-  <div id="ko-resurrect-btn" style="display:none;">
+  <div id="ko-resurrect-btn" style="display:none;margin-bottom:16px;">
     <button onclick="resurrect()" style="background:linear-gradient(135deg,#10B981,#34D399);border:none;border-radius:14px;color:white;padding:15px 32px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(16,185,129,0.4);">✨ Resucitar</button>
   </div>
-</div>
-
-<!-- MODAL CATÁLOGO DE RESURRECCIÓN -->
-<div class="modal-overlay hidden" id="resurrection-catalog-modal">
-  <div class="modal">
-    <div class="modal-title" id="resurrection-catalog-title">Catálogo de resurrección</div>
-    <div id="resurrection-catalog-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
-    <div class="m-acts">
-      <button class="btn-c" onclick="closeResurrectionCatalog()">Cancelar</button>
-    </div>
-  </div>
+  <button onclick="document.getElementById('ko-screen').style.display='none'" style="background:none;border:none;color:rgba(168,154,140,0.5);font-size:12px;cursor:pointer;font-family:inherit;padding:8px;">Ver calendario y tareas →</button>
 </div>
 
 <div id="group-rotation-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:linear-gradient(135deg,#6366F1,#3B82F6);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:6px;text-align:center;">
@@ -1018,6 +1039,29 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   </div>
 </div>
 
+<!-- MODAL CATÁLOGO DE RESURRECCIÓN (al estar KO, para elegir qué hacer) -->
+<div class="modal-overlay hidden" id="resurrection-catalog-modal">
+  <div class="modal">
+    <div class="modal-title" id="resurrection-catalog-title">Catálogo de resurrección</div>
+    <div id="resurrection-catalog-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div class="m-acts">
+      <button class="btn-c" onclick="closeResurrectionCatalog()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GESTIÓN CATÁLOGO RESURRECCIÓN (desde el perfil, en modo normal) -->
+<div class="modal-overlay hidden" id="resurrection-edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="resurrection-edit-title">Editar catálogo</div>
+    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="resurrection-edit-name" placeholder="Ej: Limpiar el baño a fondo"></div>
+    <div class="fg"><label class="fl">Descripción (opcional)</label><input class="fi" id="resurrection-edit-desc" placeholder="Ej: Incluye azulejos y suelo"></div>
+    <div class="m-acts">
+      <button class="btn-c" onclick="closeResurrectionEditModal()">Cancelar</button>
+      <button class="btn-p" id="resurrection-edit-save-btn" onclick="saveResurrectionItem()">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <!-- SHOPPING ITEM MODAL -->
 <div class="modal-overlay hidden" id="shopping-modal">
@@ -1359,7 +1403,7 @@ const DEFAULT_TASKS=[
 let tasks=[];
 let history=[];
 let xpState={Rafa:0,María:0};
-let hpState={Rafa:100,María:100}; // salud individual, 0-100
+let hpState={Rafa:HP_INITIAL,María:HP_INITIAL}; // salud individual, 0-100
 let hpDead={Rafa:false,María:false}; // true = KO, esperando resurrección
 let hpResurrectionDone={Rafa:{task:false,detail:false},María:{task:false,detail:false}};
 let activeFilter={hoy:'all',sem:'all',mes:'all'};
@@ -1643,6 +1687,12 @@ async function checkWeeklyXPReset(){
       const weekResult={winner,loser,wrXP:wr,wmXP:wm,loserBonus:loserPct>=70,date:now.toLocaleDateString('es-ES'),ts:Date.now()};
       await setDoc(doc(db,'state','lastWeekResult'),weekResult);
     }
+    // ─ Bonus/penalización semanal de HP ─
+    // Contamos cuántos días buenos tuvo cada persona en la semana que acaba
+    // de terminar, usando el historial. Un día "bueno" es uno donde esa persona
+    // ganó ≥50 XP (umbral de racha positiva, coherente con el resto del sistema).
+    await applyWeeklyHpBonus();
+
     // Reset weekly XP
     xpWeekly={Rafa:0,María:0};
     await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
@@ -2291,26 +2341,137 @@ function showTravelMessageBanner(msg){
 // ─── SISTEMA HP / KO / RESURRECCIÓN ───────────────────────────────────────
 let resurrectionCatalogType=null; // 'task' | 'detail'
 
-function showDeadScreen(person){
+async function showDeadScreen(person){
   const screen=document.getElementById('ko-screen');
   if(!screen)return;
   const prog=hpResurrectionDone[person]||{task:false,detail:false};
-  // Actualizar checks visuales
+  const checkSVG=`<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#10B981;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`;
   const taskCheck=document.getElementById('ko-task-check');
   const detailCheck=document.getElementById('ko-detail-check');
-  if(taskCheck)taskCheck.innerHTML=prog.task?`<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#10B981;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`:'';
-  if(taskCheck)taskCheck.style.background=prog.task?'#10B981':'transparent';
-  if(detailCheck)detailCheck.innerHTML=prog.detail?`<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#10B981;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`:'';
-  if(detailCheck)detailCheck.style.background=prog.detail?'#10B981':'transparent';
-  // Mostrar botón de resucitar si ambas condiciones están cumplidas
+  if(taskCheck){taskCheck.innerHTML=prog.task?checkSVG:'';taskCheck.style.background=prog.task?'#10B981':'transparent';}
+  if(detailCheck){detailCheck.innerHTML=prog.detail?checkSVG:'';detailCheck.style.background=prog.detail?'#10B981':'transparent';}
   const btn=document.getElementById('ko-resurrect-btn');
   if(btn)btn.style.display=(prog.task&&prog.detail)?'block':'none';
+  // Contar muertes anteriores de esta persona
+  const deathCountEl=document.getElementById('ko-death-count');
+  if(deathCountEl){
+    try{
+      const deathsSnap=await getDoc(doc(db,'state','deaths'));
+      if(deathsSnap.exists()){
+        const count=Object.values(deathsSnap.data()).filter(d=>d.person===person).length;
+        deathCountEl.textContent=count>1?`Esta es tu muerte número ${count} 💀`:'';
+      }
+    }catch(e){}
+  }
   screen.style.display='flex';
 }
 
 function checkDeadScreenOnLoad(){
   if(currentUser&&hpDead[currentUser]){
-    showDeadScreen(currentUser);
+    showDeadScreen(currentUser); // async, no bloqueamos el arranque
+  }
+}
+
+// ─ Gestión del catálogo de resurrección desde el perfil ─
+let resurrectionEditType=null;
+let resurrectionEditId=null;
+
+window.editResurrectionItem=(btn)=>{
+  const row=btn.closest('[data-res-id]');
+  if(!row)return;
+  const id=row.dataset.resId;
+  const type=row.dataset.resType;
+  const name=row.querySelector('div>div:first-child')?.textContent?.trim()||'';
+  const desc=row.querySelector('div>div:nth-child(2)')?.textContent?.trim()||'';
+  openResurrectionEditModal(type,id,name,desc);
+};
+
+window.openResurrectionEditModal=(type,id,name,desc)=>{
+  resurrectionEditType=type;
+  resurrectionEditId=id||null;
+  const title=document.getElementById('resurrection-edit-title');
+  const nameEl=document.getElementById('resurrection-edit-name');
+  const descEl=document.getElementById('resurrection-edit-desc');
+  const btn=document.getElementById('resurrection-edit-save-btn');
+  if(title)title.textContent=type==='task'?'Tarea de resurrección':'Detalle de resurrección';
+  if(nameEl)nameEl.value=name||'';
+  if(descEl)descEl.value=desc||'';
+  if(btn)btn.textContent=id?'Guardar cambios':'+ Añadir';
+  document.getElementById('resurrection-edit-modal').classList.remove('hidden');
+};
+window.closeResurrectionEditModal=()=>{
+  document.getElementById('resurrection-edit-modal').classList.add('hidden');
+  resurrectionEditType=null;resurrectionEditId=null;
+};
+
+window.saveResurrectionItem=async()=>{
+  if(!currentUser||!resurrectionEditType)return;
+  const name=document.getElementById('resurrection-edit-name').value.trim();
+  if(!name)return;
+  const desc=document.getElementById('resurrection-edit-desc').value.trim();
+  const col=resurrectionEditType==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
+  const id=resurrectionEditId||('r'+Date.now());
+  await setDoc(doc(db,col,id),{name,desc,createdAt:Date.now()});
+  closeResurrectionEditModal();
+  renderResurrectionCatalogs();
+  showToast('Guardado ✓');
+};
+
+window.deleteResurrectionItem=async(type,id)=>{
+  if(!currentUser)return;
+  const col=type==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
+  await deleteDoc(doc(db,col,id));
+  renderResurrectionCatalogs();
+  showToast('Eliminado');
+};
+
+async function renderResurrectionCatalogs(){
+  if(!currentUser)return;
+  const isOwn=profileViewing===currentUser;
+  const taskSection=document.getElementById('resurrection-task-section');
+  const detailSection=document.getElementById('resurrection-detail-section');
+  const titleEl=document.getElementById('resurrection-section-title');
+  const descEl=document.getElementById('resurrection-section-desc');
+  const deathSection=document.getElementById('death-history-section');
+  // Solo visible en propio perfil
+  [taskSection,detailSection,titleEl,descEl].forEach(el=>{if(el)el.style.display=isOwn?'':'none';});
+
+  if(!isOwn)return;
+
+  // Cargar y renderizar tareas de resurrección
+  for(const type of ['task','detail']){
+    const col=type==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
+    const listId=type==='task'?'resurrection-task-list':'resurrection-detail-list';
+    const snap=await getDocs(collection(db,col));
+    const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
+    const listEl=document.getElementById(listId);
+    if(!listEl)continue;
+    if(!items.length){
+      listEl.innerHTML=`<div style="font-size:11px;color:var(--text2);padding:6px 0;opacity:0.6;">Sin elementos — añade algo que tenga sentido como penitencia.</div>`;
+    }else{
+      listEl.innerHTML=items.map(it=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);" data-res-id="${it.id}" data-res-type="${type}">
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">${escHtml(it.name)}</div>
+            ${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
+          </div>
+          <button onclick="editResurrectionItem(this)" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;padding:4px;">✎</button>
+          <button onclick="deleteResurrectionItem('${type}','${it.id}')" style="background:none;border:none;color:#F87171;font-size:12px;cursor:pointer;padding:4px;">✕</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Histórico de muertes
+  const deathsSnap=await getDoc(doc(db,'state','deaths'));
+  if(deathsSnap.exists()){
+    const deaths=Object.values(deathsSnap.data()).filter(d=>d.person===currentUser);
+    if(deaths.length>0&&deathSection){
+      deathSection.style.display='';
+      const deathList=document.getElementById('death-history-list');
+      deaths.sort((a,b)=>b.ts-a.ts);
+      if(deathList)deathList.innerHTML=deaths.map(d=>`<div style="padding:3px 0;">💀 ${d.date} — bajó del nivel ${d.levelBefore} al ${d.levelAfter}</div>`).join('');
+    }
   }
 }
 
@@ -3683,6 +3844,7 @@ function renderProfile(){
   renderGroupRotationSettings();
   renderAppThemeSelector();
   renderTravelModeUI();
+  renderResurrectionCatalogs();
   updateEq();
 }
 
@@ -3943,11 +4105,16 @@ window.fulfillPending=async(id)=>{
 // 30-49 XP individuales → día "neutro" → corta cualquier racha negativa, vuelve a 0
 // 50+ XP individuales   → día "bueno"  → suma a racha positiva (si venías de negativo, resetea a +1)
 const STREAK_NEUTRAL_MIN=20;
-// Sistema de HP (salud del hogar) — individual por persona
+// ─── SISTEMA HP (SALUD DEL HOGAR) ────────────────────────────────────────
+// Umbrales alineados con los de racha: malo <20 XP, neutro 20-49, bueno 50+
 const HP_MAX=100;
-const HP_LOSS_BAD=15;   // pérdida por día malo  → muere en ~7 días sin hacer nada
-const HP_LOSS_NEUTRAL=5; // pérdida por día neutro
-const HP_GAIN_GOOD=5;    // ganancia por día bueno
+const HP_INITIAL=80;      // empieza con presión desde el primer día
+const HP_LOSS_BAD=10;     // día malo (<20 XP individual)  → muere en ~8 días sin hacer nada
+const HP_LOSS_NEUTRAL=4;  // día neutro (20-49 XP)
+const HP_GAIN_GOOD=3;     // día bueno (50+ XP)
+const HP_GAIN_PERFECT=6;  // día 100% del objetivo conjunto
+const HP_WEEKLY_BONUS=5;  // ≥5 días buenos en la semana → +5 HP el domingo
+const HP_WEEKLY_PENALTY=8;// ≤2 días buenos en la semana → -8 HP el domingo
 const STREAK_GOOD_MIN=50;
 const STREAK_MIN_DAILY_XP=STREAK_GOOD_MIN; // alias por compatibilidad con código existente
 
@@ -3995,16 +4162,21 @@ const STREAK_XP_REWARD=5; // XP de premio/castigo por mantener (o romper) la rac
 // INDIVIDUAL de una persona, solo a partir del segundo día consecutivo en la
 // misma dirección. Afecta a su XP total, semanal, mensual y wallet por igual,
 // ya que es XP real ganado (o perdido) por constancia, no un bono aparte.
-async function applyHpChange(person, streakResult){
+async function applyHpChange(person, streakResult, wasPerfectDay){
   if(!streakResult)return;
-  if(hpDead[person])return; // ya está KO, no se procesa más pérdida hasta resucitar
-  if(travelMode[person])return; // de viaje, HP en pausa igual que la racha
+  if(hpDead[person])return;
+  if(travelMode[person])return;
   let delta=0;
-  if(streakResult.result==='good')delta=HP_GAIN_GOOD;
-  else if(streakResult.result==='neutral')delta=-HP_LOSS_NEUTRAL;
-  else if(streakResult.result==='bad')delta=-HP_LOSS_BAD;
+  if(streakResult.result==='good'){
+    delta=wasPerfectDay?HP_GAIN_PERFECT:HP_GAIN_GOOD;
+  }else if(streakResult.result==='neutral'){
+    delta=-HP_LOSS_NEUTRAL;
+  }else if(streakResult.result==='bad'){
+    delta=-HP_LOSS_BAD;
+  }
   if(delta===0)return;
-  hpState[person]=Math.max(0,Math.min(HP_MAX,(hpState[person]||HP_MAX)+delta));
+  const prev=hpState[person]||HP_INITIAL;
+  hpState[person]=Math.max(0,Math.min(HP_MAX,prev+delta));
   if(hpState[person]===0&&!hpDead[person]){
     await triggerKO(person);
   }else{
@@ -4014,21 +4186,67 @@ async function applyHpChange(person, streakResult){
 }
 
 async function triggerKO(person){
-  // La persona llega a 0 HP: pierde todo (XP, nivel, wallet) y queda KO
   hpDead[person]=true;
   hpResurrectionDone[person]={task:false,detail:false};
-  // Penalización total — XP, semanal, mensual y wallet a cero
-  xpState[person]=0;xpWeekly[person]=0;xpMonthly[person]=0;wallet[person]=0;
-  userLevelOverride[person]=0;
+
+  // Calcular XP equivalente a 2 niveles por debajo del actual, sin bajar de 0
+  const currentXP=xpState[person]||0;
+  const currentLvl=levelInfo(currentXP,person).level;
+  const targetLvl=Math.max(1,currentLvl-2);
+  const targetXP=LEVEL_XP_CURVE[targetLvl-1]||0; // XP del inicio del nivel objetivo
+  xpState[person]=targetXP;
+  xpWeekly[person]=Math.min(xpWeekly[person]||0,targetXP);
+  xpMonthly[person]=Math.min(xpMonthly[person]||0,targetXP);
+  wallet[person]=0; // cartera completa a cero
+
+  // Guardar penalización
   await setDoc(doc(db,'state','xp'),xpState);
   await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
   await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
   await setDoc(doc(db,'state','wallet'),wallet);
-  await setDoc(doc(db,'users_meta',person),{levelResetOffset:0},{merge:true});
+
+  // Registrar muerte en el historial de muertes para el histórico
+  const deathRecord={person,date:new Date().toLocaleDateString('es-ES'),ts:Date.now(),levelBefore:currentLvl,levelAfter:targetLvl};
+  await setDoc(doc(db,'state','deaths'),{[`death_${Date.now()}`]:deathRecord},{merge:true});
+
   await saveHpState();
   updateHpBadge(person);
   updateHeader();
   if(person===currentUser)showDeadScreen(person);
+}
+
+async function applyWeeklyHpBonus(){
+  // Calcula cuántos días buenos tuvo cada persona en los últimos 7 días
+  // usando el historial, y aplica el bonus/penalización semanal de HP.
+  const now=new Date();
+  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
+  const histSnap=await getDocs(collection(db,'history'));
+  const xpPerPersonPerDay={Rafa:{},María:{}};
+  histSnap.forEach(d=>{
+    const h=d.data();
+    if(!h.date||!h.xpFor)return;
+    const hDate=histDateToDate(h.date);
+    if(hDate<weekAgo)return;
+    const dateKey=h.date;
+    for(const p of ['Rafa','María']){
+      if(!xpPerPersonPerDay[p][dateKey])xpPerPersonPerDay[p][dateKey]=0;
+      xpPerPersonPerDay[p][dateKey]+=(h.xpFor[p]||0);
+    }
+  });
+  for(const person of ['Rafa','María']){
+    if(hpDead[person]||travelMode[person])continue;
+    const days=Object.values(xpPerPersonPerDay[person]);
+    const goodDays=days.filter(xp=>xp>=STREAK_GOOD_MIN).length;
+    let delta=0;
+    if(goodDays>=5)delta=HP_WEEKLY_BONUS;
+    else if(goodDays<=2)delta=-HP_WEEKLY_PENALTY;
+    if(delta===0)continue;
+    hpState[person]=Math.max(0,Math.min(HP_MAX,(hpState[person]||HP_INITIAL)+delta));
+    if(hpState[person]===0&&!hpDead[person])await triggerKO(person);
+  }
+  await saveHpState();
+  updateHpBadge('Rafa');
+  updateHpBadge('María');
 }
 
 async function saveHpState(){
@@ -4040,20 +4258,56 @@ async function saveHpState(){
   });
 }
 
+// Registros de avisos HP ya mostrados en esta sesión, para no repetirlos
+const _hpWarningShown={Rafa:new Set(),María:new Set()};
+
 function updateHpBadge(person){
   const key=person==='Rafa'?'rafa':'maria';
-  const el=document.getElementById(key+'-hp-bar');
+  const bar=document.getElementById(key+'-hp-bar');
   const lbl=document.getElementById(key+'-hp-label');
-  const hp=hpState[person]||0;
-  if(el)el.style.width=hp+'%';
-  const color=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
-  if(el)el.style.background=color;
-  if(lbl)lbl.textContent=hp+'%';
-  const dead=hpDead[person];
   const chip=document.getElementById(key+'-hp-chip');
-  if(chip)chip.style.display=dead?'none':'flex';
   const koEl=document.getElementById(key+'-ko');
+  const dead=hpDead[person];
+  const hp=hpState[person]??HP_INITIAL;
+
+  if(chip)chip.style.display=dead?'none':'flex';
   if(koEl)koEl.style.display=dead?'flex':'none';
+  if(dead||!bar)return;
+
+  // Color dinámico de la barra con cuatro zonas
+  let color;
+  if(hp>60)color='#34D399';       // verde — todo bien
+  else if(hp>30)color='#F59E0B'; // naranja — cuidado
+  else if(hp>10)color='#EF4444'; // rojo — peligro
+  else color='#EF4444';           // rojo crítico + parpadeo
+
+  bar.style.width=hp+'%';
+  bar.style.background=color;
+  bar.style.transition='width .4s,background .4s';
+  if(lbl)lbl.textContent=hp+'%';
+  if(lbl)lbl.style.color=hp<=30?color:'var(--text2)';
+
+  // Parpadeo crítico <10 — clase CSS que activa la animación
+  bar.classList.toggle('hp-critical',hp<=10);
+
+  // Solo mostrar avisos para currentUser para no molestar con la salud del otro
+  if(person!==currentUser)return;
+  const shown=_hpWarningShown[person];
+  if(hp<=50&&!shown.has(50)){shown.add(50);showHpWarning(person,hp,'⚠️ Tu salud está bajando',`Te quedan ${hp} HP — haz tareas del hogar para recuperarla.`);}
+  if(hp<=30&&!shown.has(30)){shown.add(30);showHpWarning(person,hp,'🟠 Salud baja',`${hp} HP. Si sigues así podrías perder tu XP y nivel. ¡Ponte las pilas!`);}
+  if(hp<=15&&!shown.has(15)){shown.add(15);showHpWarning(person,hp,'🔴 Peligro crítico',`Solo te quedan ${hp} HP. Haz tareas HOY para no morir y perder tu progreso.`);}
+}
+
+function showHpWarning(person,hp,title,msg){
+  // Usa el sistema de banner existente para avisos de HP
+  const banner=document.getElementById('hp-warning-banner');
+  const titleEl=document.getElementById('hp-warning-title');
+  const msgEl=document.getElementById('hp-warning-msg');
+  if(!banner||!titleEl||!msgEl)return;
+  titleEl.textContent=title;
+  msgEl.textContent=msg;
+  banner.style.display='flex';
+  setTimeout(()=>{banner.style.display='none';},8000);
 }
 
 async function applyStreakXpReward(person,streakResult){
