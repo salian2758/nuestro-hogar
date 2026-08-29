@@ -366,6 +366,12 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div class="p-level" id="rl">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-r" id="rxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-r" id="rxpn">0 XP</div>
+        <div id="rafa-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+          <span style="font-size:9px;color:var(--text2);">❤️</span>
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="rafa-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
+          <span style="font-size:9px;color:var(--text2);min-width:22px;" id="rafa-hp-label">100%</span>
+        </div>
+        <div id="rafa-ko" style="display:none;margin-top:4px;background:rgba(239,68,68,0.15);border-radius:6px;padding:2px 6px;font-size:10px;color:#F87171;font-weight:700;text-align:center;">💀 KO</div>
         <div id="rafa-goal-mini" style="display:none;margin-top:3px;">
           <div style="font-size:8px;color:var(--text2);margin-bottom:1px;" id="rafa-goal-label">🎯 objetivo</div>
           <div style="height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div id="rafa-goal-fill" style="height:100%;width:0%;background:#34D399;"></div></div>
@@ -380,6 +386,12 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div class="p-level" id="ml">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-m" id="mxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-m" id="mxpn">0 XP</div>
+        <div id="maria-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+          <span style="font-size:9px;color:var(--text2);">❤️</span>
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="maria-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
+          <span style="font-size:9px;color:var(--text2);min-width:22px;" id="maria-hp-label">100%</span>
+        </div>
+        <div id="maria-ko" style="display:none;margin-top:4px;background:rgba(239,68,68,0.15);border-radius:6px;padding:2px 6px;font-size:10px;color:#F87171;font-weight:700;text-align:center;">💀 KO</div>
         <div id="maria-goal-mini" style="display:none;margin-top:3px;">
           <div style="font-size:8px;color:var(--text2);margin-bottom:1px;" id="maria-goal-label">🎯 objetivo</div>
           <div style="height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div id="maria-goal-fill" style="height:100%;width:0%;background:#34D399;"></div></div>
@@ -806,6 +818,46 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   <div style="font-size:30px;">✈️</div>
   <div style="font-size:14px;font-weight:600;color:white;line-height:1.4;" id="travel-message-text"></div>
   <button onclick="document.getElementById('travel-message-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.22);border:none;border-radius:8px;color:white;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;">Cerrar</button>
+</div>
+
+<!-- PANTALLA KO — bloquea toda la app hasta cumplir la penitencia de resurrección -->
+<div id="ko-screen" style="display:none;position:fixed;inset:0;z-index:900;background:#0a0806;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
+  <div style="font-size:64px;margin-bottom:16px;">💀</div>
+  <div style="font-size:22px;font-weight:800;color:#F87171;margin-bottom:8px;">Has caído</div>
+  <div style="font-size:14px;color:#A89A8C;line-height:1.6;margin-bottom:24px;" id="ko-message">El hogar ha quedado desatendido demasiado tiempo. Has perdido tu XP, nivel y cartera.<br><br>Para volver a jugar necesitas cumplir tu penitencia.</div>
+  <div style="background:#1E1A16;border-radius:16px;border:1px solid rgba(248,113,113,0.2);padding:18px;width:100%;max-width:340px;margin-bottom:20px;">
+    <div style="font-size:12px;color:#F87171;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;">Penitencia de resurrección</div>
+    <div id="ko-task-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+      <div id="ko-task-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+      <div style="flex:1;text-align:left;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">Tarea del hogar</div>
+        <div style="font-size:11px;color:var(--text2);">Completa una tarea de tu catálogo de resurrección</div>
+      </div>
+      <button onclick="openResurrectionCatalog('task')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver catálogo</button>
+    </div>
+    <div id="ko-detail-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;">
+      <div id="ko-detail-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+      <div style="flex:1;text-align:left;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);">Detalle para tu pareja</div>
+        <div style="font-size:11px;color:var(--text2);">Haz algo bonito del catálogo de detalles</div>
+      </div>
+      <button onclick="openResurrectionCatalog('detail')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver catálogo</button>
+    </div>
+  </div>
+  <div id="ko-resurrect-btn" style="display:none;">
+    <button onclick="resurrect()" style="background:linear-gradient(135deg,#10B981,#34D399);border:none;border-radius:14px;color:white;padding:15px 32px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(16,185,129,0.4);">✨ Resucitar</button>
+  </div>
+</div>
+
+<!-- MODAL CATÁLOGO DE RESURRECCIÓN -->
+<div class="modal-overlay hidden" id="resurrection-catalog-modal">
+  <div class="modal">
+    <div class="modal-title" id="resurrection-catalog-title">Catálogo de resurrección</div>
+    <div id="resurrection-catalog-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div class="m-acts">
+      <button class="btn-c" onclick="closeResurrectionCatalog()">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <div id="group-rotation-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:linear-gradient(135deg,#6366F1,#3B82F6);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:6px;text-align:center;">
@@ -1307,6 +1359,9 @@ const DEFAULT_TASKS=[
 let tasks=[];
 let history=[];
 let xpState={Rafa:0,María:0};
+let hpState={Rafa:100,María:100}; // salud individual, 0-100
+let hpDead={Rafa:false,María:false}; // true = KO, esperando resurrección
+let hpResurrectionDone={Rafa:{task:false,detail:false},María:{task:false,detail:false}};
 let activeFilter={hoy:'all',sem:'all',mes:'all'};
 let rTask=null,rPerson=null;
 let pendingCompleteId=null;
@@ -1491,6 +1546,7 @@ async function finishInit(){
     if(d.id==='xpWeekly')xpWeekly={Rafa:data.Rafa||0,María:data.María||0};
     if(d.id==='xpMonthly')xpMonthly={Rafa:data.Rafa||0,María:data.María||0};
     if(d.id==='wallet')wallet={Rafa:data.Rafa||0,María:data.María||0};
+    if(d.id==='hp'){hpState={Rafa:data.Rafa!==undefined?data.Rafa:HP_MAX,María:data.María!==undefined?data.María:HP_MAX};hpDead={Rafa:data.deadRafa||false,María:data.deadMaría||false};hpResurrectionDone={Rafa:{task:data.resTaskRafa||false,detail:data.resDetailRafa||false},María:{task:data.resTaskMaría||false,detail:data.resDetailMaría||false}};}
     if(d.id==='streak_Rafa')streakData.Rafa={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='streak_María')streakData.María={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='coupleStreak')coupleStreakData={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
@@ -1516,6 +1572,9 @@ async function finishInit(){
   updateStreakBadge('Rafa');
   updateStreakBadge('María');
   updateCoupleStreakBadge();
+  updateHpBadge('Rafa');
+  updateHpBadge('María');
+  checkDeadScreenOnLoad();
   // Catálogo de pareja por persona + pendientes cruzados
   initPersonalRewards();
   // Lista de la compra y menú semanal
@@ -2228,6 +2287,85 @@ function showTravelMessageBanner(msg){
   textEl.textContent=msg;
   banner.style.display='flex';
 }
+
+// ─── SISTEMA HP / KO / RESURRECCIÓN ───────────────────────────────────────
+let resurrectionCatalogType=null; // 'task' | 'detail'
+
+function showDeadScreen(person){
+  const screen=document.getElementById('ko-screen');
+  if(!screen)return;
+  const prog=hpResurrectionDone[person]||{task:false,detail:false};
+  // Actualizar checks visuales
+  const taskCheck=document.getElementById('ko-task-check');
+  const detailCheck=document.getElementById('ko-detail-check');
+  if(taskCheck)taskCheck.innerHTML=prog.task?`<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#10B981;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`:'';
+  if(taskCheck)taskCheck.style.background=prog.task?'#10B981':'transparent';
+  if(detailCheck)detailCheck.innerHTML=prog.detail?`<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#10B981;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`:'';
+  if(detailCheck)detailCheck.style.background=prog.detail?'#10B981':'transparent';
+  // Mostrar botón de resucitar si ambas condiciones están cumplidas
+  const btn=document.getElementById('ko-resurrect-btn');
+  if(btn)btn.style.display=(prog.task&&prog.detail)?'block':'none';
+  screen.style.display='flex';
+}
+
+function checkDeadScreenOnLoad(){
+  if(currentUser&&hpDead[currentUser]){
+    showDeadScreen(currentUser);
+  }
+}
+
+window.openResurrectionCatalog=async(type)=>{
+  resurrectionCatalogType=type;
+  const modal=document.getElementById('resurrection-catalog-modal');
+  const title=document.getElementById('resurrection-catalog-title');
+  const list=document.getElementById('resurrection-catalog-list');
+  if(!modal||!list)return;
+  const colName=type==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
+  const snap=await getDocs(collection(db,colName));
+  const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
+  title.textContent=type==='task'?'Tarea del hogar — elige una':'Detalle para tu pareja — elige uno';
+  if(!items.length){
+    list.innerHTML=`<div class="empty" style="padding:16px;">No hay elementos en este catálogo. Añádelos desde tu perfil (normal) cuando resucites, o pide a tu pareja que los añada.</div>`;
+  }else{
+    list.innerHTML=items.map(it=>`
+      <div onclick="completeResurrectionItem('${it.id}','${type}')" style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;">${escHtml(it.name)}</div>
+          ${it.desc?`<div style="font-size:11px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
+        </div>
+        <div style="color:var(--c1);font-size:18px;">→</div>
+      </div>
+    `).join('');
+  }
+  modal.classList.remove('hidden');
+};
+
+window.closeResurrectionCatalog=()=>{
+  document.getElementById('resurrection-catalog-modal').classList.add('hidden');
+};
+
+window.completeResurrectionItem=async(itemId,type)=>{
+  if(!currentUser)return;
+  hpResurrectionDone[currentUser][type]=true;
+  await saveHpState();
+  closeResurrectionCatalog();
+  showDeadScreen(currentUser); // actualiza los checks y muestra el botón si procede
+  showToast(type==='task'?'✅ Tarea completada':'✅ Detalle hecho con amor');
+};
+
+window.resurrect=async()=>{
+  if(!currentUser)return;
+  const prog=hpResurrectionDone[currentUser];
+  if(!prog.task||!prog.detail)return;
+  hpDead[currentUser]=false;
+  hpState[currentUser]=50; // resucita con la mitad de HP, no con todo
+  hpResurrectionDone[currentUser]={task:false,detail:false};
+  await saveHpState();
+  updateHpBadge(currentUser);
+  updateHeader();
+  document.getElementById('ko-screen').style.display='none';
+  showToast('✨ ¡Has resucitado! El hogar vuelve a estar en marcha');
+};
 
 window.saveTravelMessage=async()=>{
   if(!currentUser)return;
@@ -2942,6 +3080,7 @@ function updateHeader(){
         goalMini.style.display='none';
       }
     }
+    updateHpBadge(p);
   });
   const bothTravelingNow=travelMode.Rafa&&travelMode.María;
   const anyTravelingNow=travelMode.Rafa||travelMode.María;
@@ -3804,6 +3943,11 @@ window.fulfillPending=async(id)=>{
 // 30-49 XP individuales → día "neutro" → corta cualquier racha negativa, vuelve a 0
 // 50+ XP individuales   → día "bueno"  → suma a racha positiva (si venías de negativo, resetea a +1)
 const STREAK_NEUTRAL_MIN=20;
+// Sistema de HP (salud del hogar) — individual por persona
+const HP_MAX=100;
+const HP_LOSS_BAD=15;   // pérdida por día malo  → muere en ~7 días sin hacer nada
+const HP_LOSS_NEUTRAL=5; // pérdida por día neutro
+const HP_GAIN_GOOD=5;    // ganancia por día bueno
 const STREAK_GOOD_MIN=50;
 const STREAK_MIN_DAILY_XP=STREAK_GOOD_MIN; // alias por compatibilidad con código existente
 
@@ -3836,6 +3980,7 @@ async function updateStreak(person,xpEarnedNow){
   if(data.lastDate&&data.lastDate!==today){
     const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
     await applyStreakXpReward(person,res);
+    await applyHpChange(person,res);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=(data.todayXP||0)+(xpEarnedNow||0);
@@ -3850,6 +3995,67 @@ const STREAK_XP_REWARD=5; // XP de premio/castigo por mantener (o romper) la rac
 // INDIVIDUAL de una persona, solo a partir del segundo día consecutivo en la
 // misma dirección. Afecta a su XP total, semanal, mensual y wallet por igual,
 // ya que es XP real ganado (o perdido) por constancia, no un bono aparte.
+async function applyHpChange(person, streakResult){
+  if(!streakResult)return;
+  if(hpDead[person])return; // ya está KO, no se procesa más pérdida hasta resucitar
+  if(travelMode[person])return; // de viaje, HP en pausa igual que la racha
+  let delta=0;
+  if(streakResult.result==='good')delta=HP_GAIN_GOOD;
+  else if(streakResult.result==='neutral')delta=-HP_LOSS_NEUTRAL;
+  else if(streakResult.result==='bad')delta=-HP_LOSS_BAD;
+  if(delta===0)return;
+  hpState[person]=Math.max(0,Math.min(HP_MAX,(hpState[person]||HP_MAX)+delta));
+  if(hpState[person]===0&&!hpDead[person]){
+    await triggerKO(person);
+  }else{
+    await saveHpState();
+    updateHpBadge(person);
+  }
+}
+
+async function triggerKO(person){
+  // La persona llega a 0 HP: pierde todo (XP, nivel, wallet) y queda KO
+  hpDead[person]=true;
+  hpResurrectionDone[person]={task:false,detail:false};
+  // Penalización total — XP, semanal, mensual y wallet a cero
+  xpState[person]=0;xpWeekly[person]=0;xpMonthly[person]=0;wallet[person]=0;
+  userLevelOverride[person]=0;
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
+  await setDoc(doc(db,'users_meta',person),{levelResetOffset:0},{merge:true});
+  await saveHpState();
+  updateHpBadge(person);
+  updateHeader();
+  if(person===currentUser)showDeadScreen(person);
+}
+
+async function saveHpState(){
+  await setDoc(doc(db,'state','hp'),{
+    Rafa:hpState.Rafa,María:hpState.María,
+    deadRafa:hpDead.Rafa,deadMaría:hpDead.María,
+    resTaskRafa:hpResurrectionDone.Rafa.task,resDetailRafa:hpResurrectionDone.Rafa.detail,
+    resTaskMaría:hpResurrectionDone.María.task,resDetailMaría:hpResurrectionDone.María.detail,
+  });
+}
+
+function updateHpBadge(person){
+  const key=person==='Rafa'?'rafa':'maria';
+  const el=document.getElementById(key+'-hp-bar');
+  const lbl=document.getElementById(key+'-hp-label');
+  const hp=hpState[person]||0;
+  if(el)el.style.width=hp+'%';
+  const color=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
+  if(el)el.style.background=color;
+  if(lbl)lbl.textContent=hp+'%';
+  const dead=hpDead[person];
+  const chip=document.getElementById(key+'-hp-chip');
+  if(chip)chip.style.display=dead?'none':'flex';
+  const koEl=document.getElementById(key+'-ko');
+  if(koEl)koEl.style.display=dead?'flex':'none';
+}
+
 async function applyStreakXpReward(person,streakResult){
   if(!streakResult||!streakResult.isContinuation)return;
   const amount=streakResult.result==='good'?STREAK_XP_REWARD:-STREAK_XP_REWARD;
@@ -3890,6 +4096,7 @@ async function checkStreakGaps(){
       await setDoc(doc(db,'state','streak_'+person),data);
       updateStreakBadge(person);
       await applyStreakXpReward(person,res);
+    await applyHpChange(person,res);
     }
   }
   // Racha CONJUNTA del progreso diario — si AMBOS están de viaje, se pausa
