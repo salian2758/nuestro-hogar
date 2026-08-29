@@ -2368,7 +2368,7 @@ function renderTask(t){
     <div class="tdraghandle" data-task-id="${t.id}" title="Arrastra para reasignar">⠿</div>
     <div class="tcheck${t.done?' done':''}" data-task-id="${t.id}" data-done="${t.done?'1':'0'}" title="${t.done?'Toca para desmarcar':'Toca para completar, mantén pulsado para repartir'}">${t.done?chkSVG():''}</div>
     <div class="tinfo">
-      <div class="tname${t.done?' done':''}" onclick="openEditModal('${t.id}')" style="cursor:pointer;">${t.name} <span style="font-size:10px;color:var(--text2);opacity:.6;">✎</span></div>
+      <div class="tname${t.done?' done':''}">${t.name} <span onclick="openEditModal('${t.id}')" style="font-size:10px;color:var(--text2);opacity:.6;cursor:pointer;padding:4px 4px;" title="Editar">✎</span></div>
       <div class="tmeta"><span class="tag tag-z">${t.zona}</span><span class="tag tag-d">${DIFF_LBL[t.diff]}</span>${t.freq==='CadaX'?`<span class="tag" style="background:rgba(99,102,241,0.15);color:#A5B4FC;">${t.freqLabel||'Cada X'}</span>`:''}${gTag(t.group)}</div>
       ${(t.freq==='CadaX'||t.freq==='Semanal'||t.freq==='Mensual')&&t.done&&t.lastDoneDate?`<div class="tnote">⏳ Próxima vez: ${nextAvailableDate(t)}</div>`:''}
       <button class="assign-btn ${assignBtnClass(t.person)}" onclick="openAssignModal('${t.id}')">${assignBtnLabel(t.person)} <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
