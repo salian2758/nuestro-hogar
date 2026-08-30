@@ -313,8 +313,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 </head>
 <body>
 
-<!-- SPLASH SCREEN CON CORAZÓN - MOVIMIENTO ULTRA FLUIDO -->
-<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+<!-- SPLASH SCREEN CON CORAZÓN - SIN PAUSA NEGRA -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;">
   <style>
     @keyframes smoothExpand {
       0% { 
@@ -339,14 +339,14 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     }
     #splash-heart {
       font-size:120px;
-      animation:smoothExpand 1.6s ease-in-out forwards, heartbeatSmooth 0.8s ease-in-out 1.6s infinite;
+      animation:smoothExpand 1.4s ease-in-out forwards, heartbeatSmooth 0.8s ease-in-out 1.4s infinite;
       text-shadow:0 0 20px rgba(248,113,113,0.2);
       filter:drop-shadow(0 8px 20px rgba(248,113,113,0.15));
       will-change:transform;
       backface-visibility:hidden;
     }
     #splash-screen.fade-out {
-      animation:fadeOutSmooth 0.4s ease-out forwards;
+      animation:fadeOutSmooth 0.3s ease-out 1.4s forwards;
     }
   </style>
   
@@ -4948,11 +4948,11 @@ window.showToast=(msg)=>{
 // callback (incluso si responde muy rápido desde caché de sesión), TODAS las
 // funciones que necesita (goTo, initData, showToast...) ya estén definidas.
 onAuthStateChanged(auth,async user=>{
-  // Ocultar splash screen después de 1.6s (expansión fluida)
+  // Ocultar splash screen después de 1.7s (expansión 1.4s + fadeOut 0.3s)
   setTimeout(()=>{
     const splash=document.getElementById('splash-screen');
-    if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.style.display='none',400);}
-  },1600);
+    if(splash){splash.classList.add('fade-out');}
+  },1700);
   
   document.getElementById('loading').classList.add('hidden');
   if(user){
