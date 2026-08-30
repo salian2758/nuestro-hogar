@@ -347,6 +347,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     }
     #splash-screen.fade-out {
       animation:fadeOutSmooth 0.3s ease-out 1.4s forwards;
+      pointer-events:none;
     }
   </style>
   
@@ -4951,7 +4952,14 @@ onAuthStateChanged(auth,async user=>{
   // Ocultar splash screen después de 1.7s (expansión 1.4s + fadeOut 0.3s)
   setTimeout(()=>{
     const splash=document.getElementById('splash-screen');
-    if(splash){splash.classList.add('fade-out');}
+    if(splash){
+      splash.classList.add('fade-out');
+      // Asegurar que se oculte completamente y no bloquee inputs
+      setTimeout(()=>{
+        splash.style.display='none';
+        splash.style.pointerEvents='none';
+      },300);
+    }
   },1700);
   
   document.getElementById('loading').classList.add('hidden');
