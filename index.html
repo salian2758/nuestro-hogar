@@ -4438,21 +4438,35 @@ async function _loadVidaCatalogs(vp,isOwn){
     // Precargar ejemplos si está vacío y es el propio usuario
     if(!recItems.length&&isOwn){
       const RECOVERY_DEFAULTS=[
-        // Tareas profundas
+        // TAREAS PROFUNDAS (limpiezas/organizaciones no frecuentes) - 10 acciones
         {n:'Limpiar baño a fondo (azulejos, inodoro, espejo)',hp:3,d:'Limpieza profunda completa'},
         {n:'Limpiar ventanas y espejos a fondo',hp:2,d:'Cristales y marcos impecables'},
         {n:'Organizar y limpiar armarios',hp:2,d:'Ropa ordenada y espacios limpios'},
         {n:'Limpiar bajo muebles y rincones',hp:2,d:'Polvo y suciedad acumulada'},
         {n:'Encerar suelos o limpiar profundo',hp:3,d:'Suelos relucientes'},
-        // Detalles pareja (prioridad)
-        {n:'Flores o planta pequeña para la casa',hp:2,d:'Sorpresa visual'},
+        {n:'Fregar cocina a fondo',hp:2,d:'Azulejos, electrodomésticos, suelo'},
+        {n:'Aspirar y limpiar toda la casa',hp:3,d:'Todos los rincones'},
+        {n:'Cambiar sábanas y hacer camas perfectas',hp:1,d:'Con cuidado y detalle'},
+        {n:'Organizar y limpiar la despensa',hp:2,d:'Ordenado y visible'},
+        {n:'Limpiar cristales interiores y marcos',hp:1,d:'Brilla la luz'},
+        
+        // DETALLES PAREJA - 16 acciones (PRIORIDAD)
+        {n:'Flores o planta pequeña para la casa',hp:2,d:'Sorpresa visual bonita'},
         {n:'Carta o nota sincera',hp:2,d:'Algo que le guste leer'},
         {n:'Pequeño regalo sorpresa',hp:3,d:'Algo especial sin ser caro'},
-        {n:'Café/té en cama',hp:1,d:'Desayuno en la cama'},
+        {n:'Café/té en cama',hp:1,d:'Desayuno con cariño'},
         {n:'Su snack o postre favorito',hp:2,d:'Algo que le encante'},
         {n:'Hacer su postre favorito',hp:3,d:'Con cariño casero'},
         {n:'Detalle sentimental (foto, recuerdo)',hp:2,d:'Algo que le importe'},
         {n:'Playlist especial para él/ella',hp:1,d:'Canciones que lo/la harán sonreír'},
+        {n:'Masaje o tiempo relajante juntos',hp:2,d:'Sin prisas, solo vosotros'},
+        {n:'Cena especial o picnic sorpresa',hp:3,d:'Con su comida favorita'},
+        {n:'Mensaje de amor o broma privada',hp:1,d:'Algo que solo entiendáis vosotros'},
+        {n:'Foto bonita juntos o marco especial',hp:2,d:'Recuerdos compartidos'},
+        {n:'Sorteo o juego divertido juntos',hp:1,d:'Algo que os haga reír'},
+        {n:'Baño relajante o ducha romántica',hp:2,d:'Velas, música, solo los dos'},
+        {n:'Películas o series favoritas juntos',hp:1,d:'Sin distracciones'},
+        {n:'Paseo o actividad que le encante',hp:2,d:'Algo especial que disfrute'},
       ];
       for(const ej of RECOVERY_DEFAULTS){
         const id='rec'+Date.now()+Math.random().toString(36).slice(2,5);
