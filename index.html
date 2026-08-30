@@ -4313,7 +4313,6 @@ function updateHpBar(person){
   if(bar){
     bar.style.width=hp+'%';
     bar.style.background=color;
-    bar.style.transition='width 0.6s cubic-bezier(0.25,0.46,0.45,0.94), background 0.4s ease';
     bar.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
   }
   if(lbl)lbl.textContent=hpDead[person]?'💀':hp;
@@ -4444,17 +4443,31 @@ window.openVidaModal=(person)=>{
   // Título
   const titleEl=document.getElementById('vida-title');
   if(titleEl)titleEl.textContent=`❤️ Salud de ${vp}`;
-  // HP number y barra
+  // HP number y barra con 5 colores dinámicos
   const numEl=document.getElementById('vida-hp-num');
   const barEl=document.getElementById('vida-hp-bar');
   const stEl=document.getElementById('vida-status');
+  
+  let color;
+  if(hp>80)color='#10B981'; // Verde brillante
+  else if(hp>60)color='#34D399'; // Verde
+  else if(hp>40)color='#F59E0B'; // Amarillo/Naranja
+  else if(hp>20)color='#F97316'; // Naranja fuerte
+  else if(hp>0)color='#DC2626'; // Rojo
+  else color='#1F2937'; // Gris (muerto)
+  
   if(numEl)numEl.textContent=dead?'💀':hp;
-  if(barEl){barEl.style.width=(dead?0:hp)+'%';barEl.style.background=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';}
+  if(barEl){
+    barEl.style.width=(dead?0:hp)+'%';
+    barEl.style.background=color;
+    barEl.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
+  }
   if(stEl){
     if(dead)stEl.textContent='KO — completa la penitencia para resucitar';
+    else if(hp>80)stEl.textContent='Perfecto — el hogar está radiante ✨';
     else if(hp>60)stEl.textContent='Todo bien — sigue así ✓';
-    else if(hp>30)stEl.textContent='Atención — el hogar necesita más cariño';
-    else if(hp>10)stEl.textContent='⚠️ Peligro — actúa hoy';
+    else if(hp>40)stEl.textContent='Atención — el hogar necesita más cariño';
+    else if(hp>20)stEl.textContent='⚠️ Peligro — actúa hoy';
     else stEl.textContent='🚨 Crítico — mañana podrías morir';
   }
   // Cargar catálogos e historial en segundo plano
@@ -4471,7 +4484,7 @@ async function _loadVidaCatalogs(vp,isOwn){
   for(const type of ['task','detail']){
     const el=document.getElementById(`vida-res-${type}`);
     if(!el)continue;
-    const col=`resurrection_${type}_${vp}`;
+    const col=`resurrection_${type}_shared`;
     let items=[];
     try{const s=await getDocs(collection(db,col));s.forEach(d=>items.push({...d.data(),id:d.id}));}catch(e){}
     // Precargar ejemplos si está vacío y es el propio usuario
@@ -4646,7 +4659,7 @@ window._undoHpChange=async(historyId,previousHp)=>{
 
 window._delResItem=async(type,id)=>{
   if(!currentUser)return;
-  try{await deleteDoc(doc(db,`resurrection_${type}_${currentUser}`,id));}catch(e){}
+  try{await deleteDoc(doc(db,`resurrection_${type}_shared`,id));}catch(e){}
   _loadVidaCatalogs(currentUser,true);
 };
 
@@ -4670,7 +4683,7 @@ window.saveResItem=async()=>{
   if(!currentUser||!_resEditType)return;
   const name=document.getElementById('res-edit-name').value.trim();if(!name)return;
   const desc=document.getElementById('res-edit-desc').value.trim();
-  const col=`resurrection_${_resEditType}_${currentUser}`;
+  const col=`resurrection_${_resEditType}_shared`;
   const id=_resEditId||('r'+Date.now());
   await setDoc(doc(db,col,id),{name,desc,createdAt:Date.now()});
   document.getElementById('res-edit-modal').classList.add('hidden');
@@ -4733,7 +4746,7 @@ window._completeRecoveryAction=async(id,hp,actionName)=>{
 window.openKoCatalog=async(type)=>{
   const m=document.getElementById('ko-catalog-modal');if(!m)return;
   document.getElementById('ko-catalog-title').textContent=type==='task'?'Elige una tarea':'Elige un detalle';
-  const col=`resurrection_${type}_${currentUser}`;
+  const col=`resurrection_${type}_shared`;
   const snap=await getDocs(collection(db,col));
   const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
   const listEl=document.getElementById('ko-catalog-list');
