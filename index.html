@@ -4300,8 +4300,22 @@ function updateHpBar(person){
   const hp=hpState[person]??HP_INITIAL;
   const bar=document.getElementById(k+'-hp-bar');
   const lbl=document.getElementById(k+'-hp-lbl');
-  const color=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
-  if(bar){bar.style.width=hp+'%';bar.style.background=color;}
+  
+  // Colores más dinámicos conforme baja la vida
+  let color;
+  if(hp>80)color='#10B981'; // Verde brillante
+  else if(hp>60)color='#34D399'; // Verde
+  else if(hp>40)color='#F59E0B'; // Amarillo/Naranja
+  else if(hp>20)color='#F97316'; // Naranja fuerte
+  else if(hp>0)color='#DC2626'; // Rojo
+  else color='#1F2937'; // Gris (muerto)
+  
+  if(bar){
+    bar.style.width=hp+'%';
+    bar.style.background=color;
+    bar.style.transition='width 0.6s cubic-bezier(0.25,0.46,0.45,0.94), background 0.4s ease';
+    bar.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
+  }
   if(lbl)lbl.textContent=hpDead[person]?'💀':hp;
 }
 
@@ -4432,7 +4446,7 @@ async function _loadVidaCatalogs(vp,isOwn){
   // Cargar catálogo de recuperación
   const recoveryEl=document.getElementById('vida-recovery-list');
   if(recoveryEl){
-    const recCol=`recovery_${vp}`;
+    const recCol=`recovery_shared`;
     let recItems=[];
     
     // Si es el propio usuario, SIEMPRE borra viejos y carga nuevos catálogo
@@ -4532,7 +4546,7 @@ window._delResItem=async(type,id)=>{
 
 window._delRecoveryItem=async(id)=>{
   if(!currentUser)return;
-  try{await deleteDoc(doc(db,`recovery_${currentUser}`,id));}catch(e){}
+  try{await deleteDoc(doc(db,`recovery_shared`,id));}catch(e){}
   _loadVidaCatalogs(currentUser,true);
 };
 
@@ -4571,7 +4585,7 @@ window.saveRecoveryItem=async()=>{
   const name=document.getElementById('recovery-edit-name').value.trim();if(!name)return;
   const hp=Math.min(5,Math.max(1,parseInt(document.getElementById('recovery-edit-hp').value)||3));
   const desc=document.getElementById('recovery-edit-desc').value.trim();
-  const col=`recovery_${currentUser}`;
+  const col=`recovery_shared`;
   const id='rec'+Date.now();
   await setDoc(doc(db,col,id),{name,hp,desc,createdAt:Date.now()});
   document.getElementById('recovery-edit-modal').classList.add('hidden');
@@ -4583,7 +4597,7 @@ window.saveRecoveryItem=async()=>{
 window.openRecoveryCatalog=async()=>{
   if(!currentUser)return;
   const m=document.getElementById('recovery-catalog-modal');if(!m)return;
-  const col=`recovery_${currentUser}`;
+  const col=`recovery_shared`;
   const snap=await getDocs(collection(db,col));
   const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
   const listEl=document.getElementById('recovery-catalog-list');
