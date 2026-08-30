@@ -313,87 +313,54 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 </head>
 <body>
 
-<!-- SPLASH SCREEN CON CORAZÓN ANIMADO + SONIDO -->
-<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,var(--bg),var(--bg2));display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(10px);overflow:hidden;">
+<!-- SPLASH SCREEN CON CORAZÓN ANIMADO -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,var(--bg),var(--bg2));display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(5px);overflow:hidden;">
   <style>
-    @keyframes heartbeat {
-      0%,100% { transform:scale(1);opacity:1; }
-      14% { transform:scale(1.15);opacity:1; }
-      28% { transform:scale(1);opacity:1; }
-      42% { transform:scale(1.15);opacity:1; }
-      56% { transform:scale(1);opacity:0.8; }
-    }
-    @keyframes expandIconDramatic {
+    @keyframes expandClean {
       0% { 
-        transform:scale(0) rotate(-180deg);
+        transform:scale(0.05);
         opacity:0;
       }
-      15% {
-        transform:scale(0.4) rotate(-90deg);
-        opacity:0.6;
-      }
-      50% {
-        transform:scale(1.5) rotate(0deg);
-        opacity:1;
-      }
-      85% {
-        transform:scale(1.1) rotate(0deg);
+      10% {
         opacity:1;
       }
       100% { 
-        transform:scale(1) rotate(0deg);
+        transform:scale(1);
         opacity:1;
       }
     }
-    @keyframes pulseGlowDramatic {
-      0% {
-        box-shadow:0 0 0 0 rgba(248,113,113,0.8), inset 0 0 30px rgba(248,113,113,0.3);
-      }
-      50% {
-        box-shadow:0 0 0 60px rgba(248,113,113,0.2), inset 0 0 50px rgba(248,113,113,0.5);
-      }
-      100% {
-        box-shadow:0 0 0 100px rgba(248,113,113,0), inset 0 0 30px rgba(248,113,113,0);
-      }
+    @keyframes heartbeatSubtle {
+      0%,100% { transform:scale(1); }
+      14% { transform:scale(1.08); }
+      28% { transform:scale(1); }
+      42% { transform:scale(1.08); }
+      56% { transform:scale(1); }
     }
-    @keyframes fadeOut {
+    @keyframes fadeOutClean {
       0% { opacity:1; }
       100% { opacity:0; }
     }
     #splash-heart {
-      font-size:180px;
-      animation:expandIconDramatic 1.5s cubic-bezier(0.34,1.56,0.64,1) forwards, pulseGlowDramatic 1.5s ease-out, heartbeat 1.2s ease-in-out 1.5s infinite;
-      text-shadow:
-        0 0 20px rgba(248,113,113,0.8),
-        0 0 40px rgba(248,113,113,0.6),
-        0 0 60px rgba(248,113,113,0.4);
-      filter:drop-shadow(0 0 30px rgba(248,113,113,0.6)) brightness(1.2);
-      position:relative;
-    }
-    #splash-heart::before {
-      content:'';
-      position:absolute;
-      inset:-30px;
-      background:radial-gradient(circle, rgba(248,113,113,0.3) 0%, transparent 70%);
-      animation:expandIconDramatic 1.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
-      pointer-events:none;
+      font-size:100px;
+      animation:expandClean 0.7s cubic-bezier(0.25,0.46,0.45,0.94) forwards, heartbeatSubtle 1.2s ease-in-out 0.7s infinite;
+      text-shadow:0 0 15px rgba(248,113,113,0.3);
+      filter:drop-shadow(0 8px 20px rgba(248,113,113,0.2));
     }
     #splash-text {
-      margin-top:60px;
-      font-size:18px;
-      font-weight:800;
-      color:var(--c1);
+      margin-top:40px;
+      font-size:15px;
+      font-weight:600;
+      color:var(--text);
       opacity:0;
-      animation:fadeInText 0.8s ease-in-out 1.0s forwards;
-      letter-spacing:2px;
-      text-shadow:0 4px 12px rgba(0,0,0,0.3);
+      animation:fadeInSubtle 0.6s ease-in-out 0.5s forwards;
+      letter-spacing:0.5px;
     }
-    @keyframes fadeInText {
-      0% { opacity:0;transform:translateY(30px) scale(0.9); }
-      100% { opacity:1;transform:translateY(0) scale(1); }
+    @keyframes fadeInSubtle {
+      0% { opacity:0;transform:translateY(10px); }
+      100% { opacity:1;transform:translateY(0); }
     }
     #splash-screen.fade-out {
-      animation:fadeOut 0.8s ease-out forwards;
+      animation:fadeOutClean 0.5s ease-out forwards;
     }
   </style>
   
@@ -4996,31 +4963,11 @@ window.showToast=(msg)=>{
 // callback (incluso si responde muy rápido desde caché de sesión), TODAS las
 // funciones que necesita (goTo, initData, showToast...) ya estén definidas.
 onAuthStateChanged(auth,async user=>{
-  // Intentar reproducir sonido de puerta (puede estar silenciado por navegador)
-  try {
-    setTimeout(()=>{
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      if(audioContext.state==='suspended'){audioContext.resume();}
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-      
-      osc.frequency.setValueAtTime(250, audioContext.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.8);
-      gain.gain.setValueAtTime(0.15, audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
-      
-      osc.start(audioContext.currentTime);
-      osc.stop(audioContext.currentTime + 0.8);
-    }, 100);
-  } catch(e) {}
-  
-  // Ocultar splash screen después de 3 seg (para que vea completa la animación)
+  // Ocultar splash screen después de 1.8 seg (duración de la animación)
   setTimeout(()=>{
     const splash=document.getElementById('splash-screen');
-    if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.style.display='none',800);}
-  },3000);
+    if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.style.display='none',500);}
+  },1800);
   
   document.getElementById('loading').classList.add('hidden');
   if(user){
