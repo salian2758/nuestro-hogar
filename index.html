@@ -4397,11 +4397,21 @@ async function _loadVidaCatalogs(vp,isOwn){
     // Precargar ejemplos si está vacío y es el propio usuario
     if(!recItems.length&&isOwn){
       const RECOVERY_DEFAULTS=[
-        {n:'Cocinar juntos una comida especial',hp:3,d:'Receta nueva que os apetezca'},
-        {n:'Cena romántica en casa',hp:3,d:'Velas, música, sin distracciones'},
-        {n:'Paseo largo juntos',hp:2,d:'Por el barrio o un parque bonito'},
-        {n:'Reorganizar un espacio juntos',hp:2,d:'Dormitorio, salón o lo que sea'},
-        {n:'Tiempo en el sofá sin móvil',hp:1,d:'Solo hablar, mirar series o lo que sea'},
+        // Tareas profundas
+        {n:'Limpiar baño a fondo (azulejos, inodoro, espejo)',hp:3,d:'Limpieza profunda completa'},
+        {n:'Limpiar ventanas y espejos a fondo',hp:2,d:'Cristales y marcos impecables'},
+        {n:'Organizar y limpiar armarios',hp:2,d:'Ropa ordenada y espacios limpios'},
+        {n:'Limpiar bajo muebles y rincones',hp:2,d:'Polvo y suciedad acumulada'},
+        {n:'Encerar suelos o limpiar profundo',hp:3,d:'Suelos relucientes'},
+        // Detalles pareja (prioridad)
+        {n:'Flores o planta pequeña para la casa',hp:2,d:'Sorpresa visual'},
+        {n:'Carta o nota sincera',hp:2,d:'Algo que le guste leer'},
+        {n:'Pequeño regalo sorpresa',hp:3,d:'Algo especial sin ser caro'},
+        {n:'Café/té en cama',hp:1,d:'Desayuno en la cama'},
+        {n:'Su snack o postre favorito',hp:2,d:'Algo que le encante'},
+        {n:'Hacer su postre favorito',hp:3,d:'Con cariño casero'},
+        {n:'Detalle sentimental (foto, recuerdo)',hp:2,d:'Algo que le importe'},
+        {n:'Playlist especial para él/ella',hp:1,d:'Canciones que lo/la harán sonreír'},
       ];
       for(const ej of RECOVERY_DEFAULTS){
         const id='rec'+Date.now()+Math.random().toString(36).slice(2,5);
