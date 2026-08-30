@@ -4574,11 +4574,6 @@ async function _loadVidaHistorial(vp){
   const el=document.getElementById('vida-historial');
   if(!el)return;
   try{
-    // Cargar historial de cambios HP
-    const hpHistSnap=await getDocs(query(collection(db,'hp_history'),where('person','==',vp),orderBy('timestamp','desc'),limit(50)));
-    const hpChanges=[];
-    hpHistSnap.forEach(d=>hpChanges.push({...d.data(),id:d.id}));
-    
     // Cargar muertes
     const s=await getDoc(doc(db,'state','deaths'));
     const deaths=s.exists()?Object.values(s.data()).filter(d=>d.person===vp).sort((a,b)=>b.ts-a.ts):[];
@@ -4589,32 +4584,12 @@ async function _loadVidaHistorial(vp){
     // Sección de muertes
     if(deaths.length){
       html+=`<div style="font-weight:600;margin-bottom:8px;color:#F87171;">💀 Muertes (${deaths.length})</div>`;
-      html+=deaths.map(d=>`
+      html+=deaths.slice(0,5).map(d=>`
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg3);border-radius:6px;margin-bottom:4px;">
           <div style="flex:1;">
-            <div style="font-size:11px;color:var(--text2);">${d.date}</div>
+            <div style="font-size:11px;color:var(--text2);">${d.date||''}</div>
             <div style="font-size:12px;">Nivel ${d.levelBefore}→${d.levelAfter}</div>
           </div>
-        </div>
-      `).join('');
-      html+='<div style="margin-top:12px;border-top:0.5px solid var(--border);padding-top:10px;"></div>';
-    }
-    
-    // Sección de cambios HP (últimos 10)
-    if(hpChanges.length){
-      html+=`<div style="font-weight:600;margin-bottom:8px;color:#34D399;">📊 Últimos cambios (${hpChanges.length})</div>`;
-      html+=hpChanges.slice(0,10).map(c=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg3);border-radius:6px;margin-bottom:4px;">
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:500;">
-              ${c.icon} ${c.reason}
-              <span style="color:${c.change>0?'#34D399':'#F87171'};font-weight:700;margin-left:4px;">
-                ${c.change>0?'+':''}${c.change} HP
-              </span>
-            </div>
-            <div style="font-size:10px;color:var(--text2);">${c.date} (${c.hpBefore}→${c.hpAfter})</div>
-          </div>
-          ${c.canUndo?`<button onclick="_undoHpChange('${c.id}',${c.hpBefore})" style="background:none;border:none;color:#F59E0B;cursor:pointer;padding:4px;font-size:12px;">↶</button>`:''}
         </div>
       `).join('');
       html+='<div style="margin-top:12px;border-top:0.5px solid var(--border);padding-top:10px;"></div>';
