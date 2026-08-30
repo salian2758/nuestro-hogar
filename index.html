@@ -820,14 +820,11 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div style="margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(239,68,68,0.15);">Para resucitar: 1 tarea + 1 detalle de los catálogos de abajo.</div>
       </div>
       <!-- Catálogo recuperación vida -->
-      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">💚 Recuperar vida</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">💚 Recuperar vida — Click en cualquiera para ganar HP</div>
       <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid var(--border);">
           <span style="font-size:12px;font-weight:700;">🏠 Hogar & 💑 Pareja</span>
-          <div style="display:flex;gap:6px;">
-            <button onclick="openRecoveryCatalog()" style="background:none;border:none;color:#34D399;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Acciones</button>
-            <button onclick="openRecoveryEditModal()" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
-          </div>
+          <button onclick="openRecoveryEditModal()" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir acción</button>
         </div>
         <div id="vida-recovery-list" style="max-height:200px;overflow-y:auto;"></div>
       </div>
@@ -4411,9 +4408,9 @@ async function _loadVidaCatalogs(vp,isOwn){
     if(!recItems.length){recoveryEl.innerHTML=`<div style="padding:10px 12px;font-size:11px;color:var(--text2);">Sin acciones${isOwn?' — pulsa + Añadir':''}</div>`;}
     else{
       recoveryEl.innerHTML=recItems.map(it=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:0.5px solid var(--border);">
+        <div onclick="_completeRecoveryAction('${it.id}',${it.hp})" style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:0.5px solid var(--border);cursor:pointer;background:rgba(52,211,153,0.05);transition:background .2s;border-radius:4px;margin:4px 0;">
           <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${escHtml(it.name)} <span style="color:#34D399;font-size:11px;font-weight:600;">+${it.hp} HP</span></div>${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}</div>
-          ${isOwn?`<button onclick="_delRecoveryItem('${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}
+          ${isOwn?`<button onclick="event.stopPropagation();_delRecoveryItem('${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}
         </div>
       `).join('');
     }
