@@ -362,13 +362,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   </div>
   <div class="profiles">
     <div class="profile-chip" onclick="openProfile('Rafa')" style="cursor:pointer;">
-      <div class="avatar av-r" id="rafa-avatar-emoji" onclick="goToVida('Rafa')" style="font-size:16px;cursor:pointer;">🌱</div>
+      <div class="avatar av-r" id="rafa-avatar-emoji" onclick="event.stopPropagation();goToVida('Rafa')" style="font-size:16px;cursor:pointer;">🌱</div>
       <div class="p-info">
         <div class="p-name">Rafa <span id="rafa-streak-flame" style="font-size:10px;"></span></div>
         <div class="p-level" id="rl">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-r" id="rxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-r" id="rxpn">0 XP</div>
-        <div id="rafa-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="goToVida('Rafa')">
+        <div id="rafa-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="event.stopPropagation();goToVida('Rafa')">
           <span style="font-size:9px;color:var(--text2);">❤️</span>
           <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="rafa-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
           <span style="font-size:9px;color:var(--text2);min-width:22px;" id="rafa-hp-label">100%</span>
@@ -382,13 +382,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div class="profile-chip" onclick="openProfile('María')" style="cursor:pointer;">
-      <div class="avatar av-m" id="maria-avatar-emoji" onclick="goToVida('María')" style="font-size:16px;cursor:pointer;">🌱</div>
+      <div class="avatar av-m" id="maria-avatar-emoji" onclick="event.stopPropagation();goToVida('María')" style="font-size:16px;cursor:pointer;">🌱</div>
       <div class="p-info">
         <div class="p-name">María <span id="maria-streak-flame" style="font-size:10px;"></span></div>
         <div class="p-level" id="ml">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-m" id="mxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-m" id="mxpn">0 XP</div>
-        <div id="maria-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="goToVida('María')">
+        <div id="maria-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="event.stopPropagation();goToVida('María')">
           <span style="font-size:9px;color:var(--text2);">❤️</span>
           <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="maria-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
           <span style="font-size:9px;color:var(--text2);min-width:22px;" id="maria-hp-label">100%</span>
