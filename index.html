@@ -1253,7 +1253,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, query, orderBy, where, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ═══════════════════════════════════════════════
 // CONFIGURACIÓN FIREBASE — PEGA TUS VALORES AQUÍ
@@ -4319,21 +4319,67 @@ function updateHpBar(person){
   if(lbl)lbl.textContent=hpDead[person]?'💀':hp;
 }
 
+// Registrar cambio de HP en historial (con motivo y opción de deshacer)
+async function recordHpChange(person,hpBefore,hpAfter,reason,actionType='gain'){
+  const change=hpAfter-hpBefore;
+  const icon=change>0?'💪':change<0?'💔':'🎭';
+  const timestamp=Date.now();
+  const id='hp'+timestamp+Math.random().toString(36).slice(2,5);
+  
+  try{
+    await setDoc(doc(db,'hp_history',id),{
+      person,
+      hpBefore,
+      hpAfter,
+      change,
+      reason,
+      actionType,
+      icon,
+      timestamp,
+      date:new Date().toLocaleString('es-ES'),
+      canUndo:true
+    });
+  }catch(e){}
+}
+
 async function applyHpDelta(person,delta,wasPerfect){
   if(hpDead[person]||travelMode[person])return;
+  const hpBefore=hpState[person]??HP_INITIAL;
   const d=wasPerfect?HP_GAIN_PERFECT:delta;
-  hpState[person]=Math.max(0,Math.min(HP_MAX,(hpState[person]??HP_INITIAL)+d));
+  hpState[person]=Math.max(0,Math.min(HP_MAX,hpBefore+d));
+  
   if(hpState[person]===0){await triggerKO(person);}
-  else{await saveHpState();updateHpBar(person);}
+  else{
+    await saveHpState();
+    const reason=d>0?'Día perfecto':'Día del registro';
+    await recordHpChange(person,hpBefore,hpState[person],reason,'daily');
+    updateHpBar(person);
+  }
 }
 
 async function applyDayHp(person,streakResult){
   if(!streakResult||hpDead[person]||travelMode[person])return;
   let delta=0;
-  if(streakResult.result==='good')delta=HP_GAIN_GOOD;
-  else if(streakResult.result==='neutral')delta=-HP_LOSS_NEUTRAL;
-  else delta=-HP_LOSS_BAD;
-  await applyHpDelta(person,delta,false);
+  let reason='';
+  if(streakResult.result==='good'){
+    delta=HP_GAIN_GOOD;
+    reason='Día bueno';
+  }else if(streakResult.result==='neutral'){
+    delta=-HP_LOSS_NEUTRAL;
+    reason='Semana floja';
+  }else{
+    delta=-HP_LOSS_BAD;
+    reason='Día malo';
+  }
+  
+  const hpBefore=person===currentUser?hpState[person]??HP_INITIAL:hpState[person]??HP_INITIAL;
+  hpState[person]=Math.max(0,Math.min(HP_MAX,hpBefore+delta));
+  if(hpState[person]===0){await triggerKO(person);}
+  else{
+    await saveHpState();
+    await recordHpChange(person,hpBefore,hpState[person],reason,'daily');
+    updateHpBar(person);
+  }
 }
 
 async function triggerKO(person){
@@ -4519,23 +4565,83 @@ async function _loadVidaHistorial(vp){
   const el=document.getElementById('vida-historial');
   if(!el)return;
   try{
+    // Cargar historial de cambios HP
+    const hpHistSnap=await getDocs(query(collection(db,'hp_history'),where('person','==',vp),orderBy('timestamp','desc'),limit(50)));
+    const hpChanges=[];
+    hpHistSnap.forEach(d=>hpChanges.push({...d.data(),id:d.id}));
+    
+    // Cargar muertes
     const s=await getDoc(doc(db,'state','deaths'));
     const deaths=s.exists()?Object.values(s.data()).filter(d=>d.person===vp).sort((a,b)=>b.ts-a.ts):[];
+    
     const hp=hpState[vp]??HP_INITIAL;
     let html='';
+    
+    // Sección de muertes
     if(deaths.length){
-      html+=`<div style="font-weight:600;margin-bottom:6px;color:#F87171;">💀 ${deaths.length} muerte${deaths.length>1?'s':''}</div>`;
-      html+=deaths.map(d=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--border);"><span>${d.date}</span><span style="color:var(--text2);">Nivel ${d.levelBefore}→${d.levelAfter}</span></div>`).join('');
-      html+='<div style="margin-top:10px;"></div>';
-    }else{
-      html+='<div style="margin-bottom:8px;">Sin muertes registradas 🌟</div>';
+      html+=`<div style="font-weight:600;margin-bottom:8px;color:#F87171;">💀 Muertes (${deaths.length})</div>`;
+      html+=deaths.map(d=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg3);border-radius:6px;margin-bottom:4px;">
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--text2);">${d.date}</div>
+            <div style="font-size:12px;">Nivel ${d.levelBefore}→${d.levelAfter}</div>
+          </div>
+        </div>
+      `).join('');
+      html+='<div style="margin-top:12px;border-top:0.5px solid var(--border);padding-top:10px;"></div>';
     }
+    
+    // Sección de cambios HP (últimos 10)
+    if(hpChanges.length){
+      html+=`<div style="font-weight:600;margin-bottom:8px;color:#34D399;">📊 Últimos cambios (${hpChanges.length})</div>`;
+      html+=hpChanges.slice(0,10).map(c=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg3);border-radius:6px;margin-bottom:4px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:500;">
+              ${c.icon} ${c.reason}
+              <span style="color:${c.change>0?'#34D399':'#F87171'};font-weight:700;margin-left:4px;">
+                ${c.change>0?'+':''}${c.change} HP
+              </span>
+            </div>
+            <div style="font-size:10px;color:var(--text2);">${c.date} (${c.hpBefore}→${c.hpAfter})</div>
+          </div>
+          ${c.canUndo?`<button onclick="_undoHpChange('${c.id}',${c.hpBefore})" style="background:none;border:none;color:#F59E0B;cursor:pointer;padding:4px;font-size:12px;">↶</button>`:''}
+        </div>
+      `).join('');
+      html+='<div style="margin-top:12px;border-top:0.5px solid var(--border);padding-top:10px;"></div>';
+    }
+    
+    // Predicción
     if(!hpDead[vp]){
       const days=Math.max(0,Math.floor(hp/HP_LOSS_BAD));
-      html+=`<div style="line-height:1.8;"><div>HP actual: <strong>${hp}/100</strong></div><div>Sin hacer nada: ~${days} día${days!==1?'s':''} hasta morir</div><div>Día bueno hoy: +${HP_GAIN_GOOD} HP → ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)}</div></div>`;
+      html+=`<div style="line-height:1.8;font-size:11px;color:var(--text2);">
+        <div>💓 HP: <strong style="color:var(--text);">${hp}/100</strong></div>
+        <div>⏳ Sin hacer nada: ~${days} día${days!==1?'s':''}</div>
+        <div>✅ Día bueno: +${HP_GAIN_GOOD} HP → ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)}</div>
+      </div>`;
+    }else{
+      html+='<div style="font-size:12px;color:#F87171;">💀 Necesita resucitar</div>';
     }
     el.innerHTML=html||'Sin datos';
   }catch(e){el.innerHTML='Sin datos disponibles';}
+}
+
+// Deshacer cambio de HP
+window._undoHpChange=async(historyId,previousHp)=>{
+  if(!currentUser)return;
+  try{
+    // Restaurar HP anterior
+    hpState[currentUser]=previousHp;
+    await saveHpState();
+    updateHpBar(currentUser);
+    updateHeader();
+    
+    // Marcar como sin deshacer
+    await updateDoc(doc(db,'hp_history',historyId),{canUndo:false});
+    
+    _loadVidaHistorial(currentUser);
+    showToast('Cambio deshecho ↶');
+  }catch(e){}
 }
 
 window._delResItem=async(type,id)=>{
@@ -4602,20 +4708,23 @@ window.openRecoveryCatalog=async()=>{
   const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
   const listEl=document.getElementById('recovery-catalog-list');
   listEl.innerHTML=items.length?items.map(it=>`
-    <div onclick="_completeRecoveryAction('${it.id}',${it.hp})" style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
+    <div onclick="_completeRecoveryAction('${it.id}',${it.hp},'${escHtml(it.name)}')" style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
       <div style="font-size:13px;font-weight:600;">${escHtml(it.name)} <span style="color:#34D399;font-weight:700;">+${it.hp} HP</span></div>
       ${it.desc?`<div style="font-size:11px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
     </div>
   `).join(''):'<div style="padding:12px;font-size:12px;color:var(--text2);">Sin acciones en el catálogo. Abre la sección de vida para añadir.</div>';
   m.classList.remove('hidden');
 };
-window._completeRecoveryAction=async(id,hp)=>{
+window._completeRecoveryAction=async(id,hp,actionName)=>{
   if(!currentUser)return;
-  const newHp=Math.min(HP_MAX,hpState[currentUser]+hp);
+  const hpBefore=hpState[currentUser]??HP_INITIAL;
+  const newHp=Math.min(HP_MAX,hpBefore+hp);
   hpState[currentUser]=newHp;
   await saveHpState();
+  await recordHpChange(currentUser,hpBefore,newHp,actionName||'Recuperación de vida','recovery');
   updateHpBar(currentUser);
   updateHeader();
+  _loadVidaHistorial(currentUser);
   showToast(`✨ +${hp} HP — Ahora estáis en ${newHp}/100`);
   document.getElementById('recovery-catalog-modal').classList.add('hidden');
 };
