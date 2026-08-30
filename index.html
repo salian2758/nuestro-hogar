@@ -691,7 +691,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
     <!-- RESET AVATAR -->
     <button onclick="confirmResetAvatar()" style="width:100%;background:var(--bg3);border:0.5px dashed var(--border);border-radius:10px;color:var(--text2);padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:10px;">↺ Reiniciar nivel y avatar (mantiene XP, wallet, racha e historial)</button>
-    <button onclick="simulateDeath()" style="width:100%;background:rgba(239,68,68,0.06);border:0.5px dashed rgba(239,68,68,0.3);border-radius:10px;color:#F87171;padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:8px;">🧪 Simular muerte (prueba — sin perder XP ni nivel)</button>
     <button onclick="confirmResetAllXP()" style="width:100%;background:rgba(239,68,68,0.1);border:0.5px dashed rgba(239,68,68,0.4);border-radius:10px;color:#F87171;padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;">⚠️ Resetear XP total de los dos (irreversible)</button>
 
     <!-- WALLET / CATÁLOGO DE PAREJA -->
@@ -820,6 +819,18 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div>📅 Sí puedes ver tareas y calendario</div>
         <div style="margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(239,68,68,0.15);">Para resucitar: 1 tarea + 1 detalle de los catálogos de abajo.</div>
       </div>
+      <!-- Catálogo recuperación vida -->
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">💚 Recuperar vida</div>
+      <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid var(--border);">
+          <span style="font-size:12px;font-weight:700;">🏠 Hogar & 💑 Pareja</span>
+          <div style="display:flex;gap:6px;">
+            <button onclick="openRecoveryCatalog()" style="background:none;border:none;color:#34D399;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Acciones</button>
+            <button onclick="openRecoveryEditModal()" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
+          </div>
+        </div>
+        <div id="vida-recovery-list" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
       <!-- Catálogos resurrección -->
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Catálogo de resurrección</div>
       <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:10px;">
@@ -887,6 +898,29 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div class="modal-title" id="ko-catalog-title">Elige una tarea</div>
     <div id="ko-catalog-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
     <div class="m-acts"><button class="btn-c" onclick="document.getElementById('ko-catalog-modal').classList.add('hidden')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CATÁLOGO RECUPERACIÓN VIDA -->
+<div class="modal-overlay hidden" id="recovery-edit-modal">
+  <div class="modal">
+    <div class="modal-title">Recuperar vida (hogar & pareja)</div>
+    <div class="fg"><label class="fl">Acción</label><input class="fi" id="recovery-edit-name" placeholder="Ej: Cocinar juntos una comida especial"></div>
+    <div class="fg"><label class="fl">HP a recuperar (1-5)</label><input class="fi" type="number" id="recovery-edit-hp" min="1" max="5" placeholder="3" value="3"></div>
+    <div class="fg"><label class="fl">Descripción (opcional)</label><input class="fi" id="recovery-edit-desc" placeholder="Ej: Receta nueva que nos apetezca"></div>
+    <div class="m-acts">
+      <button class="btn-c" onclick="document.getElementById('recovery-edit-modal').classList.add('hidden')">Cancelar</button>
+      <button class="btn-p" onclick="saveRecoveryItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATÁLOGO RECUPERACIÓN (elegir acción) -->
+<div class="modal-overlay hidden" id="recovery-catalog-modal">
+  <div class="modal">
+    <div class="modal-title" id="recovery-catalog-title">¿Qué harás para recuperar vida?</div>
+    <div id="recovery-catalog-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div class="m-acts"><button class="btn-c" onclick="document.getElementById('recovery-catalog-modal').classList.add('hidden')">Cancelar</button></div>
   </div>
 </div>
 
@@ -4354,6 +4388,36 @@ async function _loadVidaCatalogs(vp,isOwn){
       </div>
     `).join('');
   }
+  // Cargar catálogo de recuperación
+  const recoveryEl=document.getElementById('vida-recovery-list');
+  if(recoveryEl){
+    const recCol=`recovery_${vp}`;
+    let recItems=[];
+    try{const s=await getDocs(collection(db,recCol));s.forEach(d=>recItems.push({...d.data(),id:d.id}));}catch(e){}
+    // Precargar ejemplos si está vacío y es el propio usuario
+    if(!recItems.length&&isOwn){
+      const RECOVERY_DEFAULTS=[
+        {n:'Cocinar juntos una comida especial',hp:3,d:'Receta nueva que os apetezca'},
+        {n:'Cena romántica en casa',hp:3,d:'Velas, música, sin distracciones'},
+        {n:'Paseo largo juntos',hp:2,d:'Por el barrio o un parque bonito'},
+        {n:'Reorganizar un espacio juntos',hp:2,d:'Dormitorio, salón o lo que sea'},
+        {n:'Tiempo en el sofá sin móvil',hp:1,d:'Solo hablar, mirar series o lo que sea'},
+      ];
+      for(const ej of RECOVERY_DEFAULTS){
+        const id='rec'+Date.now()+Math.random().toString(36).slice(2,5);
+        try{await setDoc(doc(db,recCol,id),{name:ej.n,hp:ej.hp,desc:ej.d,createdAt:Date.now()});recItems.push({name:ej.n,hp:ej.hp,desc:ej.d,id});}catch(e){}
+      }
+    }
+    if(!recItems.length){recoveryEl.innerHTML=`<div style="padding:10px 12px;font-size:11px;color:var(--text2);">Sin acciones${isOwn?' — pulsa + Añadir':''}</div>`;}
+    else{
+      recoveryEl.innerHTML=recItems.map(it=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:0.5px solid var(--border);">
+          <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${escHtml(it.name)} <span style="color:#34D399;font-size:11px;font-weight:600;">+${it.hp} HP</span></div>${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}</div>
+          ${isOwn?`<button onclick="_delRecoveryItem('${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}
+        </div>
+      `).join('');}
+    }
+  }
 }
 
 async function _loadVidaHistorial(vp){
@@ -4385,6 +4449,12 @@ window._delResItem=async(type,id)=>{
   _loadVidaCatalogs(currentUser,true);
 };
 
+window._delRecoveryItem=async(id)=>{
+  if(!currentUser)return;
+  try{await deleteDoc(doc(db,`recovery_${currentUser}`,id));}catch(e){}
+  _loadVidaCatalogs(currentUser,true);
+};
+
 // Editar catálogo resurrección
 let _resEditType=null,_resEditId=null;
 window.openResEditModal=(type,id,name,desc)=>{
@@ -4405,6 +4475,55 @@ window.saveResItem=async()=>{
   document.getElementById('res-edit-modal').classList.add('hidden');
   _loadVidaCatalogs(currentUser,true);
   showToast('Guardado ✓');
+};
+
+// Recuperación de vida — editar catálogo
+window.openRecoveryEditModal=()=>{
+  const m=document.getElementById('recovery-edit-modal');if(!m)return;
+  document.getElementById('recovery-edit-name').value='';
+  document.getElementById('recovery-edit-hp').value='3';
+  document.getElementById('recovery-edit-desc').value='';
+  m.classList.remove('hidden');
+};
+window.saveRecoveryItem=async()=>{
+  if(!currentUser)return;
+  const name=document.getElementById('recovery-edit-name').value.trim();if(!name)return;
+  const hp=Math.min(5,Math.max(1,parseInt(document.getElementById('recovery-edit-hp').value)||3));
+  const desc=document.getElementById('recovery-edit-desc').value.trim();
+  const col=`recovery_${currentUser}`;
+  const id='rec'+Date.now();
+  await setDoc(doc(db,col,id),{name,hp,desc,createdAt:Date.now()});
+  document.getElementById('recovery-edit-modal').classList.add('hidden');
+  _loadVidaCatalogs(currentUser,true);
+  showToast('Acción añadida ✓');
+};
+
+// Recuperación de vida — elegir del catálogo
+window.openRecoveryCatalog=async()=>{
+  if(!currentUser)return;
+  const m=document.getElementById('recovery-catalog-modal');if(!m)return;
+  const col=`recovery_${currentUser}`;
+  const snap=await getDocs(collection(db,col));
+  const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
+  const listEl=document.getElementById('recovery-catalog-list');
+  listEl.innerHTML=items.length?items.map(it=>`
+    <div onclick="_completeRecoveryAction('${it.id}',${it.hp})" style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
+      <div style="font-size:13px;font-weight:600;">${escHtml(it.name)} <span style="color:#34D399;font-weight:700;">+${it.hp} HP</span></div>
+      ${it.desc?`<div style="font-size:11px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
+    </div>
+  `).join(''):'<div style="padding:12px;font-size:12px;color:var(--text2);">Sin acciones en el catálogo. Abre la sección de vida para añadir.</div>';
+  m.classList.remove('hidden');
+};
+window._completeRecoveryAction=async(id,hp)=>{
+  if(!currentUser)return;
+  document.getElementById('recovery-catalog-modal').classList.add('hidden');
+  const newHp=Math.min(HP_MAX,hpState[currentUser]+hp);
+  hpState[currentUser]=newHp;
+  await saveHpState();
+  updateHpBar(currentUser);
+  updateHeader();
+  try{await deleteDoc(doc(db,`recovery_${currentUser}`,id));}catch(e){}
+  showToast(`✨ +${hp} HP — Ahora estáis en ${newHp}/100`);
 };
 
 // KO — elegir del catálogo para resucitar
@@ -4450,8 +4569,8 @@ window.resurrect=async()=>{
     _deathSimBackup=null;
     showToast('🧪 Prueba completada — todo restaurado a como estaba ✓');
   }else{
-    // Muerte real: resucita con 50 HP
-    hpState[currentUser]=50;
+    // Muerte real: resucita con HP máximo
+    hpState[currentUser]=HP_MAX;
     showToast('✨ ¡Has resucitado! El hogar vuelve a estar en marcha');
   }
 
