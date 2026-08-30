@@ -691,6 +691,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
     <!-- RESET AVATAR -->
     <button onclick="confirmResetAvatar()" style="width:100%;background:var(--bg3);border:0.5px dashed var(--border);border-radius:10px;color:var(--text2);padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:10px;">↺ Reiniciar nivel y avatar (mantiene XP, wallet, racha e historial)</button>
+    <button onclick="simulateDeath()" style="width:100%;background:rgba(239,68,68,0.06);border:0.5px dashed rgba(239,68,68,0.3);border-radius:10px;color:#F87171;padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:8px;">🧪 Simular muerte (prueba — sin perder XP ni nivel)</button>
     <button onclick="confirmResetAllXP()" style="width:100%;background:rgba(239,68,68,0.1);border:0.5px dashed rgba(239,68,68,0.4);border-radius:10px;color:#F87171;padding:10px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px;">⚠️ Resetear XP total de los dos (irreversible)</button>
 
     <!-- WALLET / CATÁLOGO DE PAREJA -->
@@ -765,13 +766,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div class="notif-row" id="notif-time-row" style="display:none;">
       <div class="notif-label">Hora del recordatorio</div>
       <input class="fi" id="notif-time" type="time" value="20:00" style="width:100px;" onchange="saveNotifTime()">
-    </div>
-
-    <!-- RESETEO MANUAL -->
-    <div class="stitle mt">Reseteo de tareas</div>
-    <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px;">
-      Las diarias se resetean solas cada día. Las semanales y mensuales se mantienen marcadas hasta que pasa exactamente una semana o un mes desde que las completaste — no un día fijo de calendario. También puedes forzar el reseteo de las diarias manualmente:
-      <button onclick="resetTasks()" style="display:block;width:100%;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">↺ Resetear diarias ahora</button>
     </div>
 
     <!-- PAPELERA -->
@@ -2151,6 +2145,7 @@ window.confirmComplete=async()=>{
   // Calcular reparto de XP según el modo elegido
   let xpFor={Rafa:0,María:0};
   let splitLabel='';
+  const meIsKO=me&&hpDead[me]; // si está KO, no gana XP ni racha
   if(!me||(me!=='Rafa'&&me!=='María')){
     xpFor[whoDidIt]=earned; // fallback si no hay usuario identificado
   }else if(splitMode==='mine'){
@@ -2165,10 +2160,16 @@ window.confirmComplete=async()=>{
     xpFor[me]=xpMe;xpFor[other]=xpOther;
     splitLabel=`Repartido ${pctMe}% / ${100-pctMe}%`;
   }
-  // Aplicar XP a total, semanal, mensual y wallet para cada persona implicada
+  // Aplicar XP — si está KO, su porción se bloquea (no gana XP ni racha)
+  // pero sí puede ganar XP el otro si procede
   for(const person of ['Rafa','María']){
     const amount=xpFor[person]||0;
     if(amount>0){
+      if(hpDead[person]){
+        // KO: no gana XP ni racha, pero la tarea sí queda marcada
+        if(person===me)showToast('⚠️ Estás KO — no ganas XP hasta resucitar');
+        continue;
+      }
       xpState[person]=(xpState[person]||0)+amount;
       xpWeekly[person]=(xpWeekly[person]||0)+amount;
       xpMonthly[person]=(xpMonthly[person]||0)+amount;
@@ -3694,6 +3695,32 @@ async function resetAvatarVisual(person){
   updateHeader();
 }
 
+// Simulación de muerte para pruebas — activa el flujo KO completo
+// sin modificar realmente el XP, nivel ni cartera. Al resucitar,
+// todo vuelve exactamente al estado anterior.
+let _deathSimBackup=null;
+
+window.simulateDeath=async()=>{
+  if(!currentUser)return;
+  if(!confirm('Esto activará la pantalla de muerte para que puedas probar el flujo completo.\n\nTu XP, nivel y cartera quedan guardados y se restauran al resucitar.\n\n¿Continuar?'))return;
+  // Guardar estado real
+  _deathSimBackup={
+    xp:xpState[currentUser],
+    xpWeekly:xpWeekly[currentUser],
+    xpMonthly:xpMonthly[currentUser],
+    wallet:wallet[currentUser],
+    hp:hpState[currentUser],
+  };
+  // Activar KO sin tocar el XP real — solo cambiamos el estado de HP/muerto
+  hpDead[currentUser]=true;
+  hpResurrectionDone[currentUser]={task:false,detail:false};
+  hpState[currentUser]=0;
+  await saveHpState();
+  updateHpBar(currentUser);
+  showKoScreen();
+  showToast('🧪 Modo prueba — tu XP real está guardado');
+};
+
 window.confirmResetAllXP=()=>{
   if(!confirm('⚠️ Esto pondrá a CERO el XP total de Rafa Y María, reiniciará sus rachas, y borrará todo el historial de tareas completadas.\n\nEsta acción NO se puede deshacer. ¿Seguro que quieres continuar?'))return;
   if(!confirm('Última confirmación: se perderá el nivel, el XP total, las rachas y el historial de los dos para siempre. ¿Confirmas el reseteo?'))return;
@@ -3909,6 +3936,7 @@ window.deleteReward=async(person,id)=>{
   await deleteDoc(doc(db,'catalog_'+person,id));
 };
 window.redeemReward=async(person,id)=>{
+  if(hpDead[person]){showToast('⚠️ Estás KO — no puedes canjear premios hasta resucitar');return;}
   const r=(personalCatalog[person]||[]).find(r=>r.id===id);if(!r)return;
   const myWallet=wallet[person]||0;
   if(myWallet<r.cost){showToast(`Necesitas ${r.cost} XP — tienes ${myWallet}`);return;}
@@ -4406,12 +4434,31 @@ window.resurrect=async()=>{
   const prog=hpResurrectionDone[currentUser];
   if(!prog.task||!prog.detail)return;
   hpDead[currentUser]=false;
-  hpState[currentUser]=50;
   hpResurrectionDone[currentUser]={task:false,detail:false};
+
+  if(_deathSimBackup){
+    // Modo prueba: restaurar el estado real que guardamos antes
+    xpState[currentUser]=_deathSimBackup.xp;
+    xpWeekly[currentUser]=_deathSimBackup.xpWeekly;
+    xpMonthly[currentUser]=_deathSimBackup.xpMonthly;
+    wallet[currentUser]=_deathSimBackup.wallet;
+    hpState[currentUser]=_deathSimBackup.hp;
+    await setDoc(doc(db,'state','xp'),xpState);
+    await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+    await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+    await setDoc(doc(db,'state','wallet'),wallet);
+    _deathSimBackup=null;
+    showToast('🧪 Prueba completada — todo restaurado a como estaba ✓');
+  }else{
+    // Muerte real: resucita con 50 HP
+    hpState[currentUser]=50;
+    showToast('✨ ¡Has resucitado! El hogar vuelve a estar en marcha');
+  }
+
   await saveHpState();
-  updateHpBar(currentUser);updateHeader();
+  updateHpBar(currentUser);
+  updateHeader();
   document.getElementById('ko-screen').style.display='none';
-  showToast('✨ ¡Has resucitado! El hogar vuelve a estar en marcha');
 };
 
 function initHpBars(){
