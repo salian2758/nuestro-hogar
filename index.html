@@ -938,7 +938,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   <div class="modal">
     <div class="modal-title" id="ko-catalog-title">Elige una tarea</div>
     <div id="ko-catalog-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
-    <div class="m-acts"><button class="btn-c" onclick="document.getElementById('ko-catalog-modal').classList.add('hidden')">Cancelar</button></div>
+    <div class="m-acts" style="padding-top:12px;border-top:0.5px solid var(--border);"><button class="btn-c" onclick="document.getElementById('ko-catalog-modal').classList.add('hidden')" style="width:100%;">✕ Cancelar</button></div>
   </div>
 </div>
 
@@ -4463,12 +4463,8 @@ window.openVidaModal=(person)=>{
     barEl.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
   }
   if(stEl){
-    if(dead)stEl.textContent='KO — completa la penitencia para resucitar';
-    else if(hp>80)stEl.textContent='Perfecto — el hogar está radiante ✨';
-    else if(hp>60)stEl.textContent='Todo bien — sigue así ✓';
-    else if(hp>40)stEl.textContent='Atención — el hogar necesita más cariño';
-    else if(hp>20)stEl.textContent='⚠️ Peligro — actúa hoy';
-    else stEl.textContent='🚨 Crítico — mañana podrías morir';
+    if(dead)stEl.textContent='💀 KO';
+    else stEl.textContent=hp+'/100 HP';
   }
   // Cargar catálogos e historial en segundo plano
   const isOwn=vp===currentUser;
