@@ -4434,9 +4434,18 @@ async function _loadVidaCatalogs(vp,isOwn){
   if(recoveryEl){
     const recCol=`recovery_${vp}`;
     let recItems=[];
-    try{const s=await getDocs(collection(db,recCol));s.forEach(d=>recItems.push({...d.data(),id:d.id}));}catch(e){}
-    // Precargar ejemplos si está vacío y es el propio usuario
-    if(!recItems.length&&isOwn){
+    
+    // Si es el propio usuario, SIEMPRE borra viejos y carga nuevos catálogo
+    if(isOwn){
+      try{
+        // Borrar TODOS los items antiguos
+        const s=await getDocs(collection(db,recCol));
+        for(const doc of s.docs){
+          try{await deleteDoc(doc.ref);}catch(e){}
+        }
+      }catch(e){}
+      
+      // Cargar catálogo nuevo
       const RECOVERY_DEFAULTS=[
         // TAREAS PROFUNDAS (limpiezas/organizaciones no frecuentes) - 10 acciones
         {n:'Limpiar baño a fondo (azulejos, inodoro, espejo)',hp:3,d:'Limpieza profunda completa'},
@@ -4468,10 +4477,17 @@ async function _loadVidaCatalogs(vp,isOwn){
         {n:'Películas o series favoritas juntos',hp:1,d:'Sin distracciones'},
         {n:'Paseo o actividad que le encante',hp:2,d:'Algo especial que disfrute'},
       ];
+      
       for(const ej of RECOVERY_DEFAULTS){
         const id='rec'+Date.now()+Math.random().toString(36).slice(2,5);
-        try{await setDoc(doc(db,recCol,id),{name:ej.n,hp:ej.hp,desc:ej.d,createdAt:Date.now()});recItems.push({name:ej.n,hp:ej.hp,desc:ej.d,id});}catch(e){}
+        try{
+          await setDoc(doc(db,recCol,id),{name:ej.n,hp:ej.hp,desc:ej.d,createdAt:Date.now()});
+          recItems.push({name:ej.n,hp:ej.hp,desc:ej.d,id});
+        }catch(e){}
       }
+    }else{
+      // Si NO es el propio usuario, solo carga desde Firebase
+      try{const s=await getDocs(collection(db,recCol));s.forEach(d=>recItems.push({...d.data(),id:d.id}));}catch(e){}
     }
     if(!recItems.length){recoveryEl.innerHTML=`<div style="padding:10px 12px;font-size:11px;color:var(--text2);">Sin acciones${isOwn?' — pulsa + Añadir':''}</div>`;}
     else{
