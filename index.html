@@ -154,8 +154,6 @@ body[data-app-theme="pulido"] .tc{border-radius:18px;padding:15px 16px;box-shado
 @keyframes checkPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,.5);}40%{transform:scale(1.25);box-shadow:0 0 0 8px rgba(16,185,129,.15);}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(16,185,129,0);}}
 @keyframes checkDraw{to{stroke-dashoffset:0;}}
 @keyframes levelUpDrop{0%{transform:translateY(-100%);}100%{transform:translateY(0);}}
-@keyframes hpPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-.hp-critical{animation:hpPulse 0.8s ease-in-out infinite!important;}
 .tcheck svg{width:12px;height:12px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;display:none;}
 .tcheck.done svg{display:block;}
 .tinfo{flex:1;min-width:0;}
@@ -362,18 +360,19 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   </div>
   <div class="profiles">
     <div class="profile-chip" onclick="openProfile('Rafa')" style="cursor:pointer;">
-      <div class="avatar av-r" id="rafa-avatar-emoji" onclick="event.stopPropagation();goToVida('Rafa')" style="font-size:16px;cursor:pointer;">🌱</div>
+      <div class="avatar av-r" id="rafa-avatar-emoji" onclick="event.stopPropagation();openVidaModal('Rafa')" style="font-size:16px;cursor:pointer;">🌱</div>
       <div class="p-info">
         <div class="p-name">Rafa <span id="rafa-streak-flame" style="font-size:10px;"></span></div>
         <div class="p-level" id="rl">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-r" id="rxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-r" id="rxpn">0 XP</div>
-        <div id="rafa-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="event.stopPropagation();goToVida('Rafa')">
-          <span style="font-size:9px;color:var(--text2);">❤️</span>
-          <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="rafa-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
-          <span style="font-size:9px;color:var(--text2);min-width:22px;" id="rafa-hp-label">100%</span>
+        <div onclick="event.stopPropagation();openVidaModal('Rafa')" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" id="rafa-hp-row">
+          <span style="font-size:9px;">❤️</span>
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+            <div id="rafa-hp-bar" style="height:100%;width:80%;background:#34D399;border-radius:2px;transition:width .4s,background .4s;"></div>
+          </div>
+          <span style="font-size:9px;color:var(--text2);min-width:22px;" id="rafa-hp-lbl">80</span>
         </div>
-        <div id="rafa-ko" style="display:none;margin-top:4px;background:rgba(239,68,68,0.15);border-radius:6px;padding:2px 6px;font-size:10px;color:#F87171;font-weight:700;text-align:center;">💀 KO</div>
         <div id="rafa-goal-mini" style="display:none;margin-top:3px;">
           <div style="font-size:8px;color:var(--text2);margin-bottom:1px;" id="rafa-goal-label">🎯 objetivo</div>
           <div style="height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div id="rafa-goal-fill" style="height:100%;width:0%;background:#34D399;"></div></div>
@@ -382,18 +381,19 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div class="profile-chip" onclick="openProfile('María')" style="cursor:pointer;">
-      <div class="avatar av-m" id="maria-avatar-emoji" onclick="event.stopPropagation();goToVida('María')" style="font-size:16px;cursor:pointer;">🌱</div>
+      <div class="avatar av-m" id="maria-avatar-emoji" onclick="event.stopPropagation();openVidaModal('María')" style="font-size:16px;cursor:pointer;">🌱</div>
       <div class="p-info">
         <div class="p-name">María <span id="maria-streak-flame" style="font-size:10px;"></span></div>
         <div class="p-level" id="ml">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-m" id="mxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-m" id="mxpn">0 XP</div>
-        <div id="maria-hp-chip" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" onclick="event.stopPropagation();goToVida('María')">
-          <span style="font-size:9px;color:var(--text2);">❤️</span>
-          <div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="maria-hp-bar" style="height:100%;width:100%;background:#34D399;transition:width .4s,background .4s;border-radius:2px;"></div></div>
-          <span style="font-size:9px;color:var(--text2);min-width:22px;" id="maria-hp-label">100%</span>
+        <div onclick="event.stopPropagation();openVidaModal('María')" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" id="maria-hp-row">
+          <span style="font-size:9px;">❤️</span>
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+            <div id="maria-hp-bar" style="height:100%;width:80%;background:#34D399;border-radius:2px;transition:width .4s,background .4s;"></div>
+          </div>
+          <span style="font-size:9px;color:var(--text2);min-width:22px;" id="maria-hp-lbl">80</span>
         </div>
-        <div id="maria-ko" style="display:none;margin-top:4px;background:rgba(239,68,68,0.15);border-radius:6px;padding:2px 6px;font-size:10px;color:#F87171;font-weight:700;text-align:center;">💀 KO</div>
         <div id="maria-goal-mini" style="display:none;margin-top:3px;">
           <div style="font-size:8px;color:var(--text2);margin-bottom:1px;" id="maria-goal-label">🎯 objetivo</div>
           <div style="height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;"><div id="maria-goal-fill" style="height:100%;width:0%;background:#34D399;"></div></div>
@@ -727,24 +727,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <textarea class="fi" id="travel-message-input" rows="2" placeholder="Ej: Buen viaje, disfruta sin preocuparte. Yo me encargo de todo en casa ❤️" style="resize:none;font-family:inherit;" onblur="saveTravelMessage()"></textarea>
     </div>
 
-    <!-- CATÁLOGOS DE RESURRECCIÓN -->
-    <div class="stitle" id="resurrection-section-title">Catálogos de resurrección ☠️</div>
-    <div id="resurrection-section-desc" style="font-size:11px;color:var(--text2);margin-bottom:10px;">Si llegas a 0 HP, para resucitar tendrás que completar una tarea y un detalle de estos catálogos. Que sean algo con sentido — que cuesten un poco, pero no demasiado.</div>
-    <div id="resurrection-task-section" style="margin-bottom:10px;">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">🏠 Tareas del hogar</div>
-      <div id="resurrection-task-list" style="margin-bottom:8px;"></div>
-      <button onclick="openResurrectionEditModal('task')" style="background:rgba(239,68,68,0.08);border:0.5px dashed rgba(239,68,68,0.3);border-radius:8px;color:#F87171;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;width:100%;">+ Añadir tarea de resurrección</button>
-    </div>
-    <div id="resurrection-detail-section" style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">❤️ Detalles para tu pareja</div>
-      <div id="resurrection-detail-list" style="margin-bottom:8px;"></div>
-      <button onclick="openResurrectionEditModal('detail')" style="background:rgba(239,68,68,0.08);border:0.5px dashed rgba(239,68,68,0.3);border-radius:8px;color:#F87171;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;width:100%;">+ Añadir detalle de resurrección</button>
-    </div>
-    <div id="death-history-section" style="margin-bottom:14px;display:none;">
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;">💀 Historial de muertes</div>
-      <div id="death-history-list" style="font-size:11px;color:var(--text2);"></div>
-    </div>
-
     <!-- ROTACIÓN DE GRUPOS A/B -->
     <!-- ESTILO VISUAL DE LA APP -->
     <div class="stitle" id="app-theme-title">Estilo visual de la app</div>
@@ -785,6 +767,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <input class="fi" id="notif-time" type="time" value="20:00" style="width:100px;" onchange="saveNotifTime()">
     </div>
 
+    <!-- RESETEO MANUAL -->
+    <div class="stitle mt">Reseteo de tareas</div>
+    <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px;">
+      Las diarias se resetean solas cada día. Las semanales y mensuales se mantienen marcadas hasta que pasa exactamente una semana o un mes desde que las completaste — no un día fijo de calendario. También puedes forzar el reseteo de las diarias manualmente:
+      <button onclick="resetTasks()" style="display:block;width:100%;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">↺ Resetear diarias ahora</button>
+    </div>
+
     <!-- PAPELERA -->
     <div class="stitle">Papelera <span class="sb sb-g" id="trash-count"></span></div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Se guardan los últimos 30 días. Toca restaurar para recuperar una tarea.</div>
@@ -801,83 +790,109 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   </div>
 </div>
 
-<!-- PANTALLA DE VIDA — accesible pulsando la barra HP o el avatar -->
-<div id="vida-modal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);overflow-y:auto;">
-  <div style="min-height:100%;display:flex;align-items:flex-start;padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top,0px));">
-    <div style="background:var(--bg);border-radius:20px;width:100%;max-width:430px;margin:0 auto;padding:20px;padding-bottom:32px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div style="font-size:16px;font-weight:700;">Salud del hogar ❤️</div>
-        <button onclick="closeVidaModal()" style="background:var(--bg3);border:none;border-radius:8px;color:var(--text2);padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;">✕ Cerrar</button>
+<!-- MODAL DE VIDA -->
+<div id="vida-modal" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.8);overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));min-height:100%;">
+    <div style="background:var(--bg);border-radius:20px;padding:20px;max-width:430px;margin:0 auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;" id="vida-title">❤️ Salud del hogar</div>
+        <button onclick="document.getElementById('vida-modal').style.display='none'" style="background:var(--bg3);border:none;border-radius:8px;color:var(--text);padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;">✕</button>
       </div>
-
-    <!-- ESTADO HP ACTUAL -->
-    <div id="vida-header-card" style="background:var(--bg2);border-radius:16px;border:0.5px solid var(--border);padding:20px;margin-bottom:16px;text-align:center;">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:4px;" id="vida-person-label">Salud del hogar</div>
-      <div style="font-size:52px;font-weight:800;line-height:1;margin-bottom:10px;" id="vida-hp-number">80</div>
-      <div style="height:12px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:8px;">
-        <div id="vida-hp-bar-big" style="height:100%;width:80%;background:#34D399;border-radius:6px;transition:width .6s,background .4s;"></div>
-      </div>
-      <div style="font-size:12px;color:var(--text2);" id="vida-hp-status">Todo bien — sigue así ✓</div>
-    </div>
-
-    <!-- CÓMO SUBE Y BAJA -->
-    <div class="stitle">Qué suma y qué resta ❤️</div>
-    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:16px;">
-      ${[
-        ['Día perfecto','100% del objetivo conjunto','#34D399','+6 HP'],
-        ['Día bueno','50+ XP ese día','#34D399','+3 HP'],
-        ['Semana buena','≥5 días buenos esa semana','#34D399','+5 HP'],
-        ['De viaje ✈️','Modo viaje activo','var(--text2)','sin cambio'],
-        ['Día neutro','20-49 XP ese día','#F87171','−4 HP'],
-        ['Día malo','Menos de 20 XP','#F87171','−10 HP'],
-        ['Semana floja','≤2 días buenos esa semana','#F87171','−8 HP'],
-      ].map(([t,s,c,v],i,arr)=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;${i<arr.length-1?'border-bottom:0.5px solid var(--border);':''}">
-          <div><div style="font-size:12px;font-weight:600;">${t}</div><div style="font-size:10px;color:var(--text2);">${s}</div></div>
-          <div style="color:${c};font-weight:700;font-size:14px;">${v}</div>
+      <!-- HP actual -->
+      <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:16px;text-align:center;margin-bottom:14px;">
+        <div style="font-size:40px;font-weight:800;margin-bottom:8px;" id="vida-hp-num">80</div>
+        <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:8px;">
+          <div id="vida-hp-bar" style="height:100%;width:80%;background:#34D399;border-radius:5px;transition:width .5s,background .3s;"></div>
         </div>
-      `).join('')}
-    </div>
-
-    <!-- QUÉ PASA AL MORIR -->
-    <div class="stitle">Al llegar a 0 HP 💀</div>
-    <div style="background:rgba(239,68,68,0.06);border-radius:12px;border:0.5px solid rgba(239,68,68,0.2);padding:14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.8;">
-      <div>💸 Pierdes tu <strong style="color:var(--text);">cartera completa</strong></div>
-      <div>📉 Retrocedes <strong style="color:var(--text);">2 niveles exactos</strong></div>
-      <div>🔒 No puedes ganar XP ni acceder a premios hasta resucitar</div>
-      <div>📅 Sí puedes ver el calendario y las tareas</div>
-      <div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(239,68,68,0.15);">Para resucitar: completa <strong style="color:var(--text);">una tarea</strong> y <strong style="color:var(--text);">un detalle</strong> de los catálogos de abajo.</div>
-    </div>
-
-    <!-- CATÁLOGO DE RESURRECCIÓN -->
-    <div class="stitle">Catálogo de resurrección</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Estas son las tareas y detalles que tendrás que hacer si llegas a 0 HP. Edítalos para que tengan sentido para vosotros.</div>
-
-    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:12px;">
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:12px;font-weight:700;">🏠 Tareas del hogar</div>
-        <button onclick="openResurrectionEditModal('task')" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
+        <div style="font-size:12px;color:var(--text2);" id="vida-status">Todo bien — sigue así ✓</div>
       </div>
-      <div id="vida-resurrection-task-list"></div>
-    </div>
-
-    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:16px;">
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:12px;font-weight:700;">❤️ Detalles para tu pareja</div>
-        <button onclick="openResurrectionEditModal('detail')" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
+      <!-- Tabla suma/resta -->
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Qué suma y qué resta</div>
+      <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:14px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Día perfecto (100% objetivo)</span><span style="color:#34D399;font-weight:700;">+6 HP</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Día bueno (50+ XP)</span><span style="color:#34D399;font-weight:700;">+3 HP</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Semana buena (≥5 días buenos)</span><span style="color:#34D399;font-weight:700;">+5 HP</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>De viaje ✈️</span><span style="color:var(--text2);font-weight:700;">sin cambio</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Día neutro (20–49 XP)</span><span style="color:#F87171;font-weight:700;">−4 HP</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Día malo (&lt;20 XP)</span><span style="color:#F87171;font-weight:700;">−10 HP</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;"><span>Semana floja (≤2 días buenos)</span><span style="color:#F87171;font-weight:700;">−8 HP</span></div>
       </div>
-      <div id="vida-resurrection-detail-list"></div>
+      <!-- Al llegar a 0 -->
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Al llegar a 0 HP 💀</div>
+      <div style="background:rgba(239,68,68,0.07);border-radius:10px;border:0.5px solid rgba(239,68,68,0.2);padding:12px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.8;">
+        <div>💸 Pierdes la <strong style="color:var(--text);">cartera completa</strong></div>
+        <div>📉 Retrocedes <strong style="color:var(--text);">2 niveles</strong></div>
+        <div>🔒 No puedes ganar XP ni acceder a premios</div>
+        <div>📅 Sí puedes ver tareas y calendario</div>
+        <div style="margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(239,68,68,0.15);">Para resucitar: 1 tarea + 1 detalle de los catálogos de abajo.</div>
+      </div>
+      <!-- Catálogos resurrección -->
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Catálogo de resurrección</div>
+      <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid var(--border);">
+          <span style="font-size:12px;font-weight:700;">🏠 Tareas</span>
+          <button onclick="openResEditModal('task')" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
+        </div>
+        <div id="vida-res-task"></div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:0.5px solid var(--border);">
+          <span style="font-size:12px;font-weight:700;">❤️ Detalles para tu pareja</span>
+          <button onclick="openResEditModal('detail')" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
+        </div>
+        <div id="vida-res-detail"></div>
+      </div>
+      <!-- Historial -->
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Historial</div>
+      <div id="vida-historial" style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;">Cargando...</div>
     </div>
-
-    <!-- HISTORIAL DE VIDA -->
-    <div class="stitle">Historial de vida</div>
-    <div id="vida-historial" style="margin-bottom:24px;">
-      <div style="font-size:12px;color:var(--text2);padding:14px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);">Cargando...</div>
-    </div>
-
-    <div style="display:none" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:24px;"></div>
   </div>
+</div>
+
+<!-- PANTALLA KO -->
+<div id="ko-screen" style="display:none;position:fixed;inset:0;z-index:900;background:#0a0806;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;overflow-y:auto;">
+  <div style="font-size:60px;margin-bottom:12px;">💀</div>
+  <div style="font-size:20px;font-weight:800;color:#F87171;margin-bottom:8px;">Has caído</div>
+  <div style="font-size:12px;color:#A89A8C;margin-bottom:6px;">Perdiste 2 niveles y tu cartera.</div>
+  <div style="font-size:11px;color:rgba(168,154,140,0.6);margin-bottom:20px;" id="ko-death-count"></div>
+  <div style="background:#1E1A16;border-radius:14px;border:1px solid rgba(248,113,113,0.2);padding:16px;width:100%;max-width:340px;margin-bottom:16px;">
+    <div style="font-size:11px;color:#F87171;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Penitencia</div>
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+      <div id="ko-task-check" style="width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
+      <div style="flex:1;text-align:left;"><div style="font-size:12px;font-weight:600;">Tarea del hogar</div><div style="font-size:10px;color:var(--text2);">Del catálogo de resurrección</div></div>
+      <button onclick="openKoCatalog('task')" style="background:rgba(248,113,113,0.15);border:none;border-radius:6px;color:#F87171;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;">Ver</button>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;">
+      <div id="ko-detail-check" style="width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);flex-shrink:0;"></div>
+      <div style="flex:1;text-align:left;"><div style="font-size:12px;font-weight:600;">Detalle para tu pareja</div><div style="font-size:10px;color:var(--text2);">Del catálogo de resurrección</div></div>
+      <button onclick="openKoCatalog('detail')" style="background:rgba(248,113,113,0.15);border:none;border-radius:6px;color:#F87171;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;">Ver</button>
+    </div>
+  </div>
+  <div id="ko-resurrect-btn" style="display:none;margin-bottom:12px;">
+    <button onclick="resurrect()" style="background:linear-gradient(135deg,#10B981,#34D399);border:none;border-radius:12px;color:white;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">✨ Resucitar</button>
+  </div>
+  <button onclick="document.getElementById('ko-screen').style.display='none'" style="background:none;border:none;color:rgba(168,154,140,0.4);font-size:11px;cursor:pointer;font-family:inherit;">Ver tareas →</button>
+</div>
+
+<!-- MODAL EDITAR CATÁLOGO RESURRECCIÓN -->
+<div class="modal-overlay hidden" id="res-edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="res-edit-title">Tarea de resurrección</div>
+    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="res-edit-name" placeholder="Ej: Limpiar el baño a fondo"></div>
+    <div class="fg"><label class="fl">Descripción (opcional)</label><input class="fi" id="res-edit-desc" placeholder="Ej: Incluye azulejos y suelo"></div>
+    <div class="m-acts">
+      <button class="btn-c" onclick="document.getElementById('res-edit-modal').classList.add('hidden')">Cancelar</button>
+      <button class="btn-p" onclick="saveResItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KO CATÁLOGO (elegir qué hacer para resucitar) -->
+<div class="modal-overlay hidden" id="ko-catalog-modal">
+  <div class="modal">
+    <div class="modal-title" id="ko-catalog-title">Elige una tarea</div>
+    <div id="ko-catalog-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div class="m-acts"><button class="btn-c" onclick="document.getElementById('ko-catalog-modal').classList.add('hidden')">Cancelar</button></div>
   </div>
 </div>
 
@@ -911,47 +926,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   <div style="font-size:30px;">✈️</div>
   <div style="font-size:14px;font-weight:600;color:white;line-height:1.4;" id="travel-message-text"></div>
   <button onclick="document.getElementById('travel-message-banner').style.display='none'" style="margin-top:4px;background:rgba(255,255,255,0.22);border:none;border-radius:8px;color:white;padding:6px 16px;font-size:12px;cursor:pointer;font-family:inherit;">Cerrar</button>
-</div>
-
-<!-- BANNER DE AVISO PROGRESIVO DE HP — aparece en umbrales 50/30/15 -->
-<div id="hp-warning-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:440;background:linear-gradient(135deg,#B45309,#F59E0B);padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:4px;text-align:center;animation:levelUpDrop .3s ease;">
-  <div style="font-size:13px;font-weight:700;color:white;" id="hp-warning-title">⚠️ Salud bajando</div>
-  <div style="font-size:12px;color:rgba(255,255,255,0.9);" id="hp-warning-msg"></div>
-  <button onclick="document.getElementById('hp-warning-banner').style.display='none'" style="margin-top:4px;background:rgba(0,0,0,0.15);border:none;border-radius:6px;color:white;padding:4px 12px;font-size:10px;cursor:pointer;font-family:inherit;">Cerrar</button>
-</div>
-
-<!-- PANTALLA KO — bloquea ganar XP y acceder a premios, pero NO el calendario/tareas -->
-<div id="ko-screen" style="display:none;position:fixed;inset:0;z-index:900;background:#0a0806;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;overflow-y:auto;">
-  <div style="font-size:64px;margin-bottom:16px;">💀</div>
-  <div style="font-size:22px;font-weight:800;color:#F87171;margin-bottom:8px;">Has caído</div>
-  <div style="font-size:13px;color:#A89A8C;line-height:1.6;margin-bottom:8px;" id="ko-message">El hogar ha quedado desatendido. Has perdido 2 niveles y tu cartera.</div>
-  <div style="font-size:11px;color:rgba(248,113,113,0.7);margin-bottom:20px;" id="ko-death-count"></div>
-  <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:8px 14px;margin-bottom:20px;font-size:12px;color:#A89A8C;">
-    📅 Puedes seguir viendo el calendario y las tareas — solo están bloqueados ganar XP y acceder a premios.
-  </div>
-  <div style="background:#1E1A16;border-radius:16px;border:1px solid rgba(248,113,113,0.2);padding:18px;width:100%;max-width:340px;margin-bottom:20px;">
-    <div style="font-size:12px;color:#F87171;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;">Penitencia de resurrección</div>
-    <div id="ko-task-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
-      <div id="ko-task-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
-      <div style="flex:1;text-align:left;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);">Tarea del hogar</div>
-        <div style="font-size:11px;color:var(--text2);">Una tarea algo más profunda de lo normal</div>
-      </div>
-      <button onclick="openResurrectionCatalog('task')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver</button>
-    </div>
-    <div id="ko-detail-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;">
-      <div id="ko-detail-check" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
-      <div style="flex:1;text-align:left;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);">Detalle para tu pareja</div>
-        <div style="font-size:11px;color:var(--text2);">Algo bonito que a ella le importe</div>
-      </div>
-      <button onclick="openResurrectionCatalog('detail')" style="background:rgba(248,113,113,0.15);border:none;border-radius:8px;color:#F87171;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Ver</button>
-    </div>
-  </div>
-  <div id="ko-resurrect-btn" style="display:none;margin-bottom:16px;">
-    <button onclick="resurrect()" style="background:linear-gradient(135deg,#10B981,#34D399);border:none;border-radius:14px;color:white;padding:15px 32px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(16,185,129,0.4);">✨ Resucitar</button>
-  </div>
-  <button onclick="document.getElementById('ko-screen').style.display='none'" style="background:none;border:none;color:rgba(168,154,140,0.5);font-size:12px;cursor:pointer;font-family:inherit;padding:8px;">Ver calendario y tareas →</button>
 </div>
 
 <div id="group-rotation-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:linear-gradient(135deg,#6366F1,#3B82F6);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));flex-direction:column;align-items:center;gap:6px;text-align:center;">
@@ -1112,29 +1086,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   </div>
 </div>
 
-<!-- MODAL CATÁLOGO DE RESURRECCIÓN (al estar KO, para elegir qué hacer) -->
-<div class="modal-overlay hidden" id="resurrection-catalog-modal">
-  <div class="modal">
-    <div class="modal-title" id="resurrection-catalog-title">Catálogo de resurrección</div>
-    <div id="resurrection-catalog-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
-    <div class="m-acts">
-      <button class="btn-c" onclick="closeResurrectionCatalog()">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL GESTIÓN CATÁLOGO RESURRECCIÓN (desde el perfil, en modo normal) -->
-<div class="modal-overlay hidden" id="resurrection-edit-modal">
-  <div class="modal">
-    <div class="modal-title" id="resurrection-edit-title">Editar catálogo</div>
-    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="resurrection-edit-name" placeholder="Ej: Limpiar el baño a fondo"></div>
-    <div class="fg"><label class="fl">Descripción (opcional)</label><input class="fi" id="resurrection-edit-desc" placeholder="Ej: Incluye azulejos y suelo"></div>
-    <div class="m-acts">
-      <button class="btn-c" onclick="closeResurrectionEditModal()">Cancelar</button>
-      <button class="btn-p" id="resurrection-edit-save-btn" onclick="saveResurrectionItem()">Guardar</button>
-    </div>
-  </div>
-</div>
 
 <!-- SHOPPING ITEM MODAL -->
 <div class="modal-overlay hidden" id="shopping-modal">
@@ -1475,19 +1426,16 @@ const DEFAULT_TASKS=[
 
 let tasks=[];
 let history=[];
-let xpState={Rafa:0,María:0};
-// ─── SISTEMA HP (SALUD DEL HOGAR) ────────────────────────────────────────
-const HP_MAX=100;
-const HP_INITIAL=80;
-const HP_LOSS_BAD=10;
-const HP_LOSS_NEUTRAL=4;
-const HP_GAIN_GOOD=3;
-const HP_GAIN_PERFECT=6;
-const HP_WEEKLY_BONUS=5;
-const HP_WEEKLY_PENALTY=8;
-let hpState={Rafa:HP_INITIAL,María:HP_INITIAL}; // salud individual, 0-100
-let hpDead={Rafa:false,María:false}; // true = KO, esperando resurrección
+// ─── SISTEMA HP ───────────────────────────────────────────────────────────
+const HP_MAX=100, HP_INITIAL=80;
+const HP_LOSS_BAD=10, HP_LOSS_NEUTRAL=4;
+const HP_GAIN_GOOD=3, HP_GAIN_PERFECT=6;
+const HP_WEEKLY_BONUS=5, HP_WEEKLY_PENALTY=8;
+let hpState={Rafa:HP_INITIAL,María:HP_INITIAL};
+let hpDead={Rafa:false,María:false};
 let hpResurrectionDone={Rafa:{task:false,detail:false},María:{task:false,detail:false}};
+// ──────────────────────────────────────────────────────────────────────────
+let xpState={Rafa:0,María:0};
 let activeFilter={hoy:'all',sem:'all',mes:'all'};
 let rTask=null,rPerson=null;
 let pendingCompleteId=null;
@@ -1669,10 +1617,10 @@ async function finishInit(){
   xpSnap.forEach(d=>{
     const data=d.data();
     if(d.id==='xp')xpState={Rafa:data.Rafa||0,María:data.María||0};
+    if(d.id==='hp'){hpState={Rafa:data.Rafa!==undefined?data.Rafa:HP_INITIAL,María:data.María!==undefined?data.María:HP_INITIAL};hpDead={Rafa:!!data.deadRafa,María:!!data.deadMaría};hpResurrectionDone={Rafa:{task:!!data.resTaskRafa,detail:!!data.resDetailRafa},María:{task:!!data.resTaskMaría,detail:!!data.resDetailMaría}};}
     if(d.id==='xpWeekly')xpWeekly={Rafa:data.Rafa||0,María:data.María||0};
     if(d.id==='xpMonthly')xpMonthly={Rafa:data.Rafa||0,María:data.María||0};
     if(d.id==='wallet')wallet={Rafa:data.Rafa||0,María:data.María||0};
-    if(d.id==='hp'){hpState={Rafa:data.Rafa!==undefined?data.Rafa:HP_MAX,María:data.María!==undefined?data.María:HP_MAX};hpDead={Rafa:data.deadRafa||false,María:data.deadMaría||false};hpResurrectionDone={Rafa:{task:data.resTaskRafa||false,detail:data.resDetailRafa||false},María:{task:data.resTaskMaría||false,detail:data.resDetailMaría||false}};}
     if(d.id==='streak_Rafa')streakData.Rafa={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='streak_María')streakData.María={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
     if(d.id==='coupleStreak')coupleStreakData={count:data.count||0,lastDate:data.lastDate||null,todayXP:data.todayXP||0};
@@ -1698,13 +1646,11 @@ async function finishInit(){
   updateStreakBadge('Rafa');
   updateStreakBadge('María');
   updateCoupleStreakBadge();
-  updateHpBadge('Rafa');
-  updateHpBadge('María');
-  checkDeadScreenOnLoad();
   // Catálogo de pareja por persona + pendientes cruzados
   initPersonalRewards();
   // Lista de la compra y menú semanal
   initShoppingAndMeal();
+  initHpBars();
   // Check monthly/weekly reset
   checkMonthlyReset();
   checkWeeklyXPReset();
@@ -1769,18 +1715,13 @@ async function checkWeeklyXPReset(){
       const weekResult={winner,loser,wrXP:wr,wmXP:wm,loserBonus:loserPct>=70,date:now.toLocaleDateString('es-ES'),ts:Date.now()};
       await setDoc(doc(db,'state','lastWeekResult'),weekResult);
     }
-    // ─ Bonus/penalización semanal de HP ─
-    // Contamos cuántos días buenos tuvo cada persona en la semana que acaba
-    // de terminar, usando el historial. Un día "bueno" es uno donde esa persona
-    // ganó ≥50 XP (umbral de racha positiva, coherente con el resto del sistema).
-    await applyWeeklyHpBonus();
-
     // Reset weekly XP
     xpWeekly={Rafa:0,María:0};
     await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
     await setDoc(doc(db,'state','lastWeeklyXPReset'),{date:now.toISOString(),weekKey:currentWeekKey});
     // Show winner banner
     showWeekWinner();
+    await applyWeeklyHpBonus();
   }
 }
 
@@ -2420,196 +2361,6 @@ function showTravelMessageBanner(msg){
   banner.style.display='flex';
 }
 
-// ─── SISTEMA HP / KO / RESURRECCIÓN ───────────────────────────────────────
-let resurrectionCatalogType=null; // 'task' | 'detail'
-
-async function showDeadScreen(person){
-  const screen=document.getElementById('ko-screen');
-  if(!screen)return;
-  const prog=hpResurrectionDone[person]||{task:false,detail:false};
-  const checkSVG=`<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#10B981;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`;
-  const taskCheck=document.getElementById('ko-task-check');
-  const detailCheck=document.getElementById('ko-detail-check');
-  if(taskCheck){taskCheck.innerHTML=prog.task?checkSVG:'';taskCheck.style.background=prog.task?'#10B981':'transparent';}
-  if(detailCheck){detailCheck.innerHTML=prog.detail?checkSVG:'';detailCheck.style.background=prog.detail?'#10B981':'transparent';}
-  const btn=document.getElementById('ko-resurrect-btn');
-  if(btn)btn.style.display=(prog.task&&prog.detail)?'block':'none';
-  // Contar muertes anteriores de esta persona
-  const deathCountEl=document.getElementById('ko-death-count');
-  if(deathCountEl){
-    try{
-      const deathsSnap=await getDoc(doc(db,'state','deaths'));
-      if(deathsSnap.exists()){
-        const count=Object.values(deathsSnap.data()).filter(d=>d.person===person).length;
-        deathCountEl.textContent=count>1?`Esta es tu muerte número ${count} 💀`:'';
-      }
-    }catch(e){}
-  }
-  screen.style.display='flex';
-}
-
-function checkDeadScreenOnLoad(){
-  if(currentUser&&hpDead[currentUser]){
-    showDeadScreen(currentUser); // async, no bloqueamos el arranque
-  }
-}
-
-// ─ Gestión del catálogo de resurrección desde el perfil ─
-let resurrectionEditType=null;
-let resurrectionEditId=null;
-
-window.editResurrectionItem=(btn)=>{
-  const row=btn.closest('[data-res-id]');
-  if(!row)return;
-  const id=row.dataset.resId;
-  const type=row.dataset.resType;
-  const name=row.querySelector('div>div:first-child')?.textContent?.trim()||'';
-  const desc=row.querySelector('div>div:nth-child(2)')?.textContent?.trim()||'';
-  openResurrectionEditModal(type,id,name,desc);
-};
-
-window.openResurrectionEditModal=(type,id,name,desc)=>{
-  resurrectionEditType=type;
-  resurrectionEditId=id||null;
-  const title=document.getElementById('resurrection-edit-title');
-  const nameEl=document.getElementById('resurrection-edit-name');
-  const descEl=document.getElementById('resurrection-edit-desc');
-  const btn=document.getElementById('resurrection-edit-save-btn');
-  if(title)title.textContent=type==='task'?'Tarea de resurrección':'Detalle de resurrección';
-  if(nameEl)nameEl.value=name||'';
-  if(descEl)descEl.value=desc||'';
-  if(btn)btn.textContent=id?'Guardar cambios':'+ Añadir';
-  document.getElementById('resurrection-edit-modal').classList.remove('hidden');
-};
-window.closeResurrectionEditModal=()=>{
-  document.getElementById('resurrection-edit-modal').classList.add('hidden');
-  resurrectionEditType=null;resurrectionEditId=null;
-};
-
-window.saveResurrectionItem=async()=>{
-  if(!currentUser||!resurrectionEditType)return;
-  const name=document.getElementById('resurrection-edit-name').value.trim();
-  if(!name)return;
-  const desc=document.getElementById('resurrection-edit-desc').value.trim();
-  const col=resurrectionEditType==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
-  const id=resurrectionEditId||('r'+Date.now());
-  await setDoc(doc(db,col,id),{name,desc,createdAt:Date.now()});
-  closeResurrectionEditModal();
-  renderResurrectionCatalogs();
-  showToast('Guardado ✓');
-};
-
-window.deleteResurrectionItem=async(type,id)=>{
-  if(!currentUser)return;
-  const col=type==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
-  await deleteDoc(doc(db,col,id));
-  renderResurrectionCatalogs();
-  showToast('Eliminado');
-};
-
-async function renderResurrectionCatalogs(){
-  if(!currentUser)return;
-  const isOwn=profileViewing===currentUser;
-  const taskSection=document.getElementById('resurrection-task-section');
-  const detailSection=document.getElementById('resurrection-detail-section');
-  const titleEl=document.getElementById('resurrection-section-title');
-  const descEl=document.getElementById('resurrection-section-desc');
-  const deathSection=document.getElementById('death-history-section');
-  // Solo visible en propio perfil
-  [taskSection,detailSection,titleEl,descEl].forEach(el=>{if(el)el.style.display=isOwn?'':'none';});
-
-  if(!isOwn)return;
-
-  // Cargar y renderizar tareas de resurrección
-  for(const type of ['task','detail']){
-    const col=type==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
-    const listId=type==='task'?'resurrection-task-list':'resurrection-detail-list';
-    const snap=await getDocs(collection(db,col));
-    const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
-    const listEl=document.getElementById(listId);
-    if(!listEl)continue;
-    if(!items.length){
-      listEl.innerHTML=`<div style="font-size:11px;color:var(--text2);padding:6px 0;opacity:0.6;">Sin elementos — añade algo que tenga sentido como penitencia.</div>`;
-    }else{
-      listEl.innerHTML=items.map(it=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);" data-res-id="${it.id}" data-res-type="${type}">
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">${escHtml(it.name)}</div>
-            ${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
-          </div>
-          <button onclick="editResurrectionItem(this)" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;padding:4px;">✎</button>
-          <button onclick="deleteResurrectionItem('${type}','${it.id}')" style="background:none;border:none;color:#F87171;font-size:12px;cursor:pointer;padding:4px;">✕</button>
-        </div>
-      `).join('');
-    }
-  }
-
-  // Histórico de muertes
-  const deathsSnap=await getDoc(doc(db,'state','deaths'));
-  if(deathsSnap.exists()){
-    const deaths=Object.values(deathsSnap.data()).filter(d=>d.person===currentUser);
-    if(deaths.length>0&&deathSection){
-      deathSection.style.display='';
-      const deathList=document.getElementById('death-history-list');
-      deaths.sort((a,b)=>b.ts-a.ts);
-      if(deathList)deathList.innerHTML=deaths.map(d=>`<div style="padding:3px 0;">💀 ${d.date} — bajó del nivel ${d.levelBefore} al ${d.levelAfter}</div>`).join('');
-    }
-  }
-}
-
-window.openResurrectionCatalog=async(type)=>{
-  resurrectionCatalogType=type;
-  const modal=document.getElementById('resurrection-catalog-modal');
-  const title=document.getElementById('resurrection-catalog-title');
-  const list=document.getElementById('resurrection-catalog-list');
-  if(!modal||!list)return;
-  const colName=type==='task'?`resurrection_task_${currentUser}`:`resurrection_detail_${currentUser}`;
-  const snap=await getDocs(collection(db,colName));
-  const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
-  title.textContent=type==='task'?'Tarea del hogar — elige una':'Detalle para tu pareja — elige uno';
-  if(!items.length){
-    list.innerHTML=`<div class="empty" style="padding:16px;">No hay elementos en este catálogo. Añádelos desde tu perfil (normal) cuando resucites, o pide a tu pareja que los añada.</div>`;
-  }else{
-    list.innerHTML=items.map(it=>`
-      <div onclick="completeResurrectionItem('${it.id}','${type}')" style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:10px;">
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:600;">${escHtml(it.name)}</div>
-          ${it.desc?`<div style="font-size:11px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
-        </div>
-        <div style="color:var(--c1);font-size:18px;">→</div>
-      </div>
-    `).join('');
-  }
-  modal.classList.remove('hidden');
-};
-
-window.closeResurrectionCatalog=()=>{
-  document.getElementById('resurrection-catalog-modal').classList.add('hidden');
-};
-
-window.completeResurrectionItem=async(itemId,type)=>{
-  if(!currentUser)return;
-  hpResurrectionDone[currentUser][type]=true;
-  await saveHpState();
-  closeResurrectionCatalog();
-  showDeadScreen(currentUser); // actualiza los checks y muestra el botón si procede
-  showToast(type==='task'?'✅ Tarea completada':'✅ Detalle hecho con amor');
-};
-
-window.resurrect=async()=>{
-  if(!currentUser)return;
-  const prog=hpResurrectionDone[currentUser];
-  if(!prog.task||!prog.detail)return;
-  hpDead[currentUser]=false;
-  hpState[currentUser]=50; // resucita con la mitad de HP, no con todo
-  hpResurrectionDone[currentUser]={task:false,detail:false};
-  await saveHpState();
-  updateHpBadge(currentUser);
-  updateHeader();
-  document.getElementById('ko-screen').style.display='none';
-  showToast('✨ ¡Has resucitado! El hogar vuelve a estar en marcha');
-};
-
 window.saveTravelMessage=async()=>{
   if(!currentUser)return;
   const msg=document.getElementById('travel-message-input').value;
@@ -2749,7 +2500,7 @@ function renderTask(t){
     <div class="tdraghandle" data-task-id="${t.id}" title="Arrastra para reasignar">⠿</div>
     <div class="tcheck${t.done?' done':''}" data-task-id="${t.id}" data-done="${t.done?'1':'0'}" title="${t.done?'Toca para desmarcar':'Toca para completar, mantén pulsado para repartir'}">${t.done?chkSVG():''}</div>
     <div class="tinfo">
-      <div class="tname${t.done?' done':''}">${t.name} <span onclick="openEditModal('${t.id}')" style="font-size:10px;color:var(--text2);opacity:.6;cursor:pointer;padding:4px 4px;" title="Editar">✎</span></div>
+      <div class="tname${t.done?' done':''}" onclick="openEditModal('${t.id}')" style="cursor:pointer;">${t.name} <span style="font-size:10px;color:var(--text2);opacity:.6;">✎</span></div>
       <div class="tmeta"><span class="tag tag-z">${t.zona}</span><span class="tag tag-d">${DIFF_LBL[t.diff]}</span>${t.freq==='CadaX'?`<span class="tag" style="background:rgba(99,102,241,0.15);color:#A5B4FC;">${t.freqLabel||'Cada X'}</span>`:''}${gTag(t.group)}</div>
       ${(t.freq==='CadaX'||t.freq==='Semanal'||t.freq==='Mensual')&&t.done&&t.lastDoneDate?`<div class="tnote">⏳ Próxima vez: ${nextAvailableDate(t)}</div>`:''}
       <button class="assign-btn ${assignBtnClass(t.person)}" onclick="openAssignModal('${t.id}')">${assignBtnLabel(t.person)} <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
@@ -3323,7 +3074,6 @@ function updateHeader(){
         goalMini.style.display='none';
       }
     }
-    updateHpBadge(p);
   });
   const bothTravelingNow=travelMode.Rafa&&travelMode.María;
   const anyTravelingNow=travelMode.Rafa||travelMode.María;
@@ -3397,142 +3147,6 @@ function updateEq(){
 }
 
 // ─── NAV ───
-window.closeVidaModal=()=>{
-  document.getElementById('vida-modal').style.display='none';
-};
-
-window.goToVida=async(person)=>{
-  const modal=document.getElementById('vida-modal');
-  if(!modal)return;
-  modal.style.display='block';
-
-  const viewPerson=person||currentUser||'Rafa';
-  const hp=hpState[viewPerson]??HP_INITIAL;
-  const dead=hpDead[viewPerson];
-
-  // Cabecera HP
-  const lbl=document.getElementById('vida-person-label');
-  const num=document.getElementById('vida-hp-number');
-  const bar=document.getElementById('vida-hp-bar-big');
-  const status=document.getElementById('vida-hp-status');
-  if(lbl)lbl.textContent=`${viewPerson} — Salud del hogar`;
-  if(num)num.textContent=dead?'💀':hp;
-  if(bar){
-    bar.style.width=(dead?0:hp)+'%';
-    bar.style.background=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
-    bar.classList.toggle('hp-critical',hp<=10&&!dead);
-  }
-  if(status){
-    if(dead)status.textContent='KO — completa tu penitencia para resucitar';
-    else if(hp>60)status.textContent='Todo bien — sigue así ✓';
-    else if(hp>30)status.textContent='Atención — el hogar necesita más cariño';
-    else if(hp>10)status.textContent='⚠️ Peligro — actúa hoy o pierdes tu progreso';
-    else status.textContent='🚨 Crítico — un día más y mueres';
-  }
-
-  // Catálogos de resurrección
-  const isOwn=viewPerson===currentUser;
-  await renderVidaResurrectionLists(viewPerson,isOwn);
-
-  // Historial de vida
-  const histEl=document.getElementById('vida-historial');
-  if(histEl){
-    let html='';
-    try{
-      const deathsSnap=await getDoc(doc(db,'state','deaths'));
-      const deaths=deathsSnap.exists()
-        ?Object.values(deathsSnap.data()).filter(d=>d.person===viewPerson).sort((a,b)=>b.ts-a.ts)
-        :[];
-      if(deaths.length){
-        html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:10px;">`;
-        html+=`<div style="padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:700;color:#F87171;">💀 Muertes (${deaths.length} en total)</div>`;
-        html+=deaths.map(d=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:12px;">
-            <div><div style="font-weight:600;">${d.date}</div><div style="font-size:10px;color:var(--text2);">Nivel ${d.levelBefore} → ${d.levelAfter}</div></div>
-            <div style="font-size:18px;">💀</div>
-          </div>
-        `).join('');
-        html+=`</div>`;
-      }else{
-        html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:10px;font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>`;
-      }
-      if(!dead){
-        const daysToZero=Math.floor(hp/HP_LOSS_BAD);
-        html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;">
-          <div style="font-weight:600;color:var(--text);margin-bottom:4px;">Estado actual</div>
-          <div>HP: <strong style="color:${hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444'}">${hp}/100</strong></div>
-          <div>Sin hacer nada: ~${daysToZero} día${daysToZero!==1?'s':''} hasta morir</div>
-          <div>Un día bueno hoy: ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)} HP</div>
-        </div>`;
-      }
-    }catch(e){
-      html=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);">Sin datos disponibles</div>`;
-    }
-    histEl.innerHTML=html;
-  }
-};
-
-async function renderVidaResurrectionLists(person,isOwn){
-  const EJEMPLOS_TASK=[
-    {name:'Limpiar el baño a fondo',desc:'Azulejos, inodoro, suelo y espejo'},
-    {name:'Limpiar los armarios de la cocina',desc:'Vaciar, limpiar por dentro y recolocar'},
-    {name:'Pasar el aspirador y fregar toda la casa',desc:'Todas las habitaciones sin excepción'},
-  ];
-  const EJEMPLOS_DETAIL=[
-    {name:'Preparar una cena especial en casa',desc:'Algo que le guste, con detalle'},
-    {name:'Escribirle una nota o carta',desc:'Algo sincero sobre lo que valoras de ella'},
-    {name:'Planear una tarde juntos',desc:'Sin móvil, solo los dos'},
-  ];
-
-  for(const type of ['task','detail']){
-    const listId=`vida-resurrection-${type}-list`;
-    const listEl=document.getElementById(listId);
-    if(!listEl)continue;
-    const col=`resurrection_${type}_${person}`;
-    let items=[];
-    try{
-      const snap=await getDocs(collection(db,col));
-      snap.forEach(d=>items.push({...d.data(),id:d.id}));
-    }catch(e){}
-
-    // Si el catálogo está vacío y es el propio usuario, precargamos ejemplos
-    if(!items.length&&isOwn){
-      const ejemplos=type==='task'?EJEMPLOS_TASK:EJEMPLOS_DETAIL;
-      for(const ej of ejemplos){
-        const id='ej_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-        await setDoc(doc(db,col,id),{...ej,createdAt:Date.now()});
-        items.push({...ej,id});
-      }
-    }
-
-    if(!items.length){
-      listEl.innerHTML=`<div style="padding:12px 14px;font-size:11px;color:var(--text2);">${isOwn?'Sin elementos — pulsa + Añadir para crear':'Sin elementos en este catálogo'}</div>`;
-      continue;
-    }
-
-    listEl.innerHTML=items.map(it=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);" data-res-id="${it.id}" data-res-type="${type}">
-        <div style="flex:1;">
-          <div style="font-size:12px;font-weight:600;">${escHtml(it.name)}</div>
-          ${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
-        </div>
-        ${isOwn?`
-          <button onclick="editResurrectionItem(this)" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;padding:4px;">✎</button>
-          <button onclick="deleteResurrectionItemFromVida('${type}','${it.id}')" style="background:none;border:none;color:#F87171;font-size:12px;cursor:pointer;padding:4px;">✕</button>
-        `:''}
-      </div>
-    `).join('');
-  }
-}
-
-window.deleteResurrectionItemFromVida=async(type,id)=>{
-  if(!currentUser)return;
-  const col=`resurrection_${type}_${currentUser}`;
-  await deleteDoc(doc(db,col,id));
-  await renderVidaResurrectionLists(currentUser,true);
-  showToast('Eliminado');
-};
-
 window.goTo=(name,btn)=>{
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -4062,7 +3676,6 @@ function renderProfile(){
   renderGroupRotationSettings();
   renderAppThemeSelector();
   renderTravelModeUI();
-  renderResurrectionCatalogs();
   updateEq();
 }
 
@@ -4323,8 +3936,6 @@ window.fulfillPending=async(id)=>{
 // 30-49 XP individuales → día "neutro" → corta cualquier racha negativa, vuelve a 0
 // 50+ XP individuales   → día "bueno"  → suma a racha positiva (si venías de negativo, resetea a +1)
 const STREAK_NEUTRAL_MIN=20;
-// ─── SISTEMA HP (SALUD DEL HOGAR) ────────────────────────────────────────
-// Umbrales alineados con los de racha: malo <20 XP, neutro 20-49, bueno 50+
 const STREAK_GOOD_MIN=50;
 const STREAK_MIN_DAILY_XP=STREAK_GOOD_MIN; // alias por compatibilidad con código existente
 
@@ -4357,7 +3968,7 @@ async function updateStreak(person,xpEarnedNow){
   if(data.lastDate&&data.lastDate!==today){
     const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
     await applyStreakXpReward(person,res);
-    await applyHpChange(person,res);
+    await applyDayHp(person,res);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=(data.todayXP||0)+(xpEarnedNow||0);
@@ -4372,154 +3983,6 @@ const STREAK_XP_REWARD=5; // XP de premio/castigo por mantener (o romper) la rac
 // INDIVIDUAL de una persona, solo a partir del segundo día consecutivo en la
 // misma dirección. Afecta a su XP total, semanal, mensual y wallet por igual,
 // ya que es XP real ganado (o perdido) por constancia, no un bono aparte.
-async function applyHpChange(person, streakResult, wasPerfectDay){
-  if(!streakResult)return;
-  if(hpDead[person])return;
-  if(travelMode[person])return;
-  let delta=0;
-  if(streakResult.result==='good'){
-    delta=wasPerfectDay?HP_GAIN_PERFECT:HP_GAIN_GOOD;
-  }else if(streakResult.result==='neutral'){
-    delta=-HP_LOSS_NEUTRAL;
-  }else if(streakResult.result==='bad'){
-    delta=-HP_LOSS_BAD;
-  }
-  if(delta===0)return;
-  const prev=hpState[person]||HP_INITIAL;
-  hpState[person]=Math.max(0,Math.min(HP_MAX,prev+delta));
-  if(hpState[person]===0&&!hpDead[person]){
-    await triggerKO(person);
-  }else{
-    await saveHpState();
-    updateHpBadge(person);
-  }
-}
-
-async function triggerKO(person){
-  hpDead[person]=true;
-  hpResurrectionDone[person]={task:false,detail:false};
-
-  // Calcular XP equivalente a 2 niveles por debajo del actual, sin bajar de 0
-  const currentXP=xpState[person]||0;
-  const currentLvl=levelInfo(currentXP,person).level;
-  const targetLvl=Math.max(1,currentLvl-2);
-  const targetXP=LEVEL_XP_CURVE[targetLvl-1]||0; // XP del inicio del nivel objetivo
-  xpState[person]=targetXP;
-  xpWeekly[person]=Math.min(xpWeekly[person]||0,targetXP);
-  xpMonthly[person]=Math.min(xpMonthly[person]||0,targetXP);
-  wallet[person]=0; // cartera completa a cero
-
-  // Guardar penalización
-  await setDoc(doc(db,'state','xp'),xpState);
-  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
-  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
-  await setDoc(doc(db,'state','wallet'),wallet);
-
-  // Registrar muerte en el historial de muertes para el histórico
-  const deathRecord={person,date:new Date().toLocaleDateString('es-ES'),ts:Date.now(),levelBefore:currentLvl,levelAfter:targetLvl};
-  await setDoc(doc(db,'state','deaths'),{[`death_${Date.now()}`]:deathRecord},{merge:true});
-
-  await saveHpState();
-  updateHpBadge(person);
-  updateHeader();
-  if(person===currentUser)showDeadScreen(person);
-}
-
-async function applyWeeklyHpBonus(){
-  // Calcula cuántos días buenos tuvo cada persona en los últimos 7 días
-  // usando el historial, y aplica el bonus/penalización semanal de HP.
-  const now=new Date();
-  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
-  const histSnap=await getDocs(collection(db,'history'));
-  const xpPerPersonPerDay={Rafa:{},María:{}};
-  histSnap.forEach(d=>{
-    const h=d.data();
-    if(!h.date||!h.xpFor)return;
-    const hDate=histDateToDate(h.date);
-    if(hDate<weekAgo)return;
-    const dateKey=h.date;
-    for(const p of ['Rafa','María']){
-      if(!xpPerPersonPerDay[p][dateKey])xpPerPersonPerDay[p][dateKey]=0;
-      xpPerPersonPerDay[p][dateKey]+=(h.xpFor[p]||0);
-    }
-  });
-  for(const person of ['Rafa','María']){
-    if(hpDead[person]||travelMode[person])continue;
-    const days=Object.values(xpPerPersonPerDay[person]);
-    const goodDays=days.filter(xp=>xp>=STREAK_GOOD_MIN).length;
-    let delta=0;
-    if(goodDays>=5)delta=HP_WEEKLY_BONUS;
-    else if(goodDays<=2)delta=-HP_WEEKLY_PENALTY;
-    if(delta===0)continue;
-    hpState[person]=Math.max(0,Math.min(HP_MAX,(hpState[person]||HP_INITIAL)+delta));
-    if(hpState[person]===0&&!hpDead[person])await triggerKO(person);
-  }
-  await saveHpState();
-  updateHpBadge('Rafa');
-  updateHpBadge('María');
-}
-
-async function saveHpState(){
-  await setDoc(doc(db,'state','hp'),{
-    Rafa:hpState.Rafa,María:hpState.María,
-    deadRafa:hpDead.Rafa,deadMaría:hpDead.María,
-    resTaskRafa:hpResurrectionDone.Rafa.task,resDetailRafa:hpResurrectionDone.Rafa.detail,
-    resTaskMaría:hpResurrectionDone.María.task,resDetailMaría:hpResurrectionDone.María.detail,
-  });
-}
-
-// Registros de avisos HP ya mostrados en esta sesión, para no repetirlos
-const _hpWarningShown={Rafa:new Set(),María:new Set()};
-
-function updateHpBadge(person){
-  const key=person==='Rafa'?'rafa':'maria';
-  const bar=document.getElementById(key+'-hp-bar');
-  const lbl=document.getElementById(key+'-hp-label');
-  const chip=document.getElementById(key+'-hp-chip');
-  const koEl=document.getElementById(key+'-ko');
-  const dead=hpDead[person];
-  const hp=hpState[person]??HP_INITIAL;
-
-  if(chip)chip.style.display=dead?'none':'flex';
-  if(koEl)koEl.style.display=dead?'flex':'none';
-  if(dead||!bar)return;
-
-  // Color dinámico de la barra con cuatro zonas
-  let color;
-  if(hp>60)color='#34D399';       // verde — todo bien
-  else if(hp>30)color='#F59E0B'; // naranja — cuidado
-  else if(hp>10)color='#EF4444'; // rojo — peligro
-  else color='#EF4444';           // rojo crítico + parpadeo
-
-  bar.style.width=hp+'%';
-  bar.style.background=color;
-  bar.style.transition='width .4s,background .4s';
-  if(lbl)lbl.textContent=hp+'%';
-  if(lbl)lbl.style.color=hp<=30?color:'var(--text2)';
-
-  // Parpadeo crítico <10 — clase CSS que activa la animación
-  bar.classList.toggle('hp-critical',hp<=10);
-
-  // Solo mostrar avisos para currentUser para no molestar con la salud del otro
-  if(person!==currentUser)return;
-  const shown=_hpWarningShown[person];
-  if(hp<=50&&!shown.has(50)){shown.add(50);showHpWarning(person,hp,'⚠️ Tu salud está bajando',`Te quedan ${hp} HP — haz tareas del hogar para recuperarla.`);}
-  if(hp<=30&&!shown.has(30)){shown.add(30);showHpWarning(person,hp,'🟠 Salud baja',`${hp} HP. Si sigues así podrías perder tu XP y nivel. ¡Ponte las pilas!`);}
-  if(hp<=15&&!shown.has(15)){shown.add(15);showHpWarning(person,hp,'🔴 Peligro crítico',`Solo te quedan ${hp} HP. Haz tareas HOY para no morir y perder tu progreso.`);}
-}
-
-function showHpWarning(person,hp,title,msg){
-  // Usa el sistema de banner existente para avisos de HP
-  const banner=document.getElementById('hp-warning-banner');
-  const titleEl=document.getElementById('hp-warning-title');
-  const msgEl=document.getElementById('hp-warning-msg');
-  if(!banner||!titleEl||!msgEl)return;
-  titleEl.textContent=title;
-  msgEl.textContent=msg;
-  banner.style.display='flex';
-  setTimeout(()=>{banner.style.display='none';},8000);
-}
-
 async function applyStreakXpReward(person,streakResult){
   if(!streakResult||!streakResult.isContinuation)return;
   const amount=streakResult.result==='good'?STREAK_XP_REWARD:-STREAK_XP_REWARD;
@@ -4560,7 +4023,7 @@ async function checkStreakGaps(){
       await setDoc(doc(db,'state','streak_'+person),data);
       updateStreakBadge(person);
       await applyStreakXpReward(person,res);
-    await applyHpChange(person,res);
+    await applyDayHp(person,res);
     }
   }
   // Racha CONJUNTA del progreso diario — si AMBOS están de viaje, se pausa
@@ -4715,6 +4178,246 @@ let planReminderTimeouts=[]; // timeouts activos de avisos de planes, para poder
 let planReminderShown=new Set(); // IDs de plan ya avisados en esta sesión, para no repetir el aviso
 let mealPlan={lunes:'',martes:'',miércoles:'',jueves:'',viernes:'',sábado:'',domingo:''};
 let shoppingUnsub=null;
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA HP — salud individual, barras, KO, resurrección
+// ═══════════════════════════════════════════════════════════
+
+async function saveHpState(){
+  await setDoc(doc(db,'state','hp'),{
+    Rafa:hpState.Rafa,María:hpState.María,
+    deadRafa:hpDead.Rafa,deadMaría:hpDead.María,
+    resTaskRafa:hpResurrectionDone.Rafa.task,resDetailRafa:hpResurrectionDone.Rafa.detail,
+    resTaskMaría:hpResurrectionDone.María.task,resDetailMaría:hpResurrectionDone.María.detail,
+  });
+}
+
+function updateHpBar(person){
+  const k=person==='Rafa'?'rafa':'maria';
+  const hp=hpState[person]??HP_INITIAL;
+  const bar=document.getElementById(k+'-hp-bar');
+  const lbl=document.getElementById(k+'-hp-lbl');
+  const color=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
+  if(bar){bar.style.width=hp+'%';bar.style.background=color;}
+  if(lbl)lbl.textContent=hpDead[person]?'💀':hp;
+}
+
+async function applyHpDelta(person,delta,wasPerfect){
+  if(hpDead[person]||travelMode[person])return;
+  const d=wasPerfect?HP_GAIN_PERFECT:delta;
+  hpState[person]=Math.max(0,Math.min(HP_MAX,(hpState[person]??HP_INITIAL)+d));
+  if(hpState[person]===0){await triggerKO(person);}
+  else{await saveHpState();updateHpBar(person);}
+}
+
+async function applyDayHp(person,streakResult){
+  if(!streakResult||hpDead[person]||travelMode[person])return;
+  let delta=0;
+  if(streakResult.result==='good')delta=HP_GAIN_GOOD;
+  else if(streakResult.result==='neutral')delta=-HP_LOSS_NEUTRAL;
+  else delta=-HP_LOSS_BAD;
+  await applyHpDelta(person,delta,false);
+}
+
+async function triggerKO(person){
+  hpDead[person]=true;
+  hpResurrectionDone[person]={task:false,detail:false};
+  const currentXP=xpState[person]||0;
+  const currentLvl=levelInfo(currentXP,person).level;
+  const targetLvl=Math.max(1,currentLvl-2);
+  xpState[person]=LEVEL_XP_CURVE[targetLvl-1]||0;
+  xpWeekly[person]=0;xpMonthly[person]=0;wallet[person]=0;
+  await setDoc(doc(db,'state','xp'),xpState);
+  await setDoc(doc(db,'state','xpWeekly'),xpWeekly);
+  await setDoc(doc(db,'state','xpMonthly'),xpMonthly);
+  await setDoc(doc(db,'state','wallet'),wallet);
+  await setDoc(doc(db,'state','deaths'),{[`d${Date.now()}`]:{person,date:new Date().toLocaleDateString('es-ES'),ts:Date.now(),levelBefore:currentLvl,levelAfter:targetLvl}},{merge:true});
+  await saveHpState();
+  updateHpBar(person);updateHeader();
+  if(person===currentUser)showKoScreen();
+}
+
+function showKoScreen(){
+  const prog=hpResurrectionDone[currentUser]||{task:false,detail:false};
+  const chk=`<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#10B981;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const tc=document.getElementById('ko-task-check');
+  const dc=document.getElementById('ko-detail-check');
+  if(tc){tc.innerHTML=prog.task?chk:'';tc.style.background=prog.task?'#10B981':'transparent';}
+  if(dc){dc.innerHTML=prog.detail?chk:'';dc.style.background=prog.detail?'#10B981':'transparent';}
+  const btn=document.getElementById('ko-resurrect-btn');
+  if(btn)btn.style.display=(prog.task&&prog.detail)?'block':'none';
+  const koScreen=document.getElementById('ko-screen');
+  if(koScreen)koScreen.style.display='flex';
+}
+
+async function applyWeeklyHpBonus(){
+  const now=new Date();
+  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
+  const histSnap=await getDocs(collection(db,'history'));
+  const xpPerDay={Rafa:{},María:{}};
+  histSnap.forEach(d=>{
+    const h=d.data();if(!h.date||!h.xpFor)return;
+    const hd=histDateToDate(h.date);if(hd<weekAgo)return;
+    for(const p of ['Rafa','María']){
+      xpPerDay[p][h.date]=(xpPerDay[p][h.date]||0)+(h.xpFor[p]||0);
+    }
+  });
+  for(const p of ['Rafa','María']){
+    if(hpDead[p]||travelMode[p])continue;
+    const good=Object.values(xpPerDay[p]).filter(x=>x>=STREAK_GOOD_MIN).length;
+    const delta=good>=5?HP_WEEKLY_BONUS:good<=2?-HP_WEEKLY_PENALTY:0;
+    if(delta)await applyHpDelta(p,delta,false);
+  }
+}
+
+// Apertura del modal de vida — SÍNCRONO para evitar cualquier problema de timing
+window.openVidaModal=(person)=>{
+  const modal=document.getElementById('vida-modal');
+  if(!modal)return;
+  modal.style.display='block';
+  const vp=person||currentUser||'Rafa';
+  const hp=hpState[vp]??HP_INITIAL;
+  const dead=hpDead[vp];
+  // Título
+  const titleEl=document.getElementById('vida-title');
+  if(titleEl)titleEl.textContent=`❤️ Salud de ${vp}`;
+  // HP number y barra
+  const numEl=document.getElementById('vida-hp-num');
+  const barEl=document.getElementById('vida-hp-bar');
+  const stEl=document.getElementById('vida-status');
+  if(numEl)numEl.textContent=dead?'💀':hp;
+  if(barEl){barEl.style.width=(dead?0:hp)+'%';barEl.style.background=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';}
+  if(stEl){
+    if(dead)stEl.textContent='KO — completa la penitencia para resucitar';
+    else if(hp>60)stEl.textContent='Todo bien — sigue así ✓';
+    else if(hp>30)stEl.textContent='Atención — el hogar necesita más cariño';
+    else if(hp>10)stEl.textContent='⚠️ Peligro — actúa hoy';
+    else stEl.textContent='🚨 Crítico — mañana podrías morir';
+  }
+  // Cargar catálogos e historial en segundo plano
+  const isOwn=vp===currentUser;
+  _loadVidaCatalogs(vp,isOwn);
+  _loadVidaHistorial(vp);
+};
+
+async function _loadVidaCatalogs(vp,isOwn){
+  const DEFAULTS={
+    task:[{n:'Limpiar el baño a fondo',d:'Azulejos, inodoro, suelo y espejo'},{n:'Aspirar y fregar toda la casa',d:'Todas las habitaciones'},{n:'Limpiar armarios de la cocina',d:'Vaciar, limpiar por dentro y reordenar'}],
+    detail:[{n:'Preparar una cena especial',d:'Algo que le guste de verdad'},{n:'Escribirle una nota o carta',d:'Algo sincero y de corazón'},{n:'Planear una tarde juntos sin móvil',d:'Solo los dos, sin distracciones'}],
+  };
+  for(const type of ['task','detail']){
+    const el=document.getElementById(`vida-res-${type}`);
+    if(!el)continue;
+    const col=`resurrection_${type}_${vp}`;
+    let items=[];
+    try{const s=await getDocs(collection(db,col));s.forEach(d=>items.push({...d.data(),id:d.id}));}catch(e){}
+    // Precargar ejemplos si está vacío y es el propio usuario
+    if(!items.length&&isOwn){
+      for(const ej of DEFAULTS[type]){
+        const id='ej'+Date.now()+Math.random().toString(36).slice(2,5);
+        try{await setDoc(doc(db,col,id),{name:ej.n,desc:ej.d,createdAt:Date.now()});items.push({name:ej.n,desc:ej.d,id});}catch(e){}
+      }
+    }
+    if(!items.length){el.innerHTML=`<div style="padding:10px 12px;font-size:11px;color:var(--text2);">Sin elementos${isOwn?' — pulsa + Añadir':''}</div>`;continue;}
+    el.innerHTML=items.map(it=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:0.5px solid var(--border);">
+        <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${escHtml(it.name)}</div>${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}</div>
+        ${isOwn?`<button onclick="_delResItem('${type}','${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}
+      </div>
+    `).join('');
+  }
+}
+
+async function _loadVidaHistorial(vp){
+  const el=document.getElementById('vida-historial');
+  if(!el)return;
+  try{
+    const s=await getDoc(doc(db,'state','deaths'));
+    const deaths=s.exists()?Object.values(s.data()).filter(d=>d.person===vp).sort((a,b)=>b.ts-a.ts):[];
+    const hp=hpState[vp]??HP_INITIAL;
+    let html='';
+    if(deaths.length){
+      html+=`<div style="font-weight:600;margin-bottom:6px;color:#F87171;">💀 ${deaths.length} muerte${deaths.length>1?'s':''}</div>`;
+      html+=deaths.map(d=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--border);"><span>${d.date}</span><span style="color:var(--text2);">Nivel ${d.levelBefore}→${d.levelAfter}</span></div>`).join('');
+      html+='<div style="margin-top:10px;"></div>';
+    }else{
+      html+='<div style="margin-bottom:8px;">Sin muertes registradas 🌟</div>';
+    }
+    if(!hpDead[vp]){
+      const days=Math.max(0,Math.floor(hp/HP_LOSS_BAD));
+      html+=`<div style="line-height:1.8;"><div>HP actual: <strong>${hp}/100</strong></div><div>Sin hacer nada: ~${days} día${days!==1?'s':''} hasta morir</div><div>Día bueno hoy: +${HP_GAIN_GOOD} HP → ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)}</div></div>`;
+    }
+    el.innerHTML=html||'Sin datos';
+  }catch(e){el.innerHTML='Sin datos disponibles';}
+}
+
+window._delResItem=async(type,id)=>{
+  if(!currentUser)return;
+  try{await deleteDoc(doc(db,`resurrection_${type}_${currentUser}`,id));}catch(e){}
+  _loadVidaCatalogs(currentUser,true);
+};
+
+// Editar catálogo resurrección
+let _resEditType=null,_resEditId=null;
+window.openResEditModal=(type,id,name,desc)=>{
+  _resEditType=type;_resEditId=id||null;
+  const m=document.getElementById('res-edit-modal');if(!m)return;
+  document.getElementById('res-edit-title').textContent=type==='task'?'Tarea de resurrección':'Detalle de resurrección';
+  document.getElementById('res-edit-name').value=name||'';
+  document.getElementById('res-edit-desc').value=desc||'';
+  m.classList.remove('hidden');
+};
+window.saveResItem=async()=>{
+  if(!currentUser||!_resEditType)return;
+  const name=document.getElementById('res-edit-name').value.trim();if(!name)return;
+  const desc=document.getElementById('res-edit-desc').value.trim();
+  const col=`resurrection_${_resEditType}_${currentUser}`;
+  const id=_resEditId||('r'+Date.now());
+  await setDoc(doc(db,col,id),{name,desc,createdAt:Date.now()});
+  document.getElementById('res-edit-modal').classList.add('hidden');
+  _loadVidaCatalogs(currentUser,true);
+  showToast('Guardado ✓');
+};
+
+// KO — elegir del catálogo para resucitar
+window.openKoCatalog=async(type)=>{
+  const m=document.getElementById('ko-catalog-modal');if(!m)return;
+  document.getElementById('ko-catalog-title').textContent=type==='task'?'Elige una tarea':'Elige un detalle';
+  const col=`resurrection_${type}_${currentUser}`;
+  const snap=await getDocs(collection(db,col));
+  const items=[];snap.forEach(d=>items.push({...d.data(),id:d.id}));
+  const listEl=document.getElementById('ko-catalog-list');
+  listEl.innerHTML=items.length?items.map(it=>`
+    <div onclick="_markKoDone('${type}','${it.id}')" style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
+      <div style="font-size:13px;font-weight:600;">${escHtml(it.name)}</div>
+      ${it.desc?`<div style="font-size:11px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
+    </div>
+  `).join(''):'<div style="padding:12px;font-size:12px;color:var(--text2);">Sin elementos en el catálogo. Abre el menú de vida (avatar) para añadir.</div>';
+  m.classList.remove('hidden');
+};
+window._markKoDone=async(type,id)=>{
+  hpResurrectionDone[currentUser][type]=true;
+  await saveHpState();
+  document.getElementById('ko-catalog-modal').classList.add('hidden');
+  showKoScreen();
+};
+window.resurrect=async()=>{
+  if(!currentUser)return;
+  const prog=hpResurrectionDone[currentUser];
+  if(!prog.task||!prog.detail)return;
+  hpDead[currentUser]=false;
+  hpState[currentUser]=50;
+  hpResurrectionDone[currentUser]={task:false,detail:false};
+  await saveHpState();
+  updateHpBar(currentUser);updateHeader();
+  document.getElementById('ko-screen').style.display='none';
+  showToast('✨ ¡Has resucitado! El hogar vuelve a estar en marcha');
+};
+
+function initHpBars(){
+  updateHpBar('Rafa');updateHpBar('María');
+  if(currentUser&&hpDead[currentUser])showKoScreen();
+}
 
 function initShoppingAndMeal(){
   shoppingUnsub=onSnapshot(collection(db,'shopping_list'),snap=>{
