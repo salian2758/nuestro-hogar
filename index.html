@@ -313,10 +313,10 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 </head>
 <body>
 
-<!-- SPLASH SCREEN CON EXPANSIÓN DEL LOGO DE LA APP -->
+<!-- SPLASH SCREEN CON EXPANSIÓN DEL CORAZÓN -->
 <div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;">
   <style>
-    @keyframes logoExpandWithBeat {
+    @keyframes heartExpandWithBeat {
       0% { 
         transform:translate(-calc(100vw - 100px), -calc(100vh - 100px)) scale(0.05);
         opacity:1;
@@ -347,11 +347,11 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       90% { opacity:1; }
       100% { opacity:0; }
     }
-    #splash-logo {
+    #splash-heart {
       font-size:120px;
-      animation:logoExpandWithBeat 1.8s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
-      text-shadow:0 0 20px rgba(52,211,153,0.2);
-      filter:drop-shadow(0 8px 20px rgba(52,211,153,0.15));
+      animation:heartExpandWithBeat 1.8s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+      text-shadow:0 0 20px rgba(248,113,113,0.2);
+      filter:drop-shadow(0 8px 20px rgba(248,113,113,0.15));
       will-change:transform;
     }
     #splash-screen.fade-out {
@@ -359,7 +359,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     }
   </style>
   
-  <div id="splash-logo">🏠</div>
+  <div id="splash-heart">❤️</div>
 </div>
 
 <div id="loading" style="z-index:600;">
