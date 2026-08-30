@@ -323,33 +323,37 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       42% { transform:scale(1.15);opacity:1; }
       56% { transform:scale(1);opacity:0.8; }
     }
-    @keyframes expandIcon {
+    @keyframes expandIconDramatic {
       0% { 
-        transform:scale(0);
+        transform:scale(0) rotate(-180deg);
         opacity:0;
       }
-      30% {
-        transform:scale(0.8);
+      15% {
+        transform:scale(0.4) rotate(-90deg);
+        opacity:0.6;
+      }
+      50% {
+        transform:scale(1.5) rotate(0deg);
         opacity:1;
       }
-      70% {
-        transform:scale(1.3);
+      85% {
+        transform:scale(1.1) rotate(0deg);
         opacity:1;
       }
       100% { 
-        transform:scale(1);
+        transform:scale(1) rotate(0deg);
         opacity:1;
       }
     }
-    @keyframes pulseGlow {
+    @keyframes pulseGlowDramatic {
       0% {
-        box-shadow:0 0 0 0 rgba(248,113,113,0.7);
+        box-shadow:0 0 0 0 rgba(248,113,113,0.8), inset 0 0 30px rgba(248,113,113,0.3);
       }
-      70% {
-        box-shadow:0 0 0 50px rgba(248,113,113,0);
+      50% {
+        box-shadow:0 0 0 60px rgba(248,113,113,0.2), inset 0 0 50px rgba(248,113,113,0.5);
       }
       100% {
-        box-shadow:0 0 0 0 rgba(248,113,113,0);
+        box-shadow:0 0 0 100px rgba(248,113,113,0), inset 0 0 30px rgba(248,113,113,0);
       }
     }
     @keyframes fadeOut {
@@ -357,32 +361,41 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       100% { opacity:0; }
     }
     #splash-heart {
-      font-size:120px;
-      animation:expandIcon 1.2s cubic-bezier(0.34,1.56,0.64,1) forwards, pulseGlow 1.2s ease-out, heartbeat 1.2s ease-in-out 1.2s infinite;
-      text-shadow:0 0 40px rgba(248,113,113,0.6);
-      filter:drop-shadow(0 15px 40px rgba(248,113,113,0.4));
+      font-size:180px;
+      animation:expandIconDramatic 1.5s cubic-bezier(0.34,1.56,0.64,1) forwards, pulseGlowDramatic 1.5s ease-out, heartbeat 1.2s ease-in-out 1.5s infinite;
+      text-shadow:
+        0 0 20px rgba(248,113,113,0.8),
+        0 0 40px rgba(248,113,113,0.6),
+        0 0 60px rgba(248,113,113,0.4);
+      filter:drop-shadow(0 0 30px rgba(248,113,113,0.6)) brightness(1.2);
+      position:relative;
+    }
+    #splash-heart::before {
+      content:'';
+      position:absolute;
+      inset:-30px;
+      background:radial-gradient(circle, rgba(248,113,113,0.3) 0%, transparent 70%);
+      animation:expandIconDramatic 1.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      pointer-events:none;
     }
     #splash-text {
-      margin-top:40px;
-      font-size:16px;
-      font-weight:700;
-      color:var(--text);
+      margin-top:60px;
+      font-size:18px;
+      font-weight:800;
+      color:var(--c1);
       opacity:0;
-      animation:fadeIn 0.8s ease-in-out 0.8s forwards;
-      letter-spacing:1px;
+      animation:fadeInText 0.8s ease-in-out 1.0s forwards;
+      letter-spacing:2px;
+      text-shadow:0 4px 12px rgba(0,0,0,0.3);
     }
-    @keyframes fadeIn {
-      0% { opacity:0;transform:translateY(20px); }
-      100% { opacity:1;transform:translateY(0); }
+    @keyframes fadeInText {
+      0% { opacity:0;transform:translateY(30px) scale(0.9); }
+      100% { opacity:1;transform:translateY(0) scale(1); }
     }
     #splash-screen.fade-out {
       animation:fadeOut 0.8s ease-out forwards;
     }
   </style>
-  <!-- Audio de puerta abriéndose -->
-  <audio id="door-sound" style="display:none;">
-    <source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav">
-  </audio>
   
   <div id="splash-heart">❤️</div>
   <div id="splash-text">Nuestro Hogar</div>
@@ -4983,28 +4996,31 @@ window.showToast=(msg)=>{
 // callback (incluso si responde muy rápido desde caché de sesión), TODAS las
 // funciones que necesita (goTo, initData, showToast...) ya estén definidas.
 onAuthStateChanged(auth,async user=>{
-  // Reproducir sonido de puerta abriéndose
+  // Intentar reproducir sonido de puerta (puede estar silenciado por navegador)
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-    
-    osc.frequency.setValueAtTime(200, audioContext.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.6);
-    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-    
-    osc.start(audioContext.currentTime);
-    osc.stop(audioContext.currentTime + 0.6);
+    setTimeout(()=>{
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      if(audioContext.state==='suspended'){audioContext.resume();}
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.frequency.setValueAtTime(250, audioContext.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, audioContext.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.15, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+      
+      osc.start(audioContext.currentTime);
+      osc.stop(audioContext.currentTime + 0.8);
+    }, 100);
   } catch(e) {}
   
-  // Ocultar splash screen después de 2.5 seg
+  // Ocultar splash screen después de 3 seg (para que vea completa la animación)
   setTimeout(()=>{
     const splash=document.getElementById('splash-screen');
     if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.style.display='none',800);}
-  },2500);
+  },3000);
   
   document.getElementById('loading').classList.add('hidden');
   if(user){
