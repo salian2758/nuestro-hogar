@@ -4415,7 +4415,7 @@ async function _loadVidaCatalogs(vp,isOwn){
           <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${escHtml(it.name)} <span style="color:#34D399;font-size:11px;font-weight:600;">+${it.hp} HP</span></div>${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}</div>
           ${isOwn?`<button onclick="_delRecoveryItem('${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}
         </div>
-      `).join('');}
+      `).join('');
     }
   }
 }
