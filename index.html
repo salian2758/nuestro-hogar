@@ -802,8 +802,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 </div>
 
 <!-- PANTALLA DE VIDA — accesible pulsando la barra HP o el avatar -->
-<div id="sc-vida" class="screen">
-  <div class="content">
+<div id="vida-modal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);overflow-y:auto;">
+  <div style="min-height:100%;display:flex;align-items:flex-start;padding:20px 16px;padding-top:calc(20px + env(safe-area-inset-top,0px));">
+    <div style="background:var(--bg);border-radius:20px;width:100%;max-width:430px;margin:0 auto;padding:20px;padding-bottom:32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:16px;font-weight:700;">Salud del hogar ❤️</div>
+        <button onclick="closeVidaModal()" style="background:var(--bg3);border:none;border-radius:8px;color:var(--text2);padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;">✕ Cerrar</button>
+      </div>
 
     <!-- ESTADO HP ACTUAL -->
     <div id="vida-header-card" style="background:var(--bg2);border-radius:16px;border:0.5px solid var(--border);padding:20px;margin-bottom:16px;text-align:center;">
@@ -870,7 +875,9 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <div style="font-size:12px;color:var(--text2);padding:14px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);">Cargando...</div>
     </div>
 
-    <button onclick="goTo('hoy',null)" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:24px;">← Volver a Hoy</button>
+    <div style="display:none" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:24px;"></div>
+  </div>
+    </div>
   </div>
 </div>
 
@@ -3390,10 +3397,14 @@ function updateEq(){
 }
 
 // ─── NAV ───
+window.closeVidaModal=()=>{
+  document.getElementById('vida-modal').style.display='none';
+};
+
 window.goToVida=async(person)=>{
-  // Usar goTo para activar la pantalla — maneja el display/active igual que todas las demás
-  goTo('vida',null);
-  document.getElementById('quick-add-btn').style.display='none';
+  const modal=document.getElementById('vida-modal');
+  if(!modal)return;
+  modal.style.display='block';
 
   const viewPerson=person||currentUser||'Rafa';
   const hp=hpState[viewPerson]??HP_INITIAL;
@@ -3409,7 +3420,7 @@ window.goToVida=async(person)=>{
   if(bar){
     bar.style.width=(dead?0:hp)+'%';
     bar.style.background=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
-    bar.classList.toggle('hp-critical',hp<=10);
+    bar.classList.toggle('hp-critical',hp<=10&&!dead);
   }
   if(status){
     if(dead)status.textContent='KO — completa tu penitencia para resucitar';
@@ -3419,11 +3430,11 @@ window.goToVida=async(person)=>{
     else status.textContent='🚨 Crítico — un día más y mueres';
   }
 
-  // Catálogos de resurrección — solo del usuario actual (no se pueden editar los del otro)
+  // Catálogos de resurrección
   const isOwn=viewPerson===currentUser;
   await renderVidaResurrectionLists(viewPerson,isOwn);
 
-  // Historial de vida — muertes + ganancia/pérdida de HP de la última semana
+  // Historial de vida
   const histEl=document.getElementById('vida-historial');
   if(histEl){
     let html='';
@@ -3438,20 +3449,19 @@ window.goToVida=async(person)=>{
         html+=deaths.map(d=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:12px;">
             <div><div style="font-weight:600;">${d.date}</div><div style="font-size:10px;color:var(--text2);">Nivel ${d.levelBefore} → ${d.levelAfter}</div></div>
-            <div style="color:#F87171;font-size:18px;">💀</div>
+            <div style="font-size:18px;">💀</div>
           </div>
         `).join('');
         html+=`</div>`;
       }else{
         html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:10px;font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>`;
       }
-      // Estado actual resumido
-      const daysToZero=dead?0:Math.floor(hp/HP_LOSS_BAD);
       if(!dead){
+        const daysToZero=Math.floor(hp/HP_LOSS_BAD);
         html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;">
           <div style="font-weight:600;color:var(--text);margin-bottom:4px;">Estado actual</div>
           <div>HP: <strong style="color:${hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444'}">${hp}/100</strong></div>
-          <div>Sin hacer nada: mueres en ~${daysToZero} día${daysToZero!==1?'s':''}</div>
+          <div>Sin hacer nada: ~${daysToZero} día${daysToZero!==1?'s':''} hasta morir</div>
           <div>Un día bueno hoy: ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)} HP</div>
         </div>`;
       }
