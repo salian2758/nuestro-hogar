@@ -313,16 +313,12 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 </head>
 <body>
 
-<!-- SPLASH SCREEN CON LOGO PERSONALIZADO Y ANIMACIÓN ULTRA-FLUIDA -->
-<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;opacity:1;">
+<!-- SPLASH SCREEN CON CORAZÓN - MOVIMIENTO ULTRA FLUIDO -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;">
   <style>
-    @keyframes logoExpandUltraFluid {
+    @keyframes smoothExpand {
       0% { 
         transform:translate(-calc(100vw - 100px), -calc(100vh - 100px)) scale(0.05);
-        opacity:1;
-      }
-      70% { 
-        transform:translate(0, 0) scale(1);
         opacity:1;
       }
       100% { 
@@ -330,43 +326,31 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         opacity:1;
       }
     }
-    @keyframes heartbeatDuringExpand {
-      70%, 100% {
-        animation: none;
-      }
+    @keyframes heartbeatSmooth {
+      0%, 100% { transform:scale(1); }
+      25% { transform:scale(1.07); }
+      50% { transform:scale(0.97); }
       75% { transform:scale(1.06); }
-      80% { transform:scale(0.96); }
-      85% { transform:scale(1.05); }
-      90% { transform:scale(0.98); }
     }
-    @keyframes fadeOutSpotify {
+    @keyframes fadeOutSmooth {
       0% { opacity:1; }
-      92% { opacity:1; }
+      95% { opacity:1; }
       100% { opacity:0; }
     }
-    #splash-logo {
-      font-size:140px;
-      animation:logoExpandUltraFluid 1.6s cubic-bezier(0.4,0.0,0.2,1) forwards;
-      text-shadow:0 0 25px rgba(248,113,113,0.25);
-      filter:drop-shadow(0 10px 25px rgba(248,113,113,0.2));
+    #splash-heart {
+      font-size:120px;
+      animation:smoothExpand 1.6s ease-in-out forwards, heartbeatSmooth 0.8s ease-in-out 1.6s infinite;
+      text-shadow:0 0 20px rgba(248,113,113,0.2);
+      filter:drop-shadow(0 8px 20px rgba(248,113,113,0.15));
       will-change:transform;
+      backface-visibility:hidden;
     }
     #splash-screen.fade-out {
-      animation:fadeOutSpotify 0.4s ease-out forwards;
+      animation:fadeOutSmooth 0.4s ease-out forwards;
     }
   </style>
   
-  <!-- Logo: Casa con corazón dentro -->
-  <svg id="splash-logo" viewBox="0 0 100 100" style="width:140px;height:140px;">
-    <!-- Casa -->
-    <path d="M50 15 L85 45 L85 85 Q85 90 80 90 L20 90 Q15 90 15 85 L15 45 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- Techo puntudo -->
-    <line x1="50" y1="15" x2="50" y2="45" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.3"/>
-    <!-- Corazón dentro -->
-    <g transform="translate(50,50)">
-      <path d="M-8,-2 Q-12,-8 -16,-8 Q-20,-8 -20,-4 Q-20,2 0,16 Q20,2 20,-4 Q20,-8 16,-8 Q12,-8 8,-2 Q0,4 0,4 Q0,4 -8,-2 Z" fill="currentColor" opacity="0.8"/>
-    </g>
-  </svg>
+  <div id="splash-heart">❤️</div>
 </div>
 
 <div id="loading" style="z-index:600;">
@@ -4964,7 +4948,7 @@ window.showToast=(msg)=>{
 // callback (incluso si responde muy rápido desde caché de sesión), TODAS las
 // funciones que necesita (goTo, initData, showToast...) ya estén definidas.
 onAuthStateChanged(auth,async user=>{
-  // Ocultar splash screen después de 1.6s (duración de la animación ultra-fluida)
+  // Ocultar splash screen después de 1.6s (expansión fluida)
   setTimeout(()=>{
     const splash=document.getElementById('splash-screen');
     if(splash){splash.classList.add('fade-out');setTimeout(()=>splash.style.display='none',400);}
