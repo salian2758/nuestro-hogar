@@ -785,13 +785,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <input class="fi" id="notif-time" type="time" value="20:00" style="width:100px;" onchange="saveNotifTime()">
     </div>
 
-    <!-- RESETEO MANUAL -->
-    <div class="stitle mt">Reseteo de tareas</div>
-    <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px;">
-      Las diarias se resetean solas cada día. Las semanales y mensuales se mantienen marcadas hasta que pasa exactamente una semana o un mes desde que las completaste — no un día fijo de calendario. También puedes forzar el reseteo de las diarias manualmente:
-      <button onclick="resetTasks()" style="display:block;width:100%;margin-top:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">↺ Resetear diarias ahora</button>
-    </div>
-
     <!-- PAPELERA -->
     <div class="stitle">Papelera <span class="sb sb-g" id="trash-count"></span></div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Se guardan los últimos 30 días. Toca restaurar para recuperar una tarea.</div>
@@ -811,65 +804,73 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 <!-- PANTALLA DE VIDA — accesible pulsando la barra HP o el avatar -->
 <div id="sc-vida" class="screen" style="display:none;">
   <div class="content">
-    <!-- CABECERA CON ESTADO HP -->
-    <div style="background:var(--bg2);border-radius:16px;border:0.5px solid var(--border);padding:20px;margin-bottom:16px;text-align:center;">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:6px;">Salud del hogar</div>
-      <div style="font-size:48px;font-weight:800;margin-bottom:8px;" id="vida-hp-number">80</div>
-      <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:10px;">
-        <div id="vida-hp-bar-big" style="height:100%;width:80%;background:#34D399;border-radius:5px;transition:width .6s,background .4s;"></div>
+
+    <!-- ESTADO HP ACTUAL -->
+    <div id="vida-header-card" style="background:var(--bg2);border-radius:16px;border:0.5px solid var(--border);padding:20px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:4px;" id="vida-person-label">Salud del hogar</div>
+      <div style="font-size:52px;font-weight:800;line-height:1;margin-bottom:10px;" id="vida-hp-number">80</div>
+      <div style="height:12px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:8px;">
+        <div id="vida-hp-bar-big" style="height:100%;width:80%;background:#34D399;border-radius:6px;transition:width .6s,background .4s;"></div>
       </div>
-      <div style="font-size:12px;color:var(--text2);" id="vida-hp-status">Todo bien — sigue así</div>
+      <div style="font-size:12px;color:var(--text2);" id="vida-hp-status">Todo bien — sigue así ✓</div>
     </div>
 
-    <!-- CÓMO FUNCIONA -->
-    <div class="stitle">Cómo funciona ❤️</div>
-    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:16px;">
-      <div style="font-size:12px;color:var(--text2);line-height:1.7;">
-        Cada persona tiene su propia barra de vida, independiente de la otra. Se pierde salud cuando hay días flojos o de inactividad, y se recupera con días buenos.<br><br>
-        <strong style="color:var(--text);">Si llegas a 0 HP:</strong> pierdes tu cartera completa y retrocedes 2 niveles. Para resucitar, tendrás que completar una tarea del hogar y un detalle para tu pareja del catálogo de resurrección.
-      </div>
+    <!-- CÓMO SUBE Y BAJA -->
+    <div class="stitle">Qué suma y qué resta ❤️</div>
+    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:16px;">
+      ${[
+        ['Día perfecto','100% del objetivo conjunto','#34D399','+6 HP'],
+        ['Día bueno','50+ XP ese día','#34D399','+3 HP'],
+        ['Semana buena','≥5 días buenos esa semana','#34D399','+5 HP'],
+        ['De viaje ✈️','Modo viaje activo','var(--text2)','sin cambio'],
+        ['Día neutro','20-49 XP ese día','#F87171','−4 HP'],
+        ['Día malo','Menos de 20 XP','#F87171','−10 HP'],
+        ['Semana floja','≤2 días buenos esa semana','#F87171','−8 HP'],
+      ].map(([t,s,c,v],i,arr)=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;${i<arr.length-1?'border-bottom:0.5px solid var(--border);':''}">
+          <div><div style="font-size:12px;font-weight:600;">${t}</div><div style="font-size:10px;color:var(--text2);">${s}</div></div>
+          <div style="color:${c};font-weight:700;font-size:14px;">${v}</div>
+        </div>
+      `).join('')}
     </div>
 
-    <!-- TABLA DE GANANCIAS Y PÉRDIDAS -->
-    <div class="stitle">Qué suma y qué resta</div>
+    <!-- QUÉ PASA AL MORIR -->
+    <div class="stitle">Al llegar a 0 HP 💀</div>
+    <div style="background:rgba(239,68,68,0.06);border-radius:12px;border:0.5px solid rgba(239,68,68,0.2);padding:14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.8;">
+      <div>💸 Pierdes tu <strong style="color:var(--text);">cartera completa</strong></div>
+      <div>📉 Retrocedes <strong style="color:var(--text);">2 niveles exactos</strong></div>
+      <div>🔒 No puedes ganar XP ni acceder a premios hasta resucitar</div>
+      <div>📅 Sí puedes ver el calendario y las tareas</div>
+      <div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(239,68,68,0.15);">Para resucitar: completa <strong style="color:var(--text);">una tarea</strong> y <strong style="color:var(--text);">un detalle</strong> de los catálogos de abajo.</div>
+    </div>
+
+    <!-- CATÁLOGO DE RESURRECCIÓN -->
+    <div class="stitle">Catálogo de resurrección</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Estas son las tareas y detalles que tendrás que hacer si llegas a 0 HP. Edítalos para que tengan sentido para vosotros.</div>
+
+    <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:12px;">
+      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;font-weight:700;">🏠 Tareas del hogar</div>
+        <button onclick="openResurrectionEditModal('task')" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
+      </div>
+      <div id="vida-resurrection-task-list"></div>
+    </div>
+
     <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:16px;">
       <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">Día bueno</div><div style="font-size:10px;color:var(--text2);">50+ XP ese día</div></div>
-        <div style="color:#34D399;font-weight:700;font-size:14px;">+3 HP</div>
+        <div style="font-size:12px;font-weight:700;">❤️ Detalles para tu pareja</div>
+        <button onclick="openResurrectionEditModal('detail')" style="background:none;border:none;color:var(--c1);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">+ Añadir</button>
       </div>
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">Día perfecto</div><div style="font-size:10px;color:var(--text2);">100% del objetivo conjunto</div></div>
-        <div style="color:#34D399;font-weight:700;font-size:14px;">+6 HP</div>
-      </div>
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">Semana buena</div><div style="font-size:10px;color:var(--text2);">≥5 días buenos esa semana</div></div>
-        <div style="color:#34D399;font-weight:700;font-size:14px;">+5 HP</div>
-      </div>
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">Día neutro</div><div style="font-size:10px;color:var(--text2);">20-49 XP ese día</div></div>
-        <div style="color:#F87171;font-weight:700;font-size:14px;">−4 HP</div>
-      </div>
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">Día malo</div><div style="font-size:10px;color:var(--text2);">Menos de 20 XP</div></div>
-        <div style="color:#F87171;font-weight:700;font-size:14px;">−10 HP</div>
-      </div>
-      <div style="padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">Semana floja</div><div style="font-size:10px;color:var(--text2);">≤2 días buenos esa semana</div></div>
-        <div style="color:#F87171;font-weight:700;font-size:14px;">−8 HP</div>
-      </div>
-      <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;font-weight:600;">De viaje ✈️</div><div style="font-size:10px;color:var(--text2);">Modo viaje activo</div></div>
-        <div style="color:var(--text2);font-weight:700;font-size:14px;">sin cambio</div>
-      </div>
+      <div id="vida-resurrection-detail-list"></div>
     </div>
 
     <!-- HISTORIAL DE VIDA -->
-    <div class="stitle">Historial</div>
-    <div id="vida-historial" style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:16px;">
-      <div style="font-size:12px;color:var(--text2);">Cargando...</div>
+    <div class="stitle">Historial de vida</div>
+    <div id="vida-historial" style="margin-bottom:24px;">
+      <div style="font-size:12px;color:var(--text2);padding:14px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);">Cargando...</div>
     </div>
 
-    <button onclick="goTo('hoy',null)" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:24px;">← Volver</button>
+    <button onclick="goTo('hoy',null)" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;color:var(--text2);padding:12px;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-bottom:24px;">← Volver a Hoy</button>
   </div>
 </div>
 
@@ -3390,22 +3391,28 @@ function updateEq(){
 
 // ─── NAV ───
 window.goToVida=async(person)=>{
-  // Ocultar todas las pantallas y mostrar sc-vida
-  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  // Activar pantalla correctamente — igual que goTo, usando clase active
+  document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';s.classList.remove('active');});
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  const sc=document.getElementById('sc-vida');if(sc)sc.style.display='';
+  const sc=document.getElementById('sc-vida');
+  if(sc){sc.style.display='';sc.classList.add('active');}
+  document.getElementById('quick-add-btn').style.display='none';
 
-  const hp=hpState[person]??HP_INITIAL;
-  const dead=hpDead[person];
+  const viewPerson=person||currentUser||'Rafa';
+  const hp=hpState[viewPerson]??HP_INITIAL;
+  const dead=hpDead[viewPerson];
 
-  // Barra grande de HP
-  const bar=document.getElementById('vida-hp-bar-big');
+  // Cabecera HP
+  const lbl=document.getElementById('vida-person-label');
   const num=document.getElementById('vida-hp-number');
+  const bar=document.getElementById('vida-hp-bar-big');
   const status=document.getElementById('vida-hp-status');
+  if(lbl)lbl.textContent=`${viewPerson} — Salud del hogar`;
   if(num)num.textContent=dead?'💀':hp;
   if(bar){
     bar.style.width=(dead?0:hp)+'%';
     bar.style.background=hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444';
+    bar.classList.toggle('hp-critical',hp<=10);
   }
   if(status){
     if(dead)status.textContent='KO — completa tu penitencia para resucitar';
@@ -3415,35 +3422,108 @@ window.goToVida=async(person)=>{
     else status.textContent='🚨 Crítico — un día más y mueres';
   }
 
-  // Historial de muertes + estado actual
+  // Catálogos de resurrección — solo del usuario actual (no se pueden editar los del otro)
+  const isOwn=viewPerson===currentUser;
+  await renderVidaResurrectionLists(viewPerson,isOwn);
+
+  // Historial de vida — muertes + ganancia/pérdida de HP de la última semana
   const histEl=document.getElementById('vida-historial');
   if(histEl){
     let html='';
     try{
       const deathsSnap=await getDoc(doc(db,'state','deaths'));
-      if(deathsSnap.exists()){
-        const deaths=Object.values(deathsSnap.data())
-          .filter(d=>d.person===person)
-          .sort((a,b)=>b.ts-a.ts);
-        if(deaths.length){
-          html+=`<div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600;">💀 Muertes (${deaths.length} en total)</div>`;
-          html+=deaths.map(d=>`
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px;">
-              <span>${d.date}</span>
-              <span style="color:var(--text2);">Nivel ${d.levelBefore} → ${d.levelAfter}</span>
-            </div>
-          `).join('');
-        }else{
-          html='<div style="font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>';
-        }
+      const deaths=deathsSnap.exists()
+        ?Object.values(deathsSnap.data()).filter(d=>d.person===viewPerson).sort((a,b)=>b.ts-a.ts)
+        :[];
+      if(deaths.length){
+        html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:10px;">`;
+        html+=`<div style="padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:700;color:#F87171;">💀 Muertes (${deaths.length} en total)</div>`;
+        html+=deaths.map(d=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:0.5px solid var(--border);font-size:12px;">
+            <div><div style="font-weight:600;">${d.date}</div><div style="font-size:10px;color:var(--text2);">Nivel ${d.levelBefore} → ${d.levelAfter}</div></div>
+            <div style="color:#F87171;font-size:18px;">💀</div>
+          </div>
+        `).join('');
+        html+=`</div>`;
       }else{
-        html='<div style="font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>';
+        html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:10px;font-size:12px;color:var(--text2);">Sin muertes registradas — ¡sigue así! 🌟</div>`;
+      }
+      // Estado actual resumido
+      const daysToZero=dead?0:Math.floor(hp/HP_LOSS_BAD);
+      if(!dead){
+        html+=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);line-height:1.7;">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px;">Estado actual</div>
+          <div>HP: <strong style="color:${hp>60?'#34D399':hp>30?'#F59E0B':'#EF4444'}">${hp}/100</strong></div>
+          <div>Sin hacer nada: mueres en ~${daysToZero} día${daysToZero!==1?'s':''}</div>
+          <div>Un día bueno hoy: ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)} HP</div>
+        </div>`;
       }
     }catch(e){
-      html='<div style="font-size:12px;color:var(--text2);">Sin datos disponibles</div>';
+      html=`<div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;font-size:12px;color:var(--text2);">Sin datos disponibles</div>`;
     }
     histEl.innerHTML=html;
   }
+};
+
+async function renderVidaResurrectionLists(person,isOwn){
+  const EJEMPLOS_TASK=[
+    {name:'Limpiar el baño a fondo',desc:'Azulejos, inodoro, suelo y espejo'},
+    {name:'Limpiar los armarios de la cocina',desc:'Vaciar, limpiar por dentro y recolocar'},
+    {name:'Pasar el aspirador y fregar toda la casa',desc:'Todas las habitaciones sin excepción'},
+  ];
+  const EJEMPLOS_DETAIL=[
+    {name:'Preparar una cena especial en casa',desc:'Algo que le guste, con detalle'},
+    {name:'Escribirle una nota o carta',desc:'Algo sincero sobre lo que valoras de ella'},
+    {name:'Planear una tarde juntos',desc:'Sin móvil, solo los dos'},
+  ];
+
+  for(const type of ['task','detail']){
+    const listId=`vida-resurrection-${type}-list`;
+    const listEl=document.getElementById(listId);
+    if(!listEl)continue;
+    const col=`resurrection_${type}_${person}`;
+    let items=[];
+    try{
+      const snap=await getDocs(collection(db,col));
+      snap.forEach(d=>items.push({...d.data(),id:d.id}));
+    }catch(e){}
+
+    // Si el catálogo está vacío y es el propio usuario, precargamos ejemplos
+    if(!items.length&&isOwn){
+      const ejemplos=type==='task'?EJEMPLOS_TASK:EJEMPLOS_DETAIL;
+      for(const ej of ejemplos){
+        const id='ej_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+        await setDoc(doc(db,col,id),{...ej,createdAt:Date.now()});
+        items.push({...ej,id});
+      }
+    }
+
+    if(!items.length){
+      listEl.innerHTML=`<div style="padding:12px 14px;font-size:11px;color:var(--text2);">${isOwn?'Sin elementos — pulsa + Añadir para crear':'Sin elementos en este catálogo'}</div>`;
+      continue;
+    }
+
+    listEl.innerHTML=items.map(it=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);" data-res-id="${it.id}" data-res-type="${type}">
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;">${escHtml(it.name)}</div>
+          ${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}
+        </div>
+        ${isOwn?`
+          <button onclick="editResurrectionItem(this)" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;padding:4px;">✎</button>
+          <button onclick="deleteResurrectionItemFromVida('${type}','${it.id}')" style="background:none;border:none;color:#F87171;font-size:12px;cursor:pointer;padding:4px;">✕</button>
+        `:''}
+      </div>
+    `).join('');
+  }
+}
+
+window.deleteResurrectionItemFromVida=async(type,id)=>{
+  if(!currentUser)return;
+  const col=`resurrection_${type}_${currentUser}`;
+  await deleteDoc(doc(db,col,id));
+  await renderVidaResurrectionLists(currentUser,true);
+  showToast('Eliminado');
 };
 
 window.goTo=(name,btn)=>{
