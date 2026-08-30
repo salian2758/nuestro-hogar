@@ -4521,6 +4521,8 @@ window._completeRecoveryAction=async(id,hp)=>{
   updateHeader();
   try{await deleteDoc(doc(db,`recovery_${currentUser}`,id));}catch(e){}
   showToast(`✨ +${hp} HP — Ahora estáis en ${newHp}/100`);
+  // Cerrar modal de vida para mostrar resultado
+  document.getElementById('vida-modal').style.display='none';
 };
 
 // KO — elegir del catálogo para resucitar
