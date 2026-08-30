@@ -802,7 +802,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 </div>
 
 <!-- PANTALLA DE VIDA — accesible pulsando la barra HP o el avatar -->
-<div id="sc-vida" class="screen" style="display:none;">
+<div id="sc-vida" class="screen">
   <div class="content">
 
     <!-- ESTADO HP ACTUAL -->
@@ -3391,11 +3391,8 @@ function updateEq(){
 
 // ─── NAV ───
 window.goToVida=async(person)=>{
-  // Activar pantalla correctamente — igual que goTo, usando clase active
-  document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';s.classList.remove('active');});
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  const sc=document.getElementById('sc-vida');
-  if(sc){sc.style.display='';sc.classList.add('active');}
+  // Usar goTo para activar la pantalla — maneja el display/active igual que todas las demás
+  goTo('vida',null);
   document.getElementById('quick-add-btn').style.display='none';
 
   const viewPerson=person||currentUser||'Rafa';
