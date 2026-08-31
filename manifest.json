@@ -32,5 +32,28 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Salud de Rafa",
+      "short_name": "Rafa ❤️",
+      "description": "Ver salud y recuperar vida",
+      "url": "/?view=vida&person=Rafa",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Salud de María",
+      "short_name": "María ❤️",
+      "description": "Ver salud y recuperar vida",
+      "url": "/?view=vida&person=María",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Recuperar vida",
+      "short_name": "💚 Recuperar",
+      "description": "Acciones para recuperar HP",
+      "url": "/?view=recovery",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

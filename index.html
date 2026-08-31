@@ -4316,6 +4316,9 @@ function updateHpBar(person){
     bar.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
   }
   if(lbl)lbl.textContent=hpDead[person]?'💀':hp;
+  
+  // Actualizar badge del widget
+  notifyHpChange();
 }
 
 // Registrar cambio de HP en historial (con motivo y opción de deshacer)
@@ -5085,6 +5088,64 @@ window.showToast=(msg)=>{
 // Registrado aquí, al final del script, para que cuando Firebase dispare este
 // callback (incluso si responde muy rápido desde caché de sesión), TODAS las
 // funciones que necesita (goTo, initData, showToast...) ya estén definidas.
+// ═══════════════════════════════════════════════
+// WIDGET INFORMATIVO - Badge y Notificaciones
+// ═══════════════════════════════════════════════
+
+// Actualizar badge del icono con HP actual
+async function updateHpBadge(){
+  if(!navigator.setAppBadge)return; // No soportado
+  try{
+    const totalHp=Object.values(hpState).reduce((a,b)=>a+(b??HP_INITIAL),0);
+    const avgHp=Math.round(totalHp/2);
+    if(avgHp>0){
+      await navigator.setAppBadge(avgHp);
+    }else{
+      await navigator.clearAppBadge();
+    }
+  }catch(e){}
+}
+
+// Actualizar badge cuando cambia HP
+function notifyHpChange(){
+  updateHpBadge();
+  // Mostrar notificación si está soportado
+  if('Notification' in window && Notification.permission==='granted'){
+    const rHp=hpState['Rafa']??HP_INITIAL;
+    const mHp=hpState['María']??HP_INITIAL;
+    new Notification('Nuestro Hogar',{
+      body:`Rafa ${rHp}/100 HP • María ${mHp}/100 HP`,
+      icon:'icons/icon-192.png',
+      badge:'icons/icon-192.png',
+      tag:'hp-update'
+    });
+  }
+}
+
+// Pedir permiso para notificaciones al iniciar
+function requestNotificationPermission(){
+  if('Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+}
+
+// Detectar si viene de un shortcut y abrir vista correspondiente
+function handleShortcutNavigation(){
+  const params=new URLSearchParams(window.location.search);
+  const view=params.get('view');
+  const person=params.get('person');
+  
+  if(view==='vida'&&person){
+    setTimeout(()=>openVidaModal(person),500);
+  }else if(view==='recovery'){
+    // Scroll a la sección de recuperación
+    setTimeout(()=>{
+      const el=document.querySelector('[id*="recuperar"]');
+      if(el)el.scrollIntoView({behavior:'smooth'});
+    },500);
+  }
+}
+
 onAuthStateChanged(auth,async user=>{
   // Ocultar splash screen después de 1.7s (expansión 1.4s + fadeOut 0.3s)
   setTimeout(()=>{
@@ -5108,6 +5169,9 @@ onAuthStateChanged(auth,async user=>{
     document.querySelectorAll('.screen').forEach(s=>{s.style.display='';});
     window.goTo('hoy',document.querySelector('.nb'));
     await initData();
+    handleShortcutNavigation();
+    requestNotificationPermission();
+    updateHpBadge();
   }else{
     document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';});
     document.getElementById('main-header').style.display='none';
