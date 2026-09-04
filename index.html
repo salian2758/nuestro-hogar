@@ -3147,8 +3147,20 @@ function renderResumen(){
 
 function getDailyXpData(person){
   const today=new Date().toLocaleDateString('es-ES');
-  // Solo contar XP del historial de HOY que fue hecho por esta persona específica
-  const xpToday=history.filter(h=>h.date===today&&(h.person===person||h.assignedTo===person)).reduce((s,h)=>s+(h.pts||0),0);
+  // Contar solo XP real de HOY para esta persona específica
+  let xpToday=0;
+  history.forEach(h=>{
+    if(h.date===today){
+      // Si hay reparto (xpFor), usar ese valor específico
+      if(h.xpFor){
+        xpToday+=(h.xpFor[person]||0);
+      }
+      // Si no hay reparto, contar solo si esta persona fue quien la hizo o la completó
+      else if(h.person===person||h.assignedTo===person){
+        xpToday+=(h.pts||0);
+      }
+    }
+  });
   
   const bothTravelingNow=travelMode.Rafa&&travelMode.María;
   const anyTravelingNow=travelMode.Rafa||travelMode.María;
@@ -3156,8 +3168,8 @@ function getDailyXpData(person){
   
   let state='malo',stateColor='#DC2626';
   if(xpToday>=DAILY_GOAL)state='perfecto',stateColor='#00FF41';
-  else if(xpToday>=COUPLE_STREAK_GOOD_MIN/2)state='bueno',stateColor='#10B981';
-  else if(xpToday>=COUPLE_STREAK_NEUTRAL_MIN/2)state='neutro',stateColor='#A0A0A0';
+  else if(xpToday>=COUPLE_STREAK_GOOD_MIN)state='bueno',stateColor='#10B981';
+  else if(xpToday>=COUPLE_STREAK_NEUTRAL_MIN)state='neutro',stateColor='#A0A0A0';
   
   return {xpToday,state,stateColor,DAILY_GOAL};
 }
