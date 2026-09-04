@@ -337,6 +337,30 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       95% { opacity:1; }
       100% { opacity:0; }
     }
+    @keyframes heartbeatCritical {
+      0% { transform:scale(1); }
+      25% { transform:scale(1.25); }
+      50% { transform:scale(1); }
+      75% { transform:scale(1.15); }
+      100% { transform:scale(1); }
+    }
+    @keyframes heartbeatNormal {
+      0% { transform:scale(1); }
+      25% { transform:scale(1.15); }
+      50% { transform:scale(1); }
+      100% { transform:scale(1); }
+    }
+    @keyframes heartbeatSlow {
+      0% { transform:scale(1); }
+      20% { transform:scale(1.08); }
+      40% { transform:scale(1); }
+      100% { transform:scale(1); }
+    }
+    @keyframes hpPulse {
+      0% { box-shadow:0 0 20px currentColor, inset 0 0 12px currentColor; }
+      50% { box-shadow:0 0 30px currentColor, inset 0 0 18px currentColor; }
+      100% { box-shadow:0 0 20px currentColor, inset 0 0 12px currentColor; }
+    }
     #splash-heart {
       font-size:120px;
       animation:smoothExpand 1.4s ease-in-out forwards, heartbeatSmooth 1.2s ease-in-out 1.4s infinite;
@@ -4302,22 +4326,62 @@ function updateHpBar(person){
   const hp=hpState[person]??HP_INITIAL;
   const bar=document.getElementById(k+'-hp-bar');
   const lbl=document.getElementById(k+'-hp-lbl');
+  const avatar=document.getElementById(k+'-avatar-emoji');
   
-  // Colores más dinámicos conforme baja la vida
-  let color;
-  if(hp>80)color='#10B981'; // Verde brillante
-  else if(hp>60)color='#34D399'; // Verde
-  else if(hp>40)color='#F59E0B'; // Amarillo/Naranja
-  else if(hp>20)color='#F97316'; // Naranja fuerte
-  else if(hp>0)color='#DC2626'; // Rojo
-  else color='#1F2937'; // Gris (muerto)
+  // 10 NIVELES DE COLOR - Transiciones más suaves
+  let color,glowIntensity;
+  if(hp>95){color='#00FF41';glowIntensity=2;} // Verde cyberpunk - Perfecto
+  else if(hp>85){color='#10B981';glowIntensity=1.8;} // Verde brillante - Excelente
+  else if(hp>75){color='#34D399';glowIntensity=1.6;} // Verde - Muy bien
+  else if(hp>65){color='#6EE7B7';glowIntensity=1.4;} // Verde agua - Bien
+  else if(hp>55){color='#FBBF24';glowIntensity=1.2;} // Amarillo - Normal
+  else if(hp>45){color='#F59E0B';glowIntensity=1;} // Amarillo/Naranja - Cuidado
+  else if(hp>35){color='#FB923C';glowIntensity=1.2;} // Naranja - Atención
+  else if(hp>25){color='#F97316';glowIntensity=1.4;} // Naranja fuerte - Peligro
+  else if(hp>10){color='#EF4444';glowIntensity=1.6;} // Rojo - Crítico
+  else if(hp>0){color='#DC2626';glowIntensity=2;} // Rojo intenso - Muy crítico
+  else color='#374151'; // Gris (muerto)
   
   if(bar){
     bar.style.width=hp+'%';
     bar.style.background=color;
-    bar.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
+    // Brillo dinámico que aumenta cuando la vida baja
+    bar.style.boxShadow=`0 0 ${12*glowIntensity}px ${color}80, inset 0 0 ${8*glowIntensity}px ${color}60`;
+    bar.style.transition='width 0.3s ease, background 0.4s ease, box-shadow 0.4s ease';
+    
+    // Efecto pulse cuando HP baja mucho (debajo de 30%)
+    if(hp<30&&hp>0){
+      bar.style.animation='hpPulse 1.5s ease-in-out infinite';
+    }else{
+      bar.style.animation='none';
+    }
   }
-  if(lbl)lbl.textContent=hpDead[person]?'💀':hp;
+  
+  if(lbl){
+    lbl.textContent=hpDead[person]?'💀':hp;
+    lbl.style.color=color;
+    lbl.style.fontWeight='bold';
+  }
+  
+  // LATIDO DEL AVATAR - Más evidente
+  if(avatar){
+    if(hpDead[person]){
+      avatar.style.animation='none';
+      avatar.style.opacity='0.5';
+    }else if(hp<30&&hp>0){
+      // Latido rápido y agresivo cuando es crítico
+      avatar.style.animation='heartbeatCritical 0.8s ease-in-out infinite';
+      avatar.style.opacity='1';
+    }else if(hp<60){
+      // Latido normal cuando está bien pero no perfecto
+      avatar.style.animation='heartbeatNormal 1.2s ease-in-out infinite';
+      avatar.style.opacity='1';
+    }else{
+      // Latido lento y sutil cuando está bien
+      avatar.style.animation='heartbeatSlow 2s ease-in-out infinite';
+      avatar.style.opacity='1';
+    }
+  }
   
   // Actualizar badge del widget
   notifyHpChange();
@@ -4448,24 +4512,37 @@ window.openVidaModal=(person)=>{
   // Título
   const titleEl=document.getElementById('vida-title');
   if(titleEl)titleEl.textContent=`❤️ Salud de ${vp}`;
-  // HP number y barra con 5 colores dinámicos
+  // HP number y barra con 10 colores dinámicos
   const numEl=document.getElementById('vida-hp-num');
   const barEl=document.getElementById('vida-hp-bar');
   const stEl=document.getElementById('vida-status');
   
-  let color;
-  if(hp>80)color='#10B981'; // Verde brillante
-  else if(hp>60)color='#34D399'; // Verde
-  else if(hp>40)color='#F59E0B'; // Amarillo/Naranja
-  else if(hp>20)color='#F97316'; // Naranja fuerte
-  else if(hp>0)color='#DC2626'; // Rojo
-  else color='#1F2937'; // Gris (muerto)
+  let color,glowIntensity;
+  if(hp>95){color='#00FF41';glowIntensity=2;} // Verde cyberpunk
+  else if(hp>85){color='#10B981';glowIntensity=1.8;} // Verde brillante
+  else if(hp>75){color='#34D399';glowIntensity=1.6;} // Verde
+  else if(hp>65){color='#6EE7B7';glowIntensity=1.4;} // Verde agua
+  else if(hp>55){color='#FBBF24';glowIntensity=1.2;} // Amarillo
+  else if(hp>45){color='#F59E0B';glowIntensity=1;} // Amarillo/Naranja
+  else if(hp>35){color='#FB923C';glowIntensity=1.2;} // Naranja
+  else if(hp>25){color='#F97316';glowIntensity=1.4;} // Naranja fuerte
+  else if(hp>10){color='#EF4444';glowIntensity=1.6;} // Rojo
+  else if(hp>0){color='#DC2626';glowIntensity=2;} // Rojo intenso
+  else color='#374151'; // Gris (muerto)
   
-  if(numEl)numEl.textContent=dead?'💀':hp;
+  if(numEl){
+    numEl.textContent=dead?'💀':hp;
+    numEl.style.color=color;
+  }
   if(barEl){
     barEl.style.width=(dead?0:hp)+'%';
     barEl.style.background=color;
-    barEl.style.boxShadow=`0 0 12px ${color}40, inset 0 0 8px ${color}60`;
+    barEl.style.boxShadow=`0 0 ${12*glowIntensity}px ${color}80, inset 0 0 ${8*glowIntensity}px ${color}60`;
+    if(hp<30&&hp>0){
+      barEl.style.animation='hpPulse 1.5s ease-in-out infinite';
+    }else{
+      barEl.style.animation='none';
+    }
   }
   if(stEl){
     if(dead)stEl.textContent='💀 KO';
