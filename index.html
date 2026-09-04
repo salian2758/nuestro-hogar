@@ -431,6 +431,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div class="p-level" id="rl">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-r" id="rxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-r" id="rxpn">0 XP</div>
+        <div id="rafa-daily-xp" style="font-size:9px;color:var(--text2);margin-top:2px;"></div>
         <div onclick="event.stopPropagation();openVidaModal('Rafa')" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" id="rafa-hp-row">
           <span style="font-size:9px;">❤️</span>
           <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
@@ -452,6 +453,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div class="p-level" id="ml">Nivel 1</div>
         <div class="xp-bar"><div class="xp-fill xp-fill-m" id="mxp" style="width:0%"></div></div>
         <div class="p-xp p-xp-m" id="mxpn">0 XP</div>
+        <div id="maria-daily-xp" style="font-size:9px;color:var(--text2);margin-top:2px;"></div>
         <div onclick="event.stopPropagation();openVidaModal('María')" style="display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;" id="maria-hp-row">
           <span style="font-size:9px;">❤️</span>
           <div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
@@ -3143,6 +3145,25 @@ function renderResumen(){
   `;
 }
 
+function getDailyXpData(person){
+  const today=new Date().toLocaleDateString('es-ES');
+  const dailyTasks=tasks.filter(t=>t.freq==='Diaria');
+  const xpFromDaily=dailyTasks.filter(t=>t.done).reduce((s,t)=>s+getXP(t),0);
+  const xpFromOthersToday=history.filter(h=>h.date===today&&!dailyTasks.some(t=>t.id===h.taskId)&&(h.person===person||h.assignedTo===person)).reduce((s,h)=>s+(h.pts||0),0);
+  const xpToday=xpFromDaily+xpFromOthersToday;
+  
+  const bothTravelingNow=travelMode.Rafa&&travelMode.María;
+  const anyTravelingNow=travelMode.Rafa||travelMode.María;
+  const DAILY_GOAL=anyTravelingNow&&!bothTravelingNow?70:140;
+  
+  let state='malo',stateColor='#DC2626';
+  if(xpToday>=DAILY_GOAL)state='perfecto',stateColor='#00FF41';
+  else if(xpToday>=COUPLE_STREAK_GOOD_MIN/2)state='bueno',stateColor='#10B981';
+  else if(xpToday>=COUPLE_STREAK_NEUTRAL_MIN/2)state='neutro',stateColor='#A0A0A0';
+  
+  return {xpToday,state,stateColor,DAILY_GOAL};
+}
+
 function updateHeader(){
   ['Rafa','María'].forEach(p=>{
     const info=levelInfo(xpState[p]||0,p);
@@ -3150,6 +3171,15 @@ function updateHeader(){
     const el=document.getElementById(k+'l');if(el)el.textContent=`Nv.${info.level} · ${info.name}`;
     const xpel=document.getElementById(k+'xp');if(xpel)xpel.style.width=info.pct+'%';
     const xpn=document.getElementById(k+'xpn');if(xpn)xpn.textContent=(xpState[p]||0)+' XP total';
+    
+    // Mostrar XP de hoy con estado
+    const dailyData=getDailyXpData(p);
+    const dailyEl=document.getElementById((p==='Rafa'?'rafa':'maria')+'-daily-xp');
+    if(dailyEl){
+      const pct=Math.min(100,Math.round(dailyData.xpToday/dailyData.DAILY_GOAL*100));
+      const barWidth=Math.max(8,Math.min(100,pct));
+      dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;">+${dailyData.xpToday} XP</span> <span style="font-size:7px;opacity:0.7;">[${dailyData.state}]</span>`;
+    }
     const avEl=document.getElementById((p==='Rafa'?'rafa':'maria')+'-avatar-emoji');if(avEl)avEl.textContent=info.emoji;
     // Detectar subida de nivel y celebrarla — solo si ya habíamos visto un nivel antes (evita falso positivo al cargar la app)
     if(lastSeenLevel[p]===null){
