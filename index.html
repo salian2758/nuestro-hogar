@@ -2185,6 +2185,7 @@ window.undoToggle=async(id)=>{
   // pasado de esta tarea si es recurrente.
   if(latestDoc)await deleteDoc(doc(db,'history',latestDoc.id));
   showToast('Tarea desmarcada — XP y wallet revertidos');
+  updateHeader();
 };
 let splitMode='mine'; // 'mine' | 'shared' | 'other'
 window.setSplitMode=(mode)=>{
@@ -2284,6 +2285,7 @@ window.confirmComplete=async()=>{
   showToast(toastMsg);
   pendingCompleteId=null;
   splitMode='mine';
+  updateHeader();
 };
 
 
