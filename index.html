@@ -3146,21 +3146,27 @@ function renderResumen(){
 }
 
 function getDailyXpData(person){
+  // Obtener fecha de hoy en el mismo formato que se guarda en historial
   const today=new Date().toLocaleDateString('es-ES');
-  // Contar solo XP real de HOY para esta persona específica
+  
+  // Contar XP real de HOY
   let xpToday=0;
-  history.forEach(h=>{
-    if(h.date===today){
-      // Si hay reparto (xpFor), usar ese valor específico
-      if(h.xpFor){
-        xpToday+=(h.xpFor[person]||0);
+  if(history&&Array.isArray(history)&&history.length>0){
+    history.forEach(h=>{
+      // Comparar fechas exactamente
+      if(!h.date||h.date!==today)return;
+      
+      // Si hay reparto de XP (xpFor), usar el de esta persona
+      if(h.xpFor&&typeof h.xpFor==='object'){
+        const amount=h.xpFor[person];
+        if(amount!==undefined)xpToday+=amount;
       }
-      // Si no hay reparto, contar solo si esta persona fue quien la hizo o la completó
-      else if(h.person===person||h.assignedTo===person){
+      // Si no hay reparto, contar si esta persona fue quien lo hizo
+      else if(h.person===person){
         xpToday+=(h.pts||0);
       }
-    }
-  });
+    });
+  }
   
   const bothTravelingNow=travelMode.Rafa&&travelMode.María;
   const anyTravelingNow=travelMode.Rafa||travelMode.María;
