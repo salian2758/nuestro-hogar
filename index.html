@@ -2356,6 +2356,49 @@ window.confirmDelete=async()=>{
   showToast('Tarea eliminada — puedes restaurarla en Papelera');
 };
 
+// Marcar tarea semanal ANTES de los 7 días - reinicia contador
+window.markEarlyWeekly=async(id)=>{
+  if(!currentUser)return;
+  const t=tasks.find(t=>t.id===id);
+  if(!t||t.freq!=='Semanal')return;
+  
+  // Verificar que aún no hayan pasado 7 días
+  if(!t.lastDoneDate||(Date.now()-t.lastDoneDate)>=604800000){
+    showToast('Esta tarea ya está disponible');
+    return;
+  }
+  
+  // Ganar XP como si fuera una tarea normal
+  const earned=getXP(t);
+  xpState[currentUser]=(xpState[currentUser]||0)+earned;
+  xpWeekly[currentUser]=(xpWeekly[currentUser]||0)+earned;
+  xpMonthly[currentUser]=(xpMonthly[currentUser]||0)+earned;
+  wallet[currentUser]=(wallet[currentUser]||0)+earned;
+  await updateStreak(currentUser,earned);
+  
+  // Guardar en historial de hoy
+  const today=new Date().toLocaleDateString('es-ES');
+  await setDoc(doc(db,'history',`${id}-${Date.now()}`),{
+    taskId:id,
+    taskName:t.name,
+    person:currentUser,
+    date:today,
+    pts:earned,
+    ts:Date.now()
+  });
+  
+  // Reiniciar contador de 7 días
+  t.lastDoneDate=Date.now();
+  await updateDoc(doc(db,'tasks',id),{lastDoneDate:t.lastDoneDate});
+  
+  // Actualizar UI
+  await saveXpState();
+  updateHeader();
+  renderTasks();
+  _loadVidaHistorial(currentUser);
+  showToast(`✨ +${earned} XP — Próxima en 7 días`);
+};
+
 // ─── ADD TASK ───
 window.openModal=(freq)=>{
   document.getElementById('fn').value='';
@@ -2606,7 +2649,7 @@ function renderTask(t){
     <div class="tinfo">
       <div class="tname${t.done?' done':''}" onclick="openEditModal('${t.id}')" style="cursor:pointer;">${t.name} <span style="font-size:10px;color:var(--text2);opacity:.6;">✎</span></div>
       <div class="tmeta"><span class="tag tag-z">${t.zona}</span><span class="tag tag-d">${DIFF_LBL[t.diff]}</span>${t.freq==='CadaX'?`<span class="tag" style="background:rgba(99,102,241,0.15);color:#A5B4FC;">${t.freqLabel||'Cada X'}</span>`:''}${gTag(t.group)}</div>
-      ${(t.freq==='CadaX'||t.freq==='Semanal'||t.freq==='Mensual')&&t.done&&t.lastDoneDate?`<div class="tnote">⏳ Próxima vez: ${nextAvailableDate(t)}</div>`:''}
+      ${(t.freq==='CadaX'||t.freq==='Semanal'||t.freq==='Mensual')&&t.done&&t.lastDoneDate?`<div class="tnote">⏳ Próxima vez: ${nextAvailableDate(t)}${t.freq==='Semanal'&&(Date.now()-t.lastDoneDate)<604800000?` <button onclick="markEarlyWeekly('${t.id}')" style="background:none;border:1px solid #F97316;color:#F97316;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;margin-left:4px;font-weight:bold;">🔄 Ahora</button>`:''}</div>`:''}
       <button class="assign-btn ${assignBtnClass(t.person)}" onclick="openAssignModal('${t.id}')">${assignBtnLabel(t.person)} <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
       ${t.note?`<div class="tnote">📌 ${t.note}</div>`:''}
       ${t.completedNote?`<div class="tnote">💬 ${t.completedNote}</div>`:''}
