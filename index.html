@@ -1119,7 +1119,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div class="fg"><label class="fl">Nota (opcional)</label><input class="fi" id="complete-note" placeholder="Ej: Dejé el baño sin la ducha..."></div>
     <div class="m-acts">
       <button class="btn-c" onclick="cancelComplete()">Cancelar</button>
-      <button class="btn-p" onclick="confirmComplete()">✓ Hecho</button>
+      <button class="btn-p" id="complete-btn" onclick="confirmComplete()">✓ Hecho</button>
     </div>
   </div>
 </div>
@@ -1534,6 +1534,8 @@ let xpState={Rafa:0,María:0};
 let activeFilter={hoy:'all',sem:'all',mes:'all'};
 let rTask=null,rPerson=null;
 let pendingCompleteId=null;
+let isCompletingTask=false; // Prevenir doble ejecución de confirmComplete
+let isUndoingTask=false; // Prevenir doble ejecución de undoToggle
 let notifEnabled=false;
 let notifTime='20:00';
 
@@ -2130,15 +2132,20 @@ window.cancelComplete=()=>{
 };
 
 window.undoToggle=async(id)=>{
-  const t=tasks.find(t=>t.id===id);
-  if(!t){
-    showToast('Esta tarea ya no existe');
-    return;
-  }
-  if(!t.done){
-    showToast('Esta tarea ya se desmarcó o se reabrió sola con el tiempo');
-    return;
-  }
+  // Prevenir múltiples llamadas en paralelo
+  if(isUndoingTask)return;
+  isUndoingTask=true;
+  
+  try{
+    const t=tasks.find(t=>t.id===id);
+    if(!t){
+      showToast('Esta tarea ya no existe');
+      return;
+    }
+    if(!t.done){
+      showToast('Esta tarea ya se desmarcó o se reabrió sola con el tiempo');
+      return;
+    }
   await updateDoc(doc(db,'tasks',id),{done:false,completedNote:'',completedBy:''});
   // Buscar la entrada MÁS RECIENTE del historial para esta tarea, para saber
   // EXACTAMENTE cómo se repartió el XP esta vez (Solo yo / Compartido / Solo
@@ -2212,6 +2219,9 @@ window.undoToggle=async(id)=>{
   if(latestDoc)await deleteDoc(doc(db,'history',latestDoc.id));
   showToast('Tarea desmarcada — XP y wallet revertidos');
   updateHeader();
+  }finally{
+    isUndoingTask=false;
+  }
 };
 let splitMode='mine'; // 'mine' | 'shared' | 'other'
 window.setSplitMode=(mode)=>{
@@ -2227,9 +2237,16 @@ window.updateSplitLabels=()=>{
 };
 
 window.confirmComplete=async()=>{
-  document.getElementById('note-modal').classList.add('hidden');
-  const id=pendingCompleteId;if(!id)return;
-  const t=tasks.find(t=>t.id===id);if(!t)return;
+  // Prevenir múltiples llamadas en paralelo
+  if(isCompletingTask)return;
+  isCompletingTask=true;
+  const btn=document.getElementById('complete-btn');
+  if(btn)btn.disabled=true;
+  
+  try{
+    document.getElementById('note-modal').classList.add('hidden');
+    const id=pendingCompleteId;if(!id){isCompletingTask=false;return;}
+    const t=tasks.find(t=>t.id===id);if(!t){isCompletingTask=false;return;}
   const note=document.getElementById('complete-note').value.trim();
   const earned=getXP(t);
   const me=currentUser;
@@ -2307,13 +2324,17 @@ window.confirmComplete=async()=>{
   const xpFromOthersTodayNow=history.filter(h=>h.date===todayStr&&h.taskId!==id&&!dailyTasksNow.some(dt=>dt.id===h.taskId)).reduce((s,h)=>s+(h.pts||0),0);
   const todayTotalXP=xpFromDailyNow+xpFromOthersTodayNow+earned;
   await updateCoupleStreak(todayTotalXP);
-  // AHORA actualizar history en memoria (después de usarla para calcular)
-  history.unshift(histEntry);
+  // NO hacer history.unshift aquí - onSnapshot traerá la entrada de Firebase automáticamente
   const toastMsg=splitMode==='shared'?`+${earned} XP repartido ✓`:splitMode==='other'?`+${earned} XP para ${other} ✓`:`+${earned} XP para ${me||whoDidIt}! ✓`;
   showToast(toastMsg);
   pendingCompleteId=null;
   splitMode='mine';
   updateHeader();
+  }finally{
+    isCompletingTask=false;
+    const btn=document.getElementById('complete-btn');
+    if(btn)btn.disabled=false;
+  }
 };
 
 
@@ -2392,8 +2413,7 @@ window.markEarlyWeekly=async(id)=>{
     splitMode:'mine'
   };
   await setDoc(doc(db,'history',`${id}-${Date.now()}`),histEntry);
-  // Actualizar history en memoria inmediatamente
-  history.unshift(histEntry);
+  // NO hacer history.unshift - onSnapshot traerá la entrada automáticamente
   
   // Reiniciar contador de 7 días
   t.lastDoneDate=Date.now();
