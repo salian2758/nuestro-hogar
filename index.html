@@ -490,6 +490,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <button class="fb" data-f="none">Sin asignar</button>
     </div>
     <div class="stitle" id="daily-title-rafa">Fijas de Rafa <span class="sb sb-r" id="rxp-d"></span></div>
+    <div id="inprogress-d-rafa"></div>
     <div id="list-d-rafa" class="drop-zone" data-drop-person="Rafa" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-maria">Fijas de María <span class="sb sb-m" id="mxp-d"></span></div>
     <div id="list-d-maria" class="drop-zone" data-drop-person="María" data-drop-freq="Diaria"></div>
@@ -2705,9 +2706,18 @@ function renderTask(t){
 
 function setList(id,arr,hideWhenEmpty){
   const el=document.getElementById(id);if(!el)return;
-  const pending=arr.filter(t=>!t.done);
+  const pending=arr.filter(t=>!t.done&&t.status!=='in_progress');
   if(!pending.length){el.innerHTML=hideWhenEmpty?'':'<div class="empty">Sin tareas</div>';return;}
   el.innerHTML=pending.map(renderTask).join('');
+}
+
+// Mostrar sección ⏳ EN PROGRESO (separada de pendientes)
+function setInProgress(id,arr){
+  const el=document.getElementById(id);if(!el)return;
+  const inProgress=arr.filter(t=>t.status==='in_progress'&&!t.done);
+  if(!inProgress.length){el.innerHTML='';return;}
+  const html=`<div style="margin-bottom:20px;"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;">⏳ En progreso</div>` + inProgress.map(renderTask).join('') + `</div>`;
+  el.innerHTML=html;
 }
 
 // Renderiza UNA sección única con todas las completadas de una pantalla
@@ -2764,6 +2774,7 @@ function renderAll(){
     if(fh==='Rotativa')return list.filter(t=>t.person==='Rotativa');
     return list;
   };
+  setInProgress('inprogress-d-rafa',fh==='all'||fh==='Rafa'?dr:[]);
   setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[],true);
   const rafaTitle=document.getElementById('daily-title-rafa');
   if(rafaTitle)rafaTitle.style.display=((fh==='all'||fh==='Rafa')&&dr.length)?'':'none';
