@@ -493,6 +493,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div id="inprogress-d-rafa"></div>
     <div id="list-d-rafa" class="drop-zone" data-drop-person="Rafa" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-maria">Fijas de María <span class="sb sb-m" id="mxp-d"></span></div>
+    <div id="inprogress-d-maria"></div>
     <div id="list-d-maria" class="drop-zone" data-drop-person="María" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-rot">Rotativas <span class="sb sb-g" id="rxp-rot"></span></div>
     <div id="list-d-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Diaria"></div>
@@ -533,6 +534,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div class="stitle" id="sem-title-weekly-none" style="display:none;">Sin asignar</div>
     <div id="list-s-weekly-none" class="drop-zone" data-drop-group="" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-a" style="display:none;">Grupo A — Rafa</div>
+    <div id="inprogress-s-a"></div>
     <div id="list-s-a" class="drop-zone" data-drop-group="A" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-b" style="display:none;">Grupo B — María</div>
     <div id="list-s-b" class="drop-zone" data-drop-group="B" data-drop-freq="Semanal"></div>
@@ -1125,6 +1127,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div class="m-acts">
       <button class="btn-c" onclick="cancelComplete()">Cancelar</button>
       <button class="btn-p" id="complete-btn" onclick="confirmComplete()">✓ Hecho</button>
+      <button class="btn-s" onclick="confirmStartInProgress()" style="background:rgba(99,102,241,0.2);color:#A5B4FC;margin-left:8px;">▶ En progreso</button>
     </div>
   </div>
 </div>
@@ -2230,6 +2233,98 @@ window.undoToggle=async(id)=>{
     isUndoingTask=false;
   }
 };
+
+// Marcar tarea como EN PROGRESO
+window.confirmStartInProgress=async()=>{
+  if(isCompletingTask)return;
+  isCompletingTask=true;
+  try{
+    document.getElementById('note-modal').classList.add('hidden');
+    const id=pendingCompleteId;if(!id){isCompletingTask=false;return;}
+    const t=tasks.find(t=>t.id===id);if(!t){isCompletingTask=false;return;}
+    
+    await updateDoc(doc(db,'tasks',id),{
+      status:'in_progress',
+      progressPercent:0,
+      startedBy:currentUser,
+      startedAt:Date.now()
+    });
+    
+    showToast('▶ En progreso — tu pareja la verá');
+    pendingCompleteId=null;
+    updateHeader();
+    renderTasks();
+  }finally{
+    isCompletingTask=false;
+  }
+};
+
+// Abrir modal de progreso
+window.openProgressModal=(id)=>{
+  const t=tasks.find(t=>t.id===id);
+  if(!t||t.status!=='in_progress')return;
+  const current=t.progressPercent||0;
+  
+  const modal=document.createElement('div');
+  modal.id='progress-modal-'+id;
+  modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);padding:20px;border-radius:16px;z-index:999;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+  modal.innerHTML=`<div style="text-align:center;">
+    <div style="font-weight:700;margin-bottom:16px;color:var(--text);">Progreso: ${current}%</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <button onclick="updateProgress('${id}',25);document.getElementById('progress-modal-${id}').remove()" style="padding:10px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;">25%</button>
+      <button onclick="updateProgress('${id}',50);document.getElementById('progress-modal-${id}').remove()" style="padding:10px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;">50%</button>
+      <button onclick="updateProgress('${id}',75);document.getElementById('progress-modal-${id}').remove()" style="padding:10px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;">75%</button>
+      <button onclick="updateProgress('${id}',100);document.getElementById('progress-modal-${id}').remove()" style="padding:10px;border:none;background:#10B981;color:white;border-radius:8px;cursor:pointer;font-weight:700;">✓ Completar</button>
+    </div>
+    <button onclick="document.getElementById('progress-modal-${id}').remove()" style="padding:8px 16px;border:1px solid var(--border);background:transparent;border-radius:8px;cursor:pointer;color:var(--text2);">Cancelar</button>
+  </div>`;
+  document.body.appendChild(modal);
+};
+
+// Actualizar progreso o completar
+window.updateProgress=async(id,percent)=>{
+  if(isCompletingTask)return;
+  isCompletingTask=true;
+  try{
+    const t=tasks.find(t=>t.id===id);
+    if(!t)return;
+    
+    if(percent===100){
+      // COMPLETAR
+      const earned=getXP(t);
+      await updateDoc(doc(db,'tasks',id),{
+        done:true,
+        status:'done',
+        completedAt:Date.now(),
+        completedBy:currentUser,
+        progressPercent:100
+      });
+      
+      // Guardar XP
+      xpState[currentUser]=(xpState[currentUser]||0)+earned;
+      xpWeekly[currentUser]=(xpWeekly[currentUser]||0)+earned;
+      xpMonthly[currentUser]=(xpMonthly[currentUser]||0)+earned;
+      wallet[currentUser]=(wallet[currentUser]||0)+earned;
+      await updateStreak(currentUser,earned);
+      
+      const today=new Date().toLocaleDateString('es-ES');
+      const histEntry={taskId:id,name:t.name,person:currentUser,assignedTo:currentUser,zona:t.zona,pts:earned,date:today,ts:Date.now(),splitMode:'mine'};
+      await setDoc(doc(db,'history',`${id}-${Date.now()}`),histEntry);
+      await saveXpState();
+      
+      showToast(`✓ Completada +${earned} XP`);
+    }else{
+      // Solo cambiar progreso
+      await updateDoc(doc(db,'tasks',id),{progressPercent:percent});
+      showToast(`▶ ${percent}%`);
+    }
+    
+    updateHeader();
+    renderTasks();
+  }finally{
+    isCompletingTask=false;
+  }
+};
 let splitMode='mine'; // 'mine' | 'shared' | 'other'
 window.setSplitMode=(mode)=>{
   splitMode=mode;
@@ -2688,7 +2783,7 @@ function renderTask(t){
   const x=getXP(t);
   return`<div class="tc${t.done?' done-card':''}" id="tc-${t.id}" data-task-id="${t.id}">
     <div class="tdraghandle" data-task-id="${t.id}" title="Arrastra para reasignar">⠿</div>
-    <div class="tcheck${t.done?' done':''}" data-task-id="${t.id}" data-done="${t.done?'1':'0'}" title="${t.done?'Toca para desmarcar':'Toca para completar, mantén pulsado para repartir'}">${t.done?chkSVG():''}</div>
+    <div class="tcheck${t.done?' done':''}" data-task-id="${t.id}" data-done="${t.done?'1':'0'}" title="${t.done?'Toca para desmarcar':'Toca para completar, mantén pulsado para repartir'}">${t.done?chkSVG():t.status==='in_progress'?'▶':''}}</div>
     <div class="tinfo">
       <div class="tname${t.done?' done':''}" onclick="openEditModal('${t.id}')" style="cursor:pointer;">${t.name} <span style="font-size:10px;color:var(--text2);opacity:.6;">✎</span></div>
       <div class="tmeta"><span class="tag tag-z">${t.zona}</span><span class="tag tag-d">${DIFF_LBL[t.diff]}</span>${t.freq==='CadaX'?`<span class="tag" style="background:rgba(99,102,241,0.15);color:#A5B4FC;">${t.freqLabel||'Cada X'}</span>`:''}${gTag(t.group)}</div>
@@ -2778,6 +2873,7 @@ function renderAll(){
   setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[],true);
   const rafaTitle=document.getElementById('daily-title-rafa');
   if(rafaTitle)rafaTitle.style.display=((fh==='all'||fh==='Rafa')&&dr.length)?'':'none';
+  setInProgress('inprogress-d-maria',fh==='all'||fh==='María'?dm:[]);
   setList('list-d-maria',fh==='all'||fh==='María'?dm:[],true);
   const mariaTitle=document.getElementById('daily-title-maria');
   if(mariaTitle)mariaTitle.style.display=((fh==='all'||fh==='María')&&dm.length)?'':'none';
@@ -2844,6 +2940,7 @@ function renderAll(){
   const titleWeeklyNone=document.getElementById('sem-title-weekly-none');
   if(titleWeeklyNone)titleWeeklyNone.style.display=weeklyNoneFiltered.length?'':'none';
 
+  setInProgress('inprogress-s-a',weeklyAFiltered);
   setList('list-s-a',weeklyAFiltered,true);
   const titleA=document.getElementById('sem-title-a');
   if(titleA)titleA.style.display=weeklyAFiltered.length?'':'none';
@@ -3751,7 +3848,12 @@ async function reassignTaskFromDrop(taskId,dropZone){
     if(wasHold){
       openSplitModal(id); // mantener pulsado: menú de reparto + nota, como siempre
     }else{
-      quickComplete(id,el); // toque corto: completar al instante con animación
+      const t=tasks.find(t=>t.id===id);
+      if(t&&t.status==='in_progress'){
+        openProgressModal(id); // tarea en progreso: abrir modal de %
+      }else{
+        quickComplete(id,el); // toque corto: completar al instante con animación
+      }
     }
   });
   document.body.addEventListener('pointercancel',()=>{
