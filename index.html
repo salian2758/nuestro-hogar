@@ -2297,8 +2297,6 @@ window.confirmComplete=async()=>{
     histEntry.extra=`Asignada a ${t.person}`;
   }
   await setDoc(doc(db,'history',histId),histEntry);
-  // Actualizar history en memoria inmediatamente para que getDailyXpData vea el nuevo XP
-  history.unshift(histEntry);
   // Actualizar racha conjunta del progreso diario (sobre el XP combinado de hoy).
   // Excluimos la tarea actual (id) del recálculo del array 'tasks' porque ese
   // array puede no haberse actualizado todavía vía onSnapshot — sumamos su XP
@@ -2309,6 +2307,8 @@ window.confirmComplete=async()=>{
   const xpFromOthersTodayNow=history.filter(h=>h.date===todayStr&&h.taskId!==id&&!dailyTasksNow.some(dt=>dt.id===h.taskId)).reduce((s,h)=>s+(h.pts||0),0);
   const todayTotalXP=xpFromDailyNow+xpFromOthersTodayNow+earned;
   await updateCoupleStreak(todayTotalXP);
+  // AHORA actualizar history en memoria (después de usarla para calcular)
+  history.unshift(histEntry);
   const toastMsg=splitMode==='shared'?`+${earned} XP repartido ✓`:splitMode==='other'?`+${earned} XP para ${other} ✓`:`+${earned} XP para ${me||whoDidIt}! ✓`;
   showToast(toastMsg);
   pendingCompleteId=null;
