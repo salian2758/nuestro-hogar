@@ -2297,6 +2297,8 @@ window.confirmComplete=async()=>{
     histEntry.extra=`Asignada a ${t.person}`;
   }
   await setDoc(doc(db,'history',histId),histEntry);
+  // Actualizar history en memoria inmediatamente para que getDailyXpData vea el nuevo XP
+  history.unshift(histEntry);
   // Actualizar racha conjunta del progreso diario (sobre el XP combinado de hoy).
   // Excluimos la tarea actual (id) del recálculo del array 'tasks' porque ese
   // array puede no haberse actualizado todavía vía onSnapshot — sumamos su XP
@@ -2378,14 +2380,20 @@ window.markEarlyWeekly=async(id)=>{
   
   // Guardar en historial de hoy
   const today=new Date().toLocaleDateString('es-ES');
-  await setDoc(doc(db,'history',`${id}-${Date.now()}`),{
+  const histEntry={
     taskId:id,
-    taskName:t.name,
+    name:t.name,
     person:currentUser,
-    date:today,
+    assignedTo:currentUser,
+    zona:t.zona,
     pts:earned,
-    ts:Date.now()
-  });
+    date:today,
+    ts:Date.now(),
+    splitMode:'mine'
+  };
+  await setDoc(doc(db,'history',`${id}-${Date.now()}`),histEntry);
+  // Actualizar history en memoria inmediatamente
+  history.unshift(histEntry);
   
   // Reiniciar contador de 7 días
   t.lastDoneDate=Date.now();
@@ -3204,8 +3212,8 @@ function getDailyXpData(person){
         const amount=h.xpFor[person];
         if(amount!==undefined)xpToday+=amount;
       }
-      // Si no hay reparto, contar si esta persona fue quien lo hizo
-      else if(h.person===person){
+      // Si no hay reparto, contar si esta persona fue quien lo hizo O si está asignada
+      else if(h.person===person||h.assignedTo===person){
         xpToday+=(h.pts||0);
       }
     });
