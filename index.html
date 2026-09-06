@@ -1536,6 +1536,7 @@ let rTask=null,rPerson=null;
 let pendingCompleteId=null;
 let isCompletingTask=false; // Prevenir doble ejecución de confirmComplete
 let isUndoingTask=false; // Prevenir doble ejecución de undoToggle
+let isMarkingEarlyWeekly=false; // Prevenir doble ejecución de markEarlyWeekly
 let notifEnabled=false;
 let notifTime='20:00';
 
@@ -2381,50 +2382,58 @@ window.confirmDelete=async()=>{
 
 // Marcar tarea semanal ANTES de los 7 días - reinicia contador
 window.markEarlyWeekly=async(id)=>{
-  if(!currentUser)return;
-  const t=tasks.find(t=>t.id===id);
-  if(!t||t.freq!=='Semanal')return;
+  // Prevenir múltiples llamadas en paralelo
+  if(isMarkingEarlyWeekly)return;
+  isMarkingEarlyWeekly=true;
   
-  // Verificar que aún no hayan pasado 7 días
-  if(!t.lastDoneDate||(Date.now()-t.lastDoneDate)>=604800000){
-    showToast('Esta tarea ya está disponible');
-    return;
+  try{
+    if(!currentUser)return;
+    const t=tasks.find(t=>t.id===id);
+    if(!t||t.freq!=='Semanal')return;
+    
+    // Verificar que aún no hayan pasado 7 días
+    if(!t.lastDoneDate||(Date.now()-t.lastDoneDate)>=604800000){
+      showToast('Esta tarea ya está disponible');
+      return;
+    }
+    
+    // Ganar XP como si fuera una tarea normal
+    const earned=getXP(t);
+    xpState[currentUser]=(xpState[currentUser]||0)+earned;
+    xpWeekly[currentUser]=(xpWeekly[currentUser]||0)+earned;
+    xpMonthly[currentUser]=(xpMonthly[currentUser]||0)+earned;
+    wallet[currentUser]=(wallet[currentUser]||0)+earned;
+    await updateStreak(currentUser,earned);
+    
+    // Guardar en historial de hoy
+    const today=new Date().toLocaleDateString('es-ES');
+    const histEntry={
+      taskId:id,
+      name:t.name,
+      person:currentUser,
+      assignedTo:currentUser,
+      zona:t.zona,
+      pts:earned,
+      date:today,
+      ts:Date.now(),
+      splitMode:'mine'
+    };
+    await setDoc(doc(db,'history',`${id}-${Date.now()}`),histEntry);
+    // NO hacer history.unshift - onSnapshot traerá la entrada automáticamente
+    
+    // Reiniciar contador de 7 días
+    t.lastDoneDate=Date.now();
+    await updateDoc(doc(db,'tasks',id),{lastDoneDate:t.lastDoneDate});
+    
+    // Actualizar UI
+    await saveXpState();
+    updateHeader();
+    renderTasks();
+    _loadVidaHistorial(currentUser);
+    showToast(`✨ +${earned} XP — Próxima en 7 días`);
+  }finally{
+    isMarkingEarlyWeekly=false;
   }
-  
-  // Ganar XP como si fuera una tarea normal
-  const earned=getXP(t);
-  xpState[currentUser]=(xpState[currentUser]||0)+earned;
-  xpWeekly[currentUser]=(xpWeekly[currentUser]||0)+earned;
-  xpMonthly[currentUser]=(xpMonthly[currentUser]||0)+earned;
-  wallet[currentUser]=(wallet[currentUser]||0)+earned;
-  await updateStreak(currentUser,earned);
-  
-  // Guardar en historial de hoy
-  const today=new Date().toLocaleDateString('es-ES');
-  const histEntry={
-    taskId:id,
-    name:t.name,
-    person:currentUser,
-    assignedTo:currentUser,
-    zona:t.zona,
-    pts:earned,
-    date:today,
-    ts:Date.now(),
-    splitMode:'mine'
-  };
-  await setDoc(doc(db,'history',`${id}-${Date.now()}`),histEntry);
-  // NO hacer history.unshift - onSnapshot traerá la entrada automáticamente
-  
-  // Reiniciar contador de 7 días
-  t.lastDoneDate=Date.now();
-  await updateDoc(doc(db,'tasks',id),{lastDoneDate:t.lastDoneDate});
-  
-  // Actualizar UI
-  await saveXpState();
-  updateHeader();
-  renderTasks();
-  _loadVidaHistorial(currentUser);
-  showToast(`✨ +${earned} XP — Próxima en 7 días`);
 };
 
 // ─── ADD TASK ───
