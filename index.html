@@ -3253,10 +3253,14 @@ function getDailyXpData(person){
   const anyTravelingNow=travelMode.Rafa||travelMode.María;
   const DAILY_GOAL=anyTravelingNow&&!bothTravelingNow?70:140;
   
+  // Umbrales para DÍA INDIVIDUAL (mitad de los conjuntos)
+  const INDIVIDUAL_GOOD_MIN=anyTravelingNow&&!bothTravelingNow?35:70; // Mitad de DAILY_GOAL
+  const INDIVIDUAL_NEUTRAL_MIN=20; // Mitad de COUPLE_STREAK_NEUTRAL_MIN
+  
   let state='malo',stateColor='#DC2626';
   if(xpToday>=DAILY_GOAL)state='perfecto',stateColor='#00FF41';
-  else if(xpToday>=COUPLE_STREAK_GOOD_MIN)state='bueno',stateColor='#10B981';
-  else if(xpToday>=COUPLE_STREAK_NEUTRAL_MIN)state='neutro',stateColor='#A0A0A0';
+  else if(xpToday>=INDIVIDUAL_GOOD_MIN)state='bueno',stateColor='#10B981';
+  else if(xpToday>=INDIVIDUAL_NEUTRAL_MIN)state='neutro',stateColor='#A0A0A0';
   
   return {xpToday,state,stateColor,DAILY_GOAL};
 }
