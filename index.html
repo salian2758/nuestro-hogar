@@ -532,11 +532,13 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <button class="fb" data-f="none">Sin asignar</button>
     </div>
     <div class="stitle" id="sem-title-weekly-none" style="display:none;">Sin asignar</div>
+    <div id="inprogress-s-weekly-none"></div>
     <div id="list-s-weekly-none" class="drop-zone" data-drop-group="" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-a" style="display:none;">Grupo A — Rafa</div>
     <div id="inprogress-s-a"></div>
     <div id="list-s-a" class="drop-zone" data-drop-group="A" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-b" style="display:none;">Grupo B — María</div>
+    <div id="inprogress-s-b"></div>
     <div id="list-s-b" class="drop-zone" data-drop-group="B" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-cadax-header" style="display:none;">Cada X semanas</div>
     <div class="stitle mt" id="sem-title-cadax-none" style="display:none;">Sin asignar</div>
@@ -1127,7 +1129,17 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div class="m-acts">
       <button class="btn-c" onclick="cancelComplete()">Cancelar</button>
       <button class="btn-p" id="complete-btn" onclick="confirmComplete()">✓ Hecho</button>
-      <button class="btn-s" onclick="confirmStartInProgress()" style="background:rgba(99,102,241,0.2);color:#A5B4FC;margin-left:8px;">▶ En progreso</button>
+      <div id="inprogress-section" style="display:none;margin-top:16px;">
+        <label class="fl" style="display:block;margin-bottom:8px;">Progreso inicial:</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
+          <button onclick="setProgressPercent(25)" class="progress-btn" style="padding:8px;border:1px solid #A5B4FC;background:transparent;color:#A5B4FC;border-radius:6px;cursor:pointer;font-weight:600;">25%</button>
+          <button onclick="setProgressPercent(50)" class="progress-btn" style="padding:8px;border:1px solid #A5B4FC;background:transparent;color:#A5B4FC;border-radius:6px;cursor:pointer;font-weight:600;">50%</button>
+          <button onclick="setProgressPercent(75)" class="progress-btn" style="padding:8px;border:1px solid #A5B4FC;background:transparent;color:#A5B4FC;border-radius:6px;cursor:pointer;font-weight:600;">75%</button>
+          <button onclick="setProgressPercent(0)" class="progress-btn" style="padding:8px;border:1px solid #A5B4FC;background:transparent;color:#A5B4FC;border-radius:6px;cursor:pointer;font-weight:600;">0%</button>
+        </div>
+        <button class="btn-p" onclick="confirmStartInProgress()" style="width:100%;">✓ En progreso</button>
+      </div>
+      <button class="btn-s" id="toggle-inprogress" onclick="toggleInProgressSection()" style="background:rgba(99,102,241,0.2);color:#A5B4FC;margin-left:8px;">▶ En progreso</button>
     </div>
   </div>
 </div>
@@ -1542,7 +1554,8 @@ let xpState={Rafa:0,María:0};
 let activeFilter={hoy:'all',sem:'all',mes:'all'};
 let rTask=null,rPerson=null;
 let pendingCompleteId=null;
-let isCompletingTask=false; // Prevenir doble ejecución de confirmComplete
+let isCompletingTask=false;
+let selectedProgressPercent=0; // Prevenir doble ejecución de confirmComplete
 let isUndoingTask=false; // Prevenir doble ejecución de undoToggle
 let isMarkingEarlyWeekly=false; // Prevenir doble ejecución de markEarlyWeekly
 let notifEnabled=false;
@@ -2235,6 +2248,21 @@ window.undoToggle=async(id)=>{
 };
 
 // Marcar tarea como EN PROGRESO
+
+window.toggleInProgressSection=()=>{
+  const section=document.getElementById('inprogress-section');
+  if(!section)return;
+  section.style.display=section.style.display==='none'?'block':'none';
+  document.getElementById('toggle-inprogress').textContent=section.style.display==='none'?'▶ En progreso':'✕ Cancelar';
+};
+
+window.setProgressPercent=(percent)=>{
+  selectedProgressPercent=percent;
+  // Marcar visualmente cual está seleccionado
+  document.querySelectorAll('.progress-btn').forEach(btn=>btn.style.background='transparent');
+  event.target.style.background='rgba(99,102,241,0.3)';
+};
+
 window.confirmStartInProgress=async()=>{
   if(isCompletingTask)return;
   isCompletingTask=true;
@@ -2245,13 +2273,14 @@ window.confirmStartInProgress=async()=>{
     
     await updateDoc(doc(db,'tasks',id),{
       status:'in_progress',
-      progressPercent:0,
+      progressPercent:selectedProgressPercent,
       startedBy:currentUser,
       startedAt:Date.now()
     });
     
-    showToast('▶ En progreso — tu pareja la verá');
+    showToast(`▶ En progreso ${selectedProgressPercent}% — tu pareja la verá`);
     pendingCompleteId=null;
+    selectedProgressPercent=0;
     updateHeader();
     renderTasks();
   }finally{
@@ -2956,6 +2985,8 @@ function renderAll(){
   if(titleWeeklyNone)titleWeeklyNone.style.display=weeklyNoneFiltered.length?'':'none';
 
   setInProgress('inprogress-s-a',weeklyAFiltered);
+  setInProgress('inprogress-s-b',weeklyBFiltered);
+  setInProgress('inprogress-s-weekly-none',weeklyNoneFiltered);
   setList('list-s-a',weeklyAFiltered,true);
   const titleA=document.getElementById('sem-title-a');
   if(titleA)titleA.style.display=weeklyAFiltered.length?'':'none';
