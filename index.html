@@ -1765,6 +1765,7 @@ async function finishInit(){
   unsubHist=onSnapshot(query(collection(db,'history'),orderBy('ts','desc')),snap=>{
     history=[];
     snap.forEach(d=>history.push({...d.data(),id:d.id}));
+    updateHeader(); // Actualizar header con el XP del día correcto
     renderHist();
     renderResumen();
     renderDashboard();
