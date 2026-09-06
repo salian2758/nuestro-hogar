@@ -361,6 +361,10 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       50% { box-shadow:0 0 30px currentColor, inset 0 0 18px currentColor; }
       100% { box-shadow:0 0 20px currentColor, inset 0 0 12px currentColor; }
     }
+    @keyframes glow {
+      0%, 100% { text-shadow:0 0 8px currentColor, 0 0 4px currentColor; }
+      50% { text-shadow:0 0 16px currentColor, 0 0 8px currentColor, 0 0 4px currentColor; }
+    }
     #splash-heart {
       font-size:120px;
       animation:smoothExpand 1.4s ease-in-out forwards, heartbeatSmooth 1.2s ease-in-out 1.4s infinite;
@@ -3279,7 +3283,13 @@ function updateHeader(){
     if(dailyEl){
       const pct=Math.min(100,Math.round(dailyData.xpToday/dailyData.DAILY_GOAL*100));
       const barWidth=Math.max(8,Math.min(100,pct));
-      dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;">+${dailyData.xpToday} XP</span>`;
+      
+      // Efecto especial para días perfectos
+      if(dailyData.state==='perfecto'){
+        dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;font-size:1.1em;text-shadow:0 0 8px ${dailyData.stateColor},0 0 4px ${dailyData.stateColor};animation:glow 1.5s ease-in-out infinite;">✨ +${dailyData.xpToday} XP ✨</span>`;
+      }else{
+        dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;">+${dailyData.xpToday} XP</span>`;
+      }
     }
     const avEl=document.getElementById((p==='Rafa'?'rafa':'maria')+'-avatar-emoji');if(avEl)avEl.textContent=info.emoji;
     // Detectar subida de nivel y celebrarla — solo si ya habíamos visto un nivel antes (evita falso positivo al cargar la app)
