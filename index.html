@@ -489,11 +489,10 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <button class="fb" data-f="María">María</button>
       <button class="fb" data-f="none">Sin asignar</button>
     </div>
+    <div id="inprogress-hoy"></div>
     <div class="stitle" id="daily-title-rafa">Fijas de Rafa <span class="sb sb-r" id="rxp-d"></span></div>
-    <div id="inprogress-d-rafa"></div>
     <div id="list-d-rafa" class="drop-zone" data-drop-person="Rafa" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-maria">Fijas de María <span class="sb sb-m" id="mxp-d"></span></div>
-    <div id="inprogress-d-maria"></div>
     <div id="list-d-maria" class="drop-zone" data-drop-person="María" data-drop-freq="Diaria"></div>
     <div class="stitle mt" id="daily-title-rot">Rotativas <span class="sb sb-g" id="rxp-rot"></span></div>
     <div id="list-d-rot" class="drop-zone" data-drop-person="Rotativa" data-drop-freq="Diaria"></div>
@@ -532,13 +531,10 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <button class="fb" data-f="none">Sin asignar</button>
     </div>
     <div class="stitle" id="sem-title-weekly-none" style="display:none;">Sin asignar</div>
-    <div id="inprogress-s-weekly-none"></div>
     <div id="list-s-weekly-none" class="drop-zone" data-drop-group="" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-a" style="display:none;">Grupo A — Rafa</div>
-    <div id="inprogress-s-a"></div>
     <div id="list-s-a" class="drop-zone" data-drop-group="A" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-title-b" style="display:none;">Grupo B — María</div>
-    <div id="inprogress-s-b"></div>
     <div id="list-s-b" class="drop-zone" data-drop-group="B" data-drop-freq="Semanal"></div>
     <div class="stitle mt" id="sem-cadax-header" style="display:none;">Cada X semanas</div>
     <div class="stitle mt" id="sem-title-cadax-none" style="display:none;">Sin asignar</div>
@@ -2913,11 +2909,13 @@ function renderAll(){
     if(fh==='Rotativa')return list.filter(t=>t.person==='Rotativa');
     return list;
   };
-  setInProgress('inprogress-d-rafa',fh==='all'||fh==='Rafa'?dr:[]);
+  // Combinar todas las tareas en progreso del día
+  const allDailyTasks=[...(fh==='all'||fh==='Rafa'?dr:[]),...(fh==='all'||fh==='María'?dm:[]),...(fh==='all'?drot:[]),...(fh==='all'||fh==='none'?dnone:[])];
+  setInProgress('inprogress-hoy',allDailyTasks);
+  
   setList('list-d-rafa',fh==='all'||fh==='Rafa'?dr:[],true);
   const rafaTitle=document.getElementById('daily-title-rafa');
   if(rafaTitle)rafaTitle.style.display=((fh==='all'||fh==='Rafa')&&dr.length)?'':'none';
-  setInProgress('inprogress-d-maria',fh==='all'||fh==='María'?dm:[]);
   setList('list-d-maria',fh==='all'||fh==='María'?dm:[],true);
   const mariaTitle=document.getElementById('daily-title-maria');
   if(mariaTitle)mariaTitle.style.display=((fh==='all'||fh==='María')&&dm.length)?'':'none';
