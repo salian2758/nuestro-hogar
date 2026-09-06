@@ -3253,16 +3253,21 @@ function getDailyXpData(person){
     });
   }
   
-  const bothTravelingNow=travelMode.Rafa&&travelMode.María;
-  const anyTravelingNow=travelMode.Rafa||travelMode.María;
-  const DAILY_GOAL=anyTravelingNow&&!bothTravelingNow?70:140;
-  
-  // Umbrales para DÍA INDIVIDUAL (4 niveles, mitad de los conjuntos)
-  const INDIVIDUAL_PERFECT_MIN=anyTravelingNow&&!bothTravelingNow?35:70; // Mitad de DAILY_GOAL
-  const INDIVIDUAL_GOOD_MIN=anyTravelingNow&&!bothTravelingNow?25:50; // Mitad de 100
-  const INDIVIDUAL_NEUTRAL_MIN=anyTravelingNow&&!bothTravelingNow?10:20; // Mitad de 40
+  // UMBRALES INDIVIDUALES (fijos, viaje NO afecta individual)
+  // Perfecto: ≥70
+  // Bueno: 50-69 (STREAK_GOOD_MIN)
+  // Neutro: 20-49 (STREAK_NEUTRAL_MIN)
+  // Malo: <20
+  const INDIVIDUAL_PERFECT_MIN=70;
+  const INDIVIDUAL_GOOD_MIN=STREAK_GOOD_MIN; // 50
+  const INDIVIDUAL_NEUTRAL_MIN=STREAK_NEUTRAL_MIN; // 20
   
   let state='malo',stateColor='#DC2626';
+  if(xpToday>=INDIVIDUAL_PERFECT_MIN)state='perfecto',stateColor='#00FF41';
+  else if(xpToday>=INDIVIDUAL_GOOD_MIN)state='bueno',stateColor='#10B981';
+  else if(xpToday>=INDIVIDUAL_NEUTRAL_MIN)state='neutro',stateColor='#A0A0A0';
+  
+  return {xpToday,state,stateColor,DAILY_GOAL:140};
   if(xpToday>=INDIVIDUAL_PERFECT_MIN)state='perfecto',stateColor='#00FF41';
   else if(xpToday>=INDIVIDUAL_GOOD_MIN)state='bueno',stateColor='#10B981';
   else if(xpToday>=INDIVIDUAL_NEUTRAL_MIN)state='neutro',stateColor='#A0A0A0';
@@ -4382,8 +4387,13 @@ function closeOutPastDays(data,today,goodMin,neutralMin){
 
 function finalizeDayResult(data,xpThatDay,goodMin,neutralMin){
   const prevCount=data.count||0;
-  let result; // 'good' | 'neutral' | 'bad'
-  if(xpThatDay>=goodMin){
+  const perfectMin=70; // Umbral para día perfecto (individual: 70, viaje: se calcula en updateCoupleStreak)
+  let result; // 'perfect' | 'good' | 'neutral' | 'bad'
+  
+  if(xpThatDay>=perfectMin){
+    data.count=prevCount>0?prevCount+1:1; // si venía negativo o en 0, arranca en +1
+    result='perfect';
+  }else if(xpThatDay>=goodMin){
     data.count=prevCount>0?prevCount+1:1; // si venía negativo o en 0, arranca en +1
     result='good';
   }else if(xpThatDay>=neutralMin){
@@ -4400,7 +4410,7 @@ function finalizeDayResult(data,xpThatDay,goodMin,neutralMin){
   // "Continuación de racha" = ya había una racha en la misma dirección antes
   // de este día (no es el primer día que arranca de cero) — el premio/castigo
   // de XP por racha solo aplica a partir del segundo día consecutivo.
-  const isContinuation=(result==='good'&&prevCount>0)||(result==='bad'&&prevCount<0);
+  const isContinuation=(result==='perfect'&&prevCount>0)||(result==='good'&&prevCount>0)||(result==='bad'&&prevCount<0);
   return {result,isContinuation};
 }
 
@@ -4571,7 +4581,10 @@ async function applyDayHp(person,streakResult){
   if(!streakResult||hpDead[person]||travelMode[person])return;
   let delta=0;
   let reason='';
-  if(streakResult.result==='good'){
+  if(streakResult.result==='perfect'){
+    delta=HP_GAIN_PERFECT;
+    reason='Día perfecto';
+  }else if(streakResult.result==='good'){
     delta=HP_GAIN_GOOD;
     reason='Día bueno';
   }else if(streakResult.result==='neutral'){
