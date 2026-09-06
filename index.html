@@ -4242,7 +4242,7 @@ async function updateStreak(person,xpEarnedNow){
   // anterior (evaluamos si fue bueno/neutro/malo) y rellenamos huecos de días
   // totalmente inactivos antes de empezar a acumular el XP de hoy.
   if(data.lastDate&&data.lastDate!==today){
-    const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
+    const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN,70);
     await applyStreakXpReward(person,res);
     await applyDayHp(person,res);
   }
@@ -4292,7 +4292,7 @@ async function checkStreakGaps(){
         updateStreakBadge(person);
         continue;
       }
-      const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN);
+      const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN,70);
       data.todayXP=0;
       data.lastDate=today;
       streakData[person]=data;
@@ -4316,7 +4316,8 @@ async function checkStreakGaps(){
       const anyTraveling=travelMode.Rafa||travelMode.María;
       const goodMin=anyTraveling?COUPLE_STREAK_GOOD_MIN/2:COUPLE_STREAK_GOOD_MIN;
       const neutralMin=anyTraveling?COUPLE_STREAK_NEUTRAL_MIN/2:COUPLE_STREAK_NEUTRAL_MIN;
-      const res=closeOutPastDays(coupleStreakData,today,goodMin,neutralMin);
+      const perfectMin=anyTraveling?70:140;
+      const res=closeOutPastDays(coupleStreakData,today,goodMin,neutralMin,perfectMin);
       coupleStreakData.todayXP=0;
       coupleStreakData.lastDate=today;
       await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
@@ -4338,7 +4339,8 @@ async function updateCoupleStreak(xpEarnedTodayTotal){
     const anyTraveling=travelMode.Rafa||travelMode.María;
     const goodMin=anyTraveling?COUPLE_STREAK_GOOD_MIN/2:COUPLE_STREAK_GOOD_MIN;
     const neutralMin=anyTraveling?COUPLE_STREAK_NEUTRAL_MIN/2:COUPLE_STREAK_NEUTRAL_MIN;
-    closeOutPastDays(data,today,goodMin,neutralMin);
+    const perfectMin=anyTraveling?70:140;
+    closeOutPastDays(data,today,goodMin,neutralMin,perfectMin);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=xpEarnedTodayTotal; // aquí pasamos el total ya calculado de hoy, no un incremento
@@ -4373,43 +4375,35 @@ async function applyCoupleStreakXpReward(streakResult){
   if(amount>0)showToast(`🔥 +${amount} XP para cada uno por mantener la racha conjunta`);
 }
 
-function closeOutPastDays(data,today,goodMin,neutralMin){
+function closeOutPastDays(data,today,goodMin,neutralMin,perfectMin){
   // Cierra el último día registrado con el resultado que tuviera, y por cada
   // día completamente saltado entre medias (sin ninguna actividad) lo cuenta
   // como "malo" (0 XP ese día). Devuelve el resultado del ÚLTIMO día cerrado
   // (el real, no los huecos vacíos intermedios), que es el que importa para
   // decidir el reparto de XP por racha.
-  const lastResult=finalizeDayResult(data,data.todayXP||0,goodMin,neutralMin);
+  const lastResult=finalizeDayResult(data,data.todayXP||0,goodMin,neutralMin,perfectMin);
   let gapDays=daysBetween(data.lastDate,today)-1; // días totalmente vacíos entre el último registrado y hoy
-  while(gapDays>0){finalizeDayResult(data,0,goodMin,neutralMin);gapDays--;}
+  while(gapDays>0){finalizeDayResult(data,0,goodMin,neutralMin,perfectMin);gapDays--;}
   return lastResult;
 }
 
-function finalizeDayResult(data,xpThatDay,goodMin,neutralMin){
+function finalizeDayResult(data,xpThatDay,goodMin,neutralMin,perfectMin){
   const prevCount=data.count||0;
-  const perfectMin=70; // Umbral para día perfecto (individual: 70, viaje: se calcula en updateCoupleStreak)
   let result; // 'perfect' | 'good' | 'neutral' | 'bad'
   
   if(xpThatDay>=perfectMin){
-    data.count=prevCount>0?prevCount+1:1; // si venía negativo o en 0, arranca en +1
+    data.count=prevCount>0?prevCount+1:1;
     result='perfect';
   }else if(xpThatDay>=goodMin){
-    data.count=prevCount>0?prevCount+1:1; // si venía negativo o en 0, arranca en +1
+    data.count=prevCount>0?prevCount+1:1;
     result='good';
   }else if(xpThatDay>=neutralMin){
-    // Neutro: si la racha venía siendo POSITIVA, se queda exactamente igual
-    // (no avanza, pero tampoco se pierde lo construido). Si venía en 0 o
-    // negativa, sigue cortándola a 0 — el neutro solo "protege" lo bueno ya
-    // conseguido, no perdona una racha mala.
     if(prevCount<=0)data.count=0;
     result='neutral';
   }else{
-    data.count=prevCount<0?prevCount-1:-1; // si venía positivo o en 0, arranca en -1
+    data.count=prevCount<0?prevCount-1:-1;
     result='bad';
   }
-  // "Continuación de racha" = ya había una racha en la misma dirección antes
-  // de este día (no es el primer día que arranca de cero) — el premio/castigo
-  // de XP por racha solo aplica a partir del segundo día consecutivo.
   const isContinuation=(result==='perfect'&&prevCount>0)||(result==='good'&&prevCount>0)||(result==='bad'&&prevCount<0);
   return {result,isContinuation};
 }
