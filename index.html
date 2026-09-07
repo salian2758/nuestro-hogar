@@ -2822,7 +2822,7 @@ function renderTask(t){
   const x=getXP(t);
   return`<div class="tc${t.done?' done-card':''}" id="tc-${t.id}" data-task-id="${t.id}">
     <div class="tdraghandle" data-task-id="${t.id}" title="Arrastra para reasignar">⠿</div>
-    <div class="tcheck${t.done?' done':''}" data-task-id="${t.id}" data-done="${t.done?'1':'0'}" title="${t.done?'Toca para desmarcar':'Toca para completar, mantén pulsado para repartir'}">${t.done?chkSVG():t.status==='in_progress'?'▶':''}}</div>
+    <div class="tcheck${t.done?' done':''}" data-task-id="${t.id}" data-done="${t.done?'1':'0'}" title="${t.done?'Toca para desmarcar':'Toca para completar, mantén pulsado para repartir'}">${t.done?chkSVG():t.status==='in_progress'?'▶':''}</div>
     <div class="tinfo">
       <div class="tname${t.done?' done':''}" onclick="openEditModal('${t.id}')" style="cursor:pointer;">${t.name} <span style="font-size:10px;color:var(--text2);opacity:.6;">✎</span></div>
       ${t.status==='in_progress'?`<div class="tnote" style="font-size:10px;color:#A5B4FC;">▶ ${t.startedBy||'?'} ${t.progressPercent||0}%</div>`:''}
@@ -2982,9 +2982,6 @@ function renderAll(){
   const titleWeeklyNone=document.getElementById('sem-title-weekly-none');
   if(titleWeeklyNone)titleWeeklyNone.style.display=weeklyNoneFiltered.length?'':'none';
 
-  setInProgress('inprogress-s-a',weeklyAFiltered);
-  setInProgress('inprogress-s-b',weeklyBFiltered);
-  setInProgress('inprogress-s-weekly-none',weeklyNoneFiltered);
   setList('list-s-a',weeklyAFiltered,true);
   const titleA=document.getElementById('sem-title-a');
   if(titleA)titleA.style.display=weeklyAFiltered.length?'':'none';
@@ -3014,6 +3011,10 @@ function renderAll(){
   setList('list-s-cadax-rot',cwRot,true);
   const tCwRot=document.getElementById('sem-title-cadax-rot');if(tCwRot)tCwRot.style.display=cwRot.length?'':'none';
 
+  // EN PROGRESO de Semana — combinar todas
+  const allSemanasForProgress=[...weeklyNoneFiltered,...weeklyAFiltered,...weeklyBFiltered,...cwNone,...cwRafa,...cwMaria,...cwRot];
+  setInProgress('inprogress-semana',allSemanasForProgress);
+  ;
   // Completadas de Semana — todas juntas al final
   const semAllShown=[
     ...weeklyNoneFiltered,...weeklyAFiltered,...weeklyBFiltered,
