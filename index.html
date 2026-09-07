@@ -3011,10 +3011,9 @@ function renderAll(){
   setList('list-s-cadax-rot',cwRot,true);
   const tCwRot=document.getElementById('sem-title-cadax-rot');if(tCwRot)tCwRot.style.display=cwRot.length?'':'none';
 
-  // EN PROGRESO de Semana — combinar todas
-  const allSemanasForProgress=[...weeklyNoneFiltered,...weeklyAFiltered,...weeklyBFiltered,...cwNone,...cwRafa,...cwMaria,...cwRot];
+  // EN PROGRESO de Semana — mostrar TODAS sin filtrar por persona
+  const allSemanasForProgress=[...weeklyNone,...weeklyA,...weeklyB,...cadaXWeeklyAll];
   setInProgress('inprogress-semana',allSemanasForProgress);
-  ;
   // Completadas de Semana — todas juntas al final
   const semAllShown=[
     ...weeklyNoneFiltered,...weeklyAFiltered,...weeklyBFiltered,
