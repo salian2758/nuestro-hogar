@@ -2286,6 +2286,30 @@ window.confirmStartInProgress=async()=>{
 };
 
 // Abrir modal de progreso
+
+// Cancelar una tarea in_progress y devolverla a pendiente
+window.cancelInProgress=async(id)=>{
+  if(isCompletingTask)return;
+  isCompletingTask=true;
+  try{
+    const t=tasks.find(t=>t.id===id);
+    if(!t||t.status!=='in_progress')return;
+    
+    await updateDoc(doc(db,'tasks',id),{
+      status: 'pending',
+      progressPercent: 0,
+      startedBy: null,
+      startedAt: null
+    });
+    
+    showToast(`✕ ${t.name} volvió a pendiente`);
+    updateHeader();
+    renderTasks();
+  }finally{
+    isCompletingTask=false;
+  }
+};
+
 window.openProgressModal=(id)=>{
   const t=tasks.find(t=>t.id===id);
   if(!t||t.status!=='in_progress')return;
@@ -2306,7 +2330,7 @@ window.openProgressModal=(id)=>{
       <button onclick="updateProgress('${id}',75);setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">75%</button>
       <button onclick="updateProgress('${id}',100);setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:none;background:#10B981;color:white;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">✓ Completar</button>
     </div>
-    <button onclick="closeProgressModal('${id}')" style="padding:10px 16px;border:1px solid var(--border);background:transparent;border-radius:8px;cursor:pointer;color:var(--text2);width:100%;">Cancelar</button>
+    <button onclick="cancelInProgress('${id}');setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:10px 16px;border:2px solid #F87171;background:transparent;border-radius:8px;cursor:pointer;color:#F87171;width:100%;font-weight:600;">✕ Volver a pendiente</button>
   </div>`;
   
   document.body.appendChild(backdrop);
