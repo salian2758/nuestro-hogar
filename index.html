@@ -4960,28 +4960,42 @@ async function applyWeeklyHpBonus(){
 // Normalizar nombre para comparación (quitar tildes, minúsculas)
 
 // Calcular XP de una persona en un día específico
+
+// SOLUCIÓN FINAL: Calcular XP de UNA PERSONA en UN DÍA
 function calculateDailyXP(person, dateStr){
-  if(!history || !history.length)return 0;
-  
-  let total = 0;
-  for(const h of history){
-    // Filtros estrictos
-    if(!h.date)continue;
-    if(h.date !== dateStr)continue;
-    if(!h.person)continue;
-    
-    // Normalizar para comparación
-    const hPerson = h.person.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    const targetPerson = person.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    
-    if(hPerson !== targetPerson)continue;
-    if(typeof h.pts !== 'number' || h.pts <= 0)continue;
-    
-    total += h.pts;
+  if(!history || !history.length){
+    console.log(`❌ [${person}] history vacío`);
+    return 0;
   }
   
+  let total = 0;
+  
+  // FILTRO 1: Solo entries de hoy
+  const todayEntries = history.filter(h => h.date === dateStr);
+  console.log(`📅 [${person}] Entries para ${dateStr}: ${todayEntries.length}`);
+  
+  // FILTRO 2: De esos, solo los que tienen person=esta persona
+  const personEntries = todayEntries.filter(h => {
+    if(!h.person) return false;
+    // Comparación flexible: Rafa con Rafa, María con María
+    return h.person.trim().toLowerCase() === person.trim().toLowerCase();
+  });
+  
+  console.log(`👤 [${person}] Entries para ${person}: ${personEntries.length}`, 
+    personEntries.map(h => ({name: h.name, person: h.person, pts: h.pts})));
+  
+  // FILTRO 3: Sumar solo si pts > 0
+  personEntries.forEach(h => {
+    if(h.pts && h.pts > 0){
+      total += h.pts;
+    }
+  });
+  
+  console.log(`✅ [${person}] XP FINAL: ${total} XP`);
   return total;
 }
+
+
 
 function normalizeName(name){
   if(!name)return '';
