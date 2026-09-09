@@ -1608,12 +1608,16 @@ function isCadaXLocked(t){
   return(Date.now()-t.lastDoneDate)<intervalMs;
 }
 
-function calcXP(freq,diff,custom){
+function calcXP(freq,diff,custom,freqUnit){
   if(custom&&!isNaN(parseInt(custom)))return parseInt(custom);
-  const baseFreq=freq==='CadaX'?'Semanal':freq; // CadaX no tiene entrada propia en BASE, usa el valor de Semanal
+  let baseFreq=freq;
+  if(freq==='CadaX'){
+    // CadaX: si es cada X días → usa Diaria, si cada X semanas → usa Semanal
+    baseFreq=freqUnit==='semanas'?'Semanal':'Diaria';
+  }
   return Math.round((BASE[baseFreq]||10)*(DIFF[diff]||1));
 }
-function getXP(t){return calcXP(t.freq,t.diff,t.customXP);}
+function getXP(t){return calcXP(t.freq,t.diff,t.customXP,t.freqUnit);}
 
 // Escapa de forma segura un texto libre (nombre de tarea, premio, etc.) para insertarlo
 // dentro de un argumento de cadena dentro de un atributo onclick="...". Sin esto, un
