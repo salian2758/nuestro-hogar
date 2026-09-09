@@ -484,6 +484,23 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
 .heart-glow { filter: drop-shadow(0 0 8px currentColor); }
 .heart-glow-intense { filter: drop-shadow(0 0 16px currentColor); }
+
+/* Animaciones corazón dashboard */
+.heart-dashboard {
+  display: inline-block;
+  transition: filter 0.3s ease, transform 0.1s ease;
+}
+
+.heart-beat-slow { animation: heartbeat-slow 1.5s infinite; }
+.heart-beat-normal { animation: heartbeat-slow 1.2s infinite; }
+.heart-beat-alert { animation: heartbeat-normal 1s infinite; }
+.heart-beat-fast { animation: heartbeat-fast 0.8s infinite; }
+.heart-beat-critical { animation: heartbeat-critical 0.6s infinite; }
+.heart-beat-danger { animation: heartbeat-critical 0.4s infinite; }
+.heart-beat-dying { animation: heartbeat-dying 2s infinite; }
+
+.heart-glow-dashboard { filter: drop-shadow(0 0 8px currentColor); }
+.heart-glow-intense-dashboard { filter: drop-shadow(0 0 16px currentColor); }
 </style>
 </head>
 <body>
@@ -727,6 +744,23 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
 .heart-glow { filter: drop-shadow(0 0 8px currentColor); }
 .heart-glow-intense { filter: drop-shadow(0 0 16px currentColor); }
+
+/* Animaciones corazón dashboard */
+.heart-dashboard {
+  display: inline-block;
+  transition: filter 0.3s ease, transform 0.1s ease;
+}
+
+.heart-beat-slow { animation: heartbeat-slow 1.5s infinite; }
+.heart-beat-normal { animation: heartbeat-slow 1.2s infinite; }
+.heart-beat-alert { animation: heartbeat-normal 1s infinite; }
+.heart-beat-fast { animation: heartbeat-fast 0.8s infinite; }
+.heart-beat-critical { animation: heartbeat-critical 0.6s infinite; }
+.heart-beat-danger { animation: heartbeat-critical 0.4s infinite; }
+.heart-beat-dying { animation: heartbeat-dying 2s infinite; }
+
+.heart-glow-dashboard { filter: drop-shadow(0 0 8px currentColor); }
+.heart-glow-intense-dashboard { filter: drop-shadow(0 0 16px currentColor); }
 </style>
   
   <div id="splash-heart">❤️</div>
@@ -787,7 +821,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div class="p-xp p-xp-r" id="rxpn">0 XP</div>
         <div id="rafa-daily-xp" style="font-size:9px;color:var(--text2);margin-top:2px;"></div>
         <div onclick="event.stopPropagation();openVidaModal('Rafa')" style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;" id="rafa-hp-row">
-          <span style="font-size:16px;">❤️</span>
+          <span style="font-size:16px;" id="rafa-heart" class="heart-dashboard">❤️</span>
           <div style="flex:1;height:12px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="rafa-hp-container">
             <div id="rafa-hp-bar" class="hp-bar level-1" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
           </div>
@@ -809,7 +843,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div class="p-xp p-xp-m" id="mxpn">0 XP</div>
         <div id="maria-daily-xp" style="font-size:9px;color:var(--text2);margin-top:2px;"></div>
         <div onclick="event.stopPropagation();openVidaModal('María')" style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;" id="maria-hp-row">
-          <span style="font-size:16px;">❤️</span>
+          <span style="font-size:16px;" id="maria-heart" class="heart-dashboard">❤️</span>
           <div style="flex:1;height:12px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="maria-hp-container">
             <div id="maria-hp-bar" class="hp-bar level-1" style="height:100%;width:62%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
           </div>
@@ -5331,6 +5365,43 @@ function updateHpBar(person){
         avatar.style.filter=`drop-shadow(0 0 8px ${levelData.color}60)`;
       }else{
         avatar.style.filter=`drop-shadow(0 0 4px ${levelData.color}40)`;
+      }
+    }
+  }
+  
+  // Actualizar corazón del DASHBOARD con latidos y glow dinámicos
+  const dashboardHeart = document.getElementById(k+'-heart');
+  if(dashboardHeart){
+    dashboardHeart.style.color = levelData.color;
+    
+    // Quitar todas las clases de latido
+    dashboardHeart.classList.remove('heart-beat-slow', 'heart-beat-normal', 'heart-beat-alert', 'heart-beat-fast', 'heart-beat-critical', 'heart-beat-danger', 'heart-beat-dying');
+    dashboardHeart.classList.remove('heart-glow-dashboard', 'heart-glow-intense-dashboard');
+    
+    if(hpDead[person]){
+      dashboardHeart.textContent = '💔';
+      dashboardHeart.style.filter = `drop-shadow(0 0 4px rgba(107, 114, 128, 0.4))`;
+    }else{
+      dashboardHeart.textContent = '❤️';
+      
+      // Latidos según nivel
+      if(level===1) dashboardHeart.classList.add('heart-beat-slow');
+      else if(level===2) dashboardHeart.classList.add('heart-beat-normal');
+      else if(level===3) dashboardHeart.classList.add('heart-beat-alert');
+      else if(level===4) dashboardHeart.classList.add('heart-beat-fast');
+      else if(level===5) dashboardHeart.classList.add('heart-beat-critical');
+      else if(level===6) dashboardHeart.classList.add('heart-beat-danger');
+      else if(level===7) dashboardHeart.classList.add('heart-beat-dying');
+      
+      // Glow según nivel
+      if(level>=6){
+        dashboardHeart.classList.add('heart-glow-intense-dashboard');
+        dashboardHeart.style.filter = `drop-shadow(0 0 12px ${levelData.color}80)`;
+      }else if(level>=4){
+        dashboardHeart.classList.add('heart-glow-dashboard');
+        dashboardHeart.style.filter = `drop-shadow(0 0 8px ${levelData.color}60)`;
+      }else{
+        dashboardHeart.style.filter = `drop-shadow(0 0 4px ${levelData.color}40)`;
       }
     }
   }
