@@ -1180,7 +1180,10 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     <div style="background:var(--bg);border-radius:20px;padding:20px;max-width:430px;margin:0 auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-size:15px;font-weight:700;" id="vida-title">❤️ Salud del hogar</div>
-        <button onclick="document.getElementById('vida-modal').style.display='none'" style="background:var(--bg3);border:none;border-radius:8px;color:var(--text);padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;">✕</button>
+        <div style="display:flex;gap:6px;">
+          <button onclick="openHpTestPanel()" style="background:rgba(168,85,247,0.2);border:1px solid #A855F7;border-radius:8px;color:#A855F7;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">🧪 Test</button>
+          <button onclick="document.getElementById('vida-modal').style.display='none'" style="background:var(--bg3);border:none;border-radius:8px;color:var(--text);padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;">✕</button>
+        </div>
       </div>
       <!-- HP actual -->
       <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:16px;text-align:center;margin-bottom:14px;">
