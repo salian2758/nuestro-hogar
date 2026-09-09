@@ -5803,5 +5803,21 @@ onAuthStateChanged(auth,async user=>{
   }
 });
 </script>
+<!-- MODAL CONFIRMACIÓN ACCIÓN DE RECUPERACIÓN DE VIDA -->
+<div id="recovery-modal" style="display:none;position:fixed;inset:0;z-index:850;background:rgba(0,0,0,0.8);flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--bg);border-radius:16px;padding:20px;max-width:320px;text-align:center;">
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;" id="recovery-modal-title">Acción</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;" id="recovery-modal-desc">¿Completar esta acción?</div>
+    <div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:20px;margin-bottom:4px;color:#34D399;">💚</div>
+      <div style="font-size:14px;font-weight:700;color:#34D399;" id="recovery-modal-hp">+3 HP</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeRecoveryModal()" style="flex:1;background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Cancelar</button>
+      <button onclick="completeRecoveryAction()" style="flex:1;background:#34D399;border:none;border-radius:10px;color:#000;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✓ Hacer</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
