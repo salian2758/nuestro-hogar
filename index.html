@@ -3324,7 +3324,49 @@ function renderDashboard(){
   chartContainer.innerHTML=buildBarChartSVG(data,320,dashPerson==='all'?null:dashPerson);
 }
 
+
+// Renderizar historial de HP en la vista principal de Historial
+async function renderHpHistoryInMain(){
+  const el=document.getElementById('hp-history-main');if(!el)return;
+  try{
+    const hpHistSnap=await getDocs(query(collection(db,'hp_history'),where('person','==',currentUser),orderBy('timestamp','desc'),limit(30)));
+    const hpChanges=[];
+    hpHistSnap.forEach(d=>hpChanges.push({...d.data(),id:d.id}));
+    
+    if(!hpChanges.length){
+      el.innerHTML='<div style="color:var(--text2);font-size:11px;">Sin cambios de vida registrados</div>';
+      return;
+    }
+    
+    const grouped={};
+    hpChanges.forEach(change => {
+      const date=new Date(change.timestamp).toLocaleDateString('es-ES');
+      if(!grouped[date])grouped[date]={changes:[],totalHp:0};
+      grouped[date].changes.push(change);
+      grouped[date].totalHp+=change.change;
+    });
+    
+    let html='';
+    Object.entries(grouped).forEach(([date,data])=>{
+      html+=`<div style="margin-bottom:12px;"><div style="font-weight:600;font-size:11px;color:var(--text2);margin-bottom:6px;opacity:.7;">${date}</div>`;
+      data.changes.forEach(c=>{
+        html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg3);border-radius:6px;margin-bottom:4px;border-left:3px solid ${c.change>0?'#34D399':'#F87171'};font-size:12px;">
+          <div><span style="color:${c.change>0?'#34D399':'#F87171'};font-weight:700;">${c.change>0?'+':''}${c.change} HP</span> — <strong>${c.reason}</strong></div>
+          <div style="font-size:10px;color:var(--text2);">${new Date(c.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>`;
+      });
+      html+=`<div style="text-align:right;font-size:10px;color:${data.totalHp>0?'#34D399':'#F87171'};font-weight:600;margin-bottom:8px;">Total: ${data.totalHp>0?'+':''}${data.totalHp} HP</div></div>`;
+    });
+    el.innerHTML=html;
+  }catch(e){
+    console.error('Error cargando historial HP:',e);
+    el.innerHTML='<div style="color:#F87171;">Error cargando historial</div>';
+  }
+}
+
+
 function renderHist(){
+  renderHpHistoryInMain(); // Cargar historial de vida
   const el=document.getElementById('list-hist');if(!el)return;
   if(!history.length){el.innerHTML='<div class="empty">Las tareas completadas aparecerán aquí</div>';return;}
   el.innerHTML=history.map(h=>{
@@ -4662,18 +4704,18 @@ function updateHpBar(person){
   const lbl=document.getElementById(k+'-hp-lbl');
   const avatar=document.getElementById(k+'-avatar-emoji');
   
-  // 10 NIVELES DE COLOR - Transiciones más suaves
+  // 10 NIVELES DE COLOR - Más dramáticos en extremos
   let color,glowIntensity;
-  if(hp>95){color='#00FF41';glowIntensity=2;} // Verde cyberpunk - Perfecto
-  else if(hp>85){color='#10B981';glowIntensity=1.8;} // Verde brillante - Excelente
-  else if(hp>75){color='#34D399';glowIntensity=1.6;} // Verde - Muy bien
-  else if(hp>65){color='#6EE7B7';glowIntensity=1.4;} // Verde agua - Bien
-  else if(hp>55){color='#FBBF24';glowIntensity=1.2;} // Amarillo - Normal
-  else if(hp>45){color='#F59E0B';glowIntensity=1;} // Amarillo/Naranja - Cuidado
-  else if(hp>35){color='#FB923C';glowIntensity=1.2;} // Naranja - Atención
-  else if(hp>25){color='#F97316';glowIntensity=1.4;} // Naranja fuerte - Peligro
-  else if(hp>10){color='#EF4444';glowIntensity=1.6;} // Rojo - Crítico
-  else if(hp>0){color='#DC2626';glowIntensity=2;} // Rojo intenso - Muy crítico
+  if(hp>=98){color='#00FF41';glowIntensity=3;} // Verde NEÓN brillante ✨ - PERFECTO
+  else if(hp>90){color='#10B981';glowIntensity=2.5;} // Verde cyberpunk - Excelente
+  else if(hp>80){color='#34D399';glowIntensity=2;} // Verde brillante - Muy bien
+  else if(hp>70){color='#6EE7B7';glowIntensity=1.8;} // Verde agua - Bien
+  else if(hp>60){color='#FBBF24';glowIntensity=1.5;} // Amarillo - Normal
+  else if(hp>50){color='#F59E0B';glowIntensity=1.3;} // Amarillo/Naranja - Cuidado
+  else if(hp>40){color='#FB923C';glowIntensity=1.4;} // Naranja - Atención
+  else if(hp>30){color='#F97316';glowIntensity=1.6;} // Naranja fuerte - Peligro
+  else if(hp>15){color='#EF4444';glowIntensity=2;} // Rojo - Crítico
+  else if(hp>0){color='#7F1D1D';glowIntensity=3;} // Rojo muy oscuro/sangre 🩸 - CRÍTICO EXTREMO
   else color='#374151'; // Gris (muerto)
   
   if(bar){
