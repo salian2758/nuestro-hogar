@@ -5176,17 +5176,19 @@ window.openVidaModal=(person)=>{
       // Filtrar: date=hoy AND calcular XP de ESTA PERSONA
       history.forEach(h=>{
         if(h.date === today){
-          // NUEVO: Usar xpFor[persona] si existe (data nueva con distribución)
-          if(h.xpFor && typeof h.xpFor === 'object' && h.xpFor[vp]){
-            const xpForThis = h.xpFor[vp];
+          // SI TIENE xpFor: SIEMPRE usarlo (aunque sea 0)
+          if(h.xpFor && typeof h.xpFor === 'object'){
+            const xpForThis = h.xpFor[vp] || 0;
             if(xpForThis > 0){
               console.log(`   ✅ xpFor[${vp}] = ${xpForThis} XP (${h.name})`);
               xpToday += xpForThis;
+            }else{
+              console.log(`   ⊘ xpFor[${vp}] = 0 XP (${h.name}) — no es de esta persona`);
             }
           }
-          // FALLBACK: Si no tiene xpFor, verificar person (data antigua)
+          // FALLBACK: Si NO tiene xpFor (data antigua), verificar person
           else if(h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
-            console.log(`   ✅ Fallback pts = ${h.pts} XP (${h.name})`);
+            console.log(`   ✅ Fallback pts = ${h.pts} XP (${h.name}) — data antigua`);
             xpToday += h.pts;
           }
         }
