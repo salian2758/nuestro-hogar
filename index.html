@@ -2340,7 +2340,11 @@ window.openProgressModal=(id)=>{
       <button onclick="updateProgress('${id}',25);setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">25%</button>
       <button onclick="updateProgress('${id}',50);setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">50%</button>
       <button onclick="updateProgress('${id}',75);setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">75%</button>
-      <button onclick="updateProgress('${id}',100);setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:none;background:#10B981;color:white;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">✓ Completar</button>
+    </div>
+    <!-- Completar: si está en progreso, preguntar quién la completa -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;" id="progress-complete-options-${id}">
+      <button onclick="updateProgress('${id}',100,'Rafa');setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:none;background:#10B981;color:white;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">✓ Rafa completa</button>
+      <button onclick="updateProgress('${id}',100,'María');setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:12px;border:none;background:#A78BFA;color:white;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">✓ María completa</button>
     </div>
     <button onclick="cancelInProgress('${id}');setTimeout(()=>closeProgressModal('${id}'),100)" style="padding:10px 16px;border:2px solid #F87171;background:transparent;border-radius:8px;cursor:pointer;color:#F87171;width:100%;font-weight:600;">✕ Volver a pendiente</button>
   </div>`;
@@ -2358,7 +2362,8 @@ window.closeProgressModal=(id)=>{
 };
 
 // Actualizar progreso o completar
-window.updateProgress=async(id,percent)=>{
+// completedBy: si no se especifica, usa currentUser
+window.updateProgress=async(id,percent,completedBy)=>{
   if(isCompletingTask)return;
   isCompletingTask=true;
   try{
@@ -2368,23 +2373,26 @@ window.updateProgress=async(id,percent)=>{
     if(percent===100){
       // COMPLETAR
       const earned=getXP(t);
+      // Quién completa: parámetro o usuario actual
+      const completer=completedBy||currentUser;
       await updateDoc(doc(db,'tasks',id),{
         done:true,
         status:'done',
         completedAt:Date.now(),
-        completedBy:currentUser,
+        completedBy:completer,
         progressPercent:100
       });
       
-      // Guardar XP
-      xpState[currentUser]=(xpState[currentUser]||0)+earned;
-      xpWeekly[currentUser]=(xpWeekly[currentUser]||0)+earned;
-      xpMonthly[currentUser]=(xpMonthly[currentUser]||0)+earned;
-      wallet[currentUser]=(wallet[currentUser]||0)+earned;
-      await updateStreak(currentUser,earned);
+      // Guardar XP para quien completa (puede ser diferente de currentUser)
+      xpState[completer]=(xpState[completer]||0)+earned;
+      xpWeekly[completer]=(xpWeekly[completer]||0)+earned;
+      xpMonthly[completer]=(xpMonthly[completer]||0)+earned;
+      wallet[completer]=(wallet[completer]||0)+earned;
+      await updateStreak(completer,earned);
       
       const today=new Date().toLocaleDateString('es-ES');
-      const histEntry={taskId:id,name:t.name,person:currentUser,assignedTo:currentUser,zona:t.zona,pts:earned,date:today,ts:Date.now(),splitMode:'mine'};
+      // xpFor: 100% al que completa
+      const histEntry={taskId:id,name:t.name,person:completer,assignedTo:currentUser,zona:t.zona,pts:earned,date:today,ts:Date.now(),splitMode:'mine',xpFor:{Rafa:completer==='Rafa'?earned:0,María:completer==='María'?earned:0}};
       await setDoc(doc(db,'history',`${id}-${Date.now()}`),histEntry);
       await saveXpState();
       
