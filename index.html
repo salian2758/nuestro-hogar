@@ -5030,11 +5030,20 @@ window.openVidaModal=(person)=>{
   const xpTodayEl=document.getElementById('vida-xp-today');
   if(xpTodayEl){
     const today=new Date().toLocaleDateString('es-ES');
+    // DEBUG: Ver qué se está filtrando
+    const allToday=history.filter(h=>h.date===today);
+    const filteredByPerson=allToday.filter(h=>h.person===vp);
+    console.log(`🔍 DEBUG XP Modal [${vp}]`);
+    console.log(`  Hoy: ${today}`);
+    console.log(`  Total entries hoy: ${allToday.length}`, allToday.map(h=>({person:h.person,pts:h.pts})));
+    console.log(`  Filtrado por [${vp}]: ${filteredByPerson.length}`, filteredByPerson.map(h=>({person:h.person,pts:h.pts})));
+    
     // SOLO usar history que tiene fecha explícita de cuándo se completó
     // Filtrar por persona ACTUAL y por hoy
-    const xpToday=history
-      .filter(h=>h.date===today&&h.person===vp&&(h.pts||0)>0)
+    const xpToday=filteredByPerson
+      .filter(h=>(h.pts||0)>0)
       .reduce((s,h)=>s+h.pts,0);
+    console.log(`  XP final para ${vp}: ${xpToday} XP`);
     
     let projection='';
     if(xpToday>=70){
