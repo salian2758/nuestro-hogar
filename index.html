@@ -5030,9 +5030,9 @@ window.openVidaModal=(person)=>{
   const xpTodayEl=document.getElementById('vida-xp-today');
   if(xpTodayEl){
     const today=new Date().toLocaleDateString('es-ES');
-    const completedToday=tasks.filter(t=>t.done&&t.freq!=='Puntual').reduce((s,t)=>s+getXP(t),0);
-    const histToday=history.filter(h=>h.date===today).reduce((s,h)=>s+(h.pts||0),0);
-    const xpToday=completedToday+histToday;
+    // SOLO usar history que tiene fecha explícita de cuándo se completó
+    const histToday=history.filter(h=>h.date===today&&h.person===vp&&h.pts).reduce((s,h)=>s+(h.pts||0),0);
+    const xpToday=histToday;
     
     let projection='';
     if(xpToday>=70){
