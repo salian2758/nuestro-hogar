@@ -2485,10 +2485,12 @@ window.confirmComplete=async()=>{
   // array puede no haberse actualizado todavía vía onSnapshot — sumamos su XP
   // una sola vez de forma manual, evitando doble conteo.
   const todayStr=new Date().toLocaleDateString('es-ES');
-  const dailyTasksNow=tasks.filter(t=>t.freq==='Diaria'&&t.id!==id);
-  const xpFromDailyNow=dailyTasksNow.filter(t=>t.done).reduce((s,t)=>s+getXP(t),0);
-  const xpFromOthersTodayNow=history.filter(h=>h.date===todayStr&&h.taskId!==id&&!dailyTasksNow.some(dt=>dt.id===h.taskId)).reduce((s,h)=>s+(h.pts||0),0);
-  const todayTotalXP=xpFromDailyNow+xpFromOthersTodayNow+earned;
+  // ARREGLADO: Sumar TODAS las tareas completadas hoy (no solo Diarias)
+  const completedTodayExceptThis=tasks.filter(t=>t.done&&t.id!==id&&t.freq!=='Puntual');
+  const xpFromAllCompletedToday=completedTodayExceptThis.reduce((s,t)=>s+getXP(t),0);
+  // Suma también histórico (si hay entrada manual o de otras acciones)
+  const xpFromHistoryToday=history.filter(h=>h.date===todayStr&&h.taskId!==id).reduce((s,h)=>s+(h.pts||0),0);
+  const todayTotalXP=xpFromAllCompletedToday+xpFromHistoryToday+earned;
   await updateCoupleStreak(todayTotalXP);
   // NO hacer history.unshift aquí - onSnapshot traerá la entrada de Firebase automáticamente
   const toastMsg=splitMode==='shared'?`+${earned} XP repartido ✓`:splitMode==='other'?`+${earned} XP para ${other} ✓`:`+${earned} XP para ${me||whoDidIt}! ✓`;
