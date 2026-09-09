@@ -4701,12 +4701,19 @@ let shoppingUnsub=null;
 // ═══════════════════════════════════════════════════════════
 
 async function saveHpState(){
-  await setDoc(doc(db,'state','hp'),{
-    Rafa:hpState.Rafa,María:hpState.María,
-    deadRafa:hpDead.Rafa,deadMaría:hpDead.María,
-    resTaskRafa:hpResurrectionDone.Rafa.task,resDetailRafa:hpResurrectionDone.Rafa.detail,
-    resTaskMaría:hpResurrectionDone.María.task,resDetailMaría:hpResurrectionDone.María.detail,
-  });
+  console.log(`💾 saveHpState: Guardando HP state:`, hpState);
+  try{
+    await setDoc(doc(db,'state','hp'),{
+      Rafa:hpState.Rafa,María:hpState.María,
+      deadRafa:hpDead.Rafa,deadMaría:hpDead.María,
+      resTaskRafa:hpResurrectionDone.Rafa.task,resDetailRafa:hpResurrectionDone.Rafa.detail,
+      resTaskMaría:hpResurrectionDone.María.task,resDetailMaría:hpResurrectionDone.María.detail,
+    });
+    console.log(`   ✅ HP state guardado en BD`);
+  }catch(e){
+    console.error(`   ❌ Error guardando HP state:`, e);
+    throw e;
+  }
 }
 
 function updateHpBar(person){
@@ -4862,17 +4869,24 @@ window.completeRecoveryAction=async()=>{
   }
   
   console.log(`🎯 completeRecoveryAction iniciada para [${currentUser}]`);
+  console.log(`   currentUser: [${currentUser}]`);
+  console.log(`   recoveryModalId: ${recoveryModalId}`);
+  console.log(`   recoveryModalName: ${recoveryModalName}`);
+  console.log(`   recoveryModalHp: ${recoveryModalHp}`);
   
   try{
     // Sumar HP - CRÍTICO
     const hpBefore=hpState[currentUser]??HP_INITIAL;
     const newHp=Math.min(HP_MAX,hpBefore+recoveryModalHp);
     console.log(`   HP cambio: ${hpBefore} → ${newHp} (+${recoveryModalHp})`);
+    console.log(`   hpState antes de cambio:`, hpState);
     
     // GUARDAR EN BD PRIMERO - usar saveHpState() en lugar de setDoc manual
     hpState[currentUser]=newHp;
+    console.log(`   hpState después de asignar:`, hpState);
+    console.log(`   Llamando saveHpState()...`);
     await saveHpState();
-    console.log(`   ✅ HP guardado en BD: ${newHp}`);
+    console.log(`   ✅ HP guardado en BD: ${newHp}`)
     
     // Registrar en historial de HP
     console.log(`   Registrando en hp_history...`);
