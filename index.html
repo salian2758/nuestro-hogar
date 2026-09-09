@@ -4840,20 +4840,13 @@ window.completeRecoveryAction=async()=>{
   
   try{
     // Sumar HP
-    const currentHp=hpState[currentUser]??HP_INITIAL;
-    const newHp=Math.min(HP_MAX,currentHp+recoveryModalHp);
+    const hpBefore=hpState[currentUser]??HP_INITIAL;
+    const newHp=Math.min(HP_MAX,hpBefore+recoveryModalHp);
     hpState[currentUser]=newHp;
     await setDoc(doc(db,'state','hpState'),hpState);
     
-    // Registrar en historial de HP
-    const historyId='recovery'+Date.now();
-    await setDoc(doc(db,'hp_history',historyId),{
-      person:currentUser,
-      change:recoveryModalHp,
-      reason:`Acción: ${recoveryModalName}`,
-      timestamp:Date.now(),
-      type:'recovery_action'
-    });
+    // Registrar en historial de HP usando recordHpChange
+    await recordHpChange(currentUser,hpBefore,newHp,`💚 ${recoveryModalName}`,'recovery');
     
     // Registrar en historial principal (para mostrar en "Historial")
     const histId='recov'+Date.now();
