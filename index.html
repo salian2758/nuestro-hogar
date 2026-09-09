@@ -4958,6 +4958,31 @@ async function applyWeeklyHpBonus(){
 // Apertura del modal de vida — SÍNCRONO para evitar cualquier problema de timing
 
 // Normalizar nombre para comparación (quitar tildes, minúsculas)
+
+// Calcular XP de una persona en un día específico
+function calculateDailyXP(person, dateStr){
+  if(!history || !history.length)return 0;
+  
+  let total = 0;
+  for(const h of history){
+    // Filtros estrictos
+    if(!h.date)continue;
+    if(h.date !== dateStr)continue;
+    if(!h.person)continue;
+    
+    // Normalizar para comparación
+    const hPerson = h.person.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const targetPerson = person.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    
+    if(hPerson !== targetPerson)continue;
+    if(typeof h.pts !== 'number' || h.pts <= 0)continue;
+    
+    total += h.pts;
+  }
+  
+  return total;
+}
+
 function normalizeName(name){
   if(!name)return '';
   return name.toLowerCase()
@@ -5032,19 +5057,18 @@ window.openVidaModal=(person)=>{
   const xpTodayEl=document.getElementById('vida-xp-today');
   if(xpTodayEl){
     const today=new Date().toLocaleDateString('es-ES');
-    // Normalizar el nombre para comparación (sin tildes, minúsculas)
-    const vpNormalized=normalizeName(vp);
-    // Filtrar solo XP de hoy y de esta persona (con normalización)
-    const xpToday=history
-      .filter(h=>{
-        if(h.date!==today)return false; // Solo hoy
-        if(!h.person)return false; // Debe tener persona
-        if(normalizeName(h.person)!==vpNormalized)return false; // Comparar normalizado
-        if((h.pts||0)<=0)return false; // Solo si hay XP positivo
-        return true;
-      })
-      .reduce((s,h)=>s+h.pts,0);
-    console.log(`✅ [${vp}] XP de hoy: ${xpToday} XP`);
+    
+    // DEBUG: Mostrar qué hay en history para hoy
+    const todayEntries = history.filter(h=>h.date===today);
+    console.log(`🔍 DEBUGGING XP para [${vp}]`);
+    console.log(`   Persona buscada: [${vp}]`);
+    console.log(`   Fecha buscada: ${today}`);
+    console.log(`   Total entries en history: ${history.length}`);
+    console.log(`   Entries para ${today}: ${todayEntries.length}`, todayEntries.map(h=>({person:h.person,pts:h.pts})));
+    
+    // Usar función robusta para calcular XP
+    const xpToday=calculateDailyXP(vp, today);
+    console.log(`   ✅ XP final para [${vp}]: ${xpToday} XP`);
     
     let projection='';
     if(xpToday>=70){
