@@ -4898,6 +4898,10 @@ async function applyDayHp(person,streakResult){
     await saveHpState();
     await recordHpChange(person,hpBefore,hpState[person],reason,'daily');
     updateHpBar(person);
+    // Actualizar historial si es el usuario actual
+    if(person===currentUser){
+      _loadVidaHistorial(person);
+    }
   }
 }
 
@@ -5067,47 +5071,9 @@ window.openVidaModal=(person)=>{
     else stEl.textContent=hp+'/100 HP';
   }
   
-  // Calcular y mostrar XP del día
-  const xpTodayEl=document.getElementById('vida-xp-today');
-  if(xpTodayEl){
-    const today=new Date().toLocaleDateString('es-ES');
-    
-    // DEBUG: Mostrar qué hay en history para hoy
-    const todayEntries = history.filter(h=>h.date===today);
-    console.log(`🔍 DEBUGGING XP para [${vp}]`);
-    console.log(`   Persona buscada: [${vp}]`);
-    console.log(`   Fecha buscada: ${today}`);
-    console.log(`   Total entries en history: ${history.length}`);
-    console.log(`   Entries para ${today}: ${todayEntries.length}`, todayEntries.map(h=>({person:h.person,pts:h.pts})));
-    
-    // Usar función robusta para calcular XP
-    const xpToday=calculateDailyXP(vp, today);
-    console.log(`   ✅ XP final para [${vp}]: ${xpToday} XP`);
-    
-    let projection='';
-    if(xpToday>=70){
-      projection=`<span style="color:#34D399;font-weight:700;">PERFECTO ✨</span> — +6 HP`;
-    }else if(xpToday>=50){
-      projection=`<span style="color:#34D399;font-weight:700;">BUENO 👍</span> — +3 HP`;
-    }else if(xpToday>=20){
-      projection=`<span style="color:#FBBF24;font-weight:700;">NEUTRAL 😐</span> — −4 HP`;
-    }else{
-      projection=`<span style="color:#F87171;font-weight:700;">MALO 💀</span> — −10 HP`;
-    }
-    
-    let needText='';
-    if(xpToday<70){
-      const need=70-xpToday;
-      needText=` (${need} XP falta para perfecto)`;
-    }
-    
-    xpTodayEl.innerHTML=`
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;">
-        <span>XP acumulado: <strong style="color:var(--text);">${xpToday} XP</strong>${needText}</span>
-      </div>
-      <div>Proyección: ${projection}</div>
-    `;
-  }
+  // SECCIÓN DE XP COMENTADA - Se mostrará el historial de HP en su lugar
+  // const xpTodayEl=document.getElementById('vida-xp-today');
+  // Esta sección tenía problemas con el cálculo individual, se mostrará correctamente después
   
   // Cargar catálogos e historial en segundo plano
   const isOwn=vp===currentUser;
@@ -5224,10 +5190,18 @@ async function _loadVidaHistorial(vp){
     // Cargar historial de cambios de HP
     let hpChanges = [];
     try{
-      const hpHistSnap=await getDocs(query(collection(db,'hp_history'),where('person','==',vp),orderBy('timestamp','desc'),limit(50)));
-      hpHistSnap.forEach(d=>hpChanges.push({...d.data(),id:d.id}));
+      // Cargar TODOS los cambios de HP y filtrar por persona
+      // (es más robusto que confiar en where)
+      const hpHistSnap=await getDocs(query(collection(db,'hp_history'),orderBy('timestamp','desc'),limit(100)));
+      hpHistSnap.forEach(d=>{
+        const data = d.data();
+        // Filtrar por person manualmente (caso-insensitive)
+        if(data.person && data.person.toLowerCase() === vp.toLowerCase()){
+          hpChanges.push({...data,id:d.id});
+        }
+      });
     }catch(e){
-      console.log(`ℹ️ No hay hp_history para [${vp}]:`, e.message);
+      console.log(`ℹ️ Error cargando hp_history para [${vp}]:`, e.message);
       hpChanges=[];
     }
     
