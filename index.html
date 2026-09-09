@@ -5390,6 +5390,9 @@ async function _loadVidaHistorial(vp){
       const changeStr=c.change>0?'+'+c.change:''+c.change;
       const date=c.date?new Date(c.timestamp).toLocaleDateString('es-ES'):'Hoy';
       
+      // Botón deshacer si es posible
+      const undoBtn = c.canUndo ? `<button onclick="_undoHpChange('${c.id}',${c.hpBefore})" style="background:none;border:none;color:#F97316;cursor:pointer;font-size:11px;padding:4px 8px;margin-left:8px;border-radius:4px;hover-background:var(--bg2);" title="Deshacer este cambio">↶ Deshacer</button>` : '';
+      
       html+=`
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg3);border-radius:6px;margin-bottom:4px;border-left:3px solid ${color};">
           <div style="flex:1;">
@@ -5401,6 +5404,7 @@ async function _loadVidaHistorial(vp){
               ${c.hpBefore}→${c.hpAfter} HP • ${date}
             </div>
           </div>
+          ${undoBtn}
         </div>
       `;
     });
@@ -5416,20 +5420,32 @@ async function _loadVidaHistorial(vp){
 
 // Deshacer cambio de HP
 window._undoHpChange=async(historyId,previousHp)=>{
-  if(!currentUser)return;
+  if(!currentUser){
+    showToast('❌ No hay usuario');
+    return;
+  }
   try{
+    console.log(`↶ Deshaciendo cambio HP para [${currentUser}]: restaurando a ${previousHp} HP`);
+    
     // Restaurar HP anterior
     hpState[currentUser]=previousHp;
     await saveHpState();
+    console.log(`   ✅ HP restaurado en BD`);
+    
     updateHpBar(currentUser);
     updateHeader();
     
-    // Marcar como sin deshacer
+    // Marcar como sin deshacer (no se puede deshacer dos veces)
     await updateDoc(doc(db,'hp_history',historyId),{canUndo:false});
+    console.log(`   ✅ Cambio marcado como no-reversible`);
     
-    _loadVidaHistorial(currentUser);
-    showToast('Cambio deshecho ↶');
-  }catch(e){}
+    // Recargar historial
+    await _loadVidaHistorial(currentUser);
+    showToast('↶ Cambio deshecho — HP restaurado');
+  }catch(e){
+    console.error('Error deshaciendo cambio:',e);
+    showToast('❌ Error al deshacer');
+  }
 }
 
 window._delResItem=async(type,id)=>{
