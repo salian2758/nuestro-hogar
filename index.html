@@ -875,7 +875,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <!-- XP del día y proyección -->
       <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:14px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📊 Hoy</div>
-        <div id="vida-xp-today" style="font-size:12px;color:var(--text2);">Calculando...</div>
+        
       </div>
       <!-- Tabla suma/resta -->
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Qué suma y qué resta</div>
@@ -4477,9 +4477,13 @@ async function updateStreak(person,xpEarnedNow){
   // anterior (evaluamos si fue bueno/neutro/malo) y rellenamos huecos de días
   // totalmente inactivos antes de empezar a acumular el XP de hoy.
   if(data.lastDate&&data.lastDate!==today){
+    console.log(`📅 [${person}] Cambio de día detectado: ${data.lastDate} → ${today}`);
     const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN,70);
+    console.log(`   Evaluando día anterior: ${res.result} (${res.data.todayXP} XP)`);
     await applyStreakXpReward(person,res);
     await applyDayHp(person,res);
+  }else{
+    console.log(`📅 [${person}] Mismo día: ${data.lastDate} = ${today}`);
   }
   if(data.lastDate!==today){data.todayXP=0;data.lastDate=today;}
   data.todayXP=(data.todayXP||0)+(xpEarnedNow||0);
@@ -4778,6 +4782,8 @@ async function recordHpChange(person,hpBefore,hpAfter,reason,actionType='gain'){
   const timestamp=Date.now();
   const id='hp'+timestamp+Math.random().toString(36).slice(2,5);
   
+  console.log(`💾 recordHpChange: person=[${person}], ${hpBefore}→${hpAfter} (${change>0?'+':''}${change}), reason: ${reason}`);
+  
   try{
     await setDoc(doc(db,'hp_history',id),{
       person,
@@ -4791,7 +4797,10 @@ async function recordHpChange(person,hpBefore,hpAfter,reason,actionType='gain'){
       date:new Date().toLocaleString('es-ES'),
       canUndo:true
     });
-  }catch(e){}
+    console.log(`   ✅ Guardado en hp_history con ID: ${id}`);
+  }catch(e){
+    console.error(`   ❌ Error guardando hp_history:`, e);
+  }
 }
 
 async function applyHpDelta(person,delta,wasPerfect){
@@ -5183,6 +5192,8 @@ async function _loadVidaHistorial(vp){
   const el=document.getElementById('vida-historial');
   if(!el)return;
   try{
+    console.log(`📖 _loadVidaHistorial para [${vp}]`);
+    
     // Cargar muertes
     const s=await getDoc(doc(db,'state','deaths'));
     const deaths=s.exists()?Object.values(s.data()).filter(d=>d.person===vp).sort((a,b)=>b.ts-a.ts):[];
@@ -5193,13 +5204,19 @@ async function _loadVidaHistorial(vp){
       // Cargar TODOS los cambios de HP y filtrar por persona
       // (es más robusto que confiar en where)
       const hpHistSnap=await getDocs(query(collection(db,'hp_history'),orderBy('timestamp','desc'),limit(100)));
+      console.log(`   Total en hp_history: ${hpHistSnap.size}`);
+      
       hpHistSnap.forEach(d=>{
         const data = d.data();
+        console.log(`   Entrada: person=${data.person}, change=${data.change}, reason=${data.reason}`);
+        
         // Filtrar por person manualmente (caso-insensitive)
         if(data.person && data.person.toLowerCase() === vp.toLowerCase()){
           hpChanges.push({...data,id:d.id});
+          console.log(`   ✅ Agregado para [${vp}]: ${data.reason}`);
         }
       });
+      console.log(`   Resultados filtrados para [${vp}]: ${hpChanges.length} entradas`);
     }catch(e){
       console.log(`ℹ️ Error cargando hp_history para [${vp}]:`, e.message);
       hpChanges=[];
