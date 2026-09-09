@@ -927,7 +927,10 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       </div>
       <!-- Historial -->
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Historial</div>
-      <div id="vida-historial" style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;">Cargando...</div>
+      <div style="font-weight:600;margin-top:12px;margin-bottom:8px;color:#34D399;">📊 Historial de vida</div>
+      <div id="vida-historial" style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;min-height:80px;">
+        <div style="color:var(--text2);font-style:italic;">Sin cambios registrados aún</div>
+      </div>
     </div>
   </div>
 </div>
@@ -4902,6 +4905,10 @@ window.completeRecoveryAction=async()=>{
 
 async function applyDayHp(person,streakResult){
   if(!streakResult||hpDead[person]||travelMode[person])return;
+  
+  console.log(`
+🏥 applyDayHp iniciada para [${person}]`);
+  
   let delta=0;
   let reason='';
   if(streakResult.result==='perfect'){
@@ -4917,20 +4924,46 @@ async function applyDayHp(person,streakResult){
     delta=-HP_LOSS_BAD;
     reason='Día malo (<20 XP)';
   }
-  console.log(`🏥 [${person}] HP: ${streakResult.result.toUpperCase()} → ${delta>0?'+':''}${delta} HP (${reason})`)
+  console.log(`   Resultado: ${streakResult.result.toUpperCase()}`);
+  console.log(`   XP del día anterior: ${streakResult.data.todayXP}`);
+  console.log(`   Cambio HP: ${delta>0?'+':''}${delta}`);
+  console.log(`   Motivo: ${reason}`);
   
-  const hpBefore=person===currentUser?hpState[person]??HP_INITIAL:hpState[person]??HP_INITIAL;
-  hpState[person]=Math.max(0,Math.min(HP_MAX,hpBefore+delta));
-  if(hpState[person]===0){await triggerKO(person);}
-  else{
+  const hpBefore=hpState[person]??HP_INITIAL;
+  const newHp=Math.max(0,Math.min(HP_MAX,hpBefore+delta));
+  
+  console.log(`   HP cambio: ${hpBefore} → ${newHp}`);
+  
+  hpState[person]=newHp;
+  
+  if(newHp===0){
+    console.log(`   ⚠️ HP llegó a 0 - Trigger KO`);
+    await triggerKO(person);
+  }else{
+    // Guardar HP
     await saveHpState();
-    await recordHpChange(person,hpBefore,hpState[person],reason,'daily');
+    console.log(`   ✅ HP guardado en BD`);
+    
+    // Registrar en hp_history
+    await recordHpChange(person,hpBefore,newHp,reason,'daily');
+    console.log(`   ✅ Registrado en hp_history`);
+    
+    // Actualizar barra de HP
     updateHpBar(person);
-    // Actualizar historial si es el usuario actual
+    console.log(`   ✅ Barra de HP actualizada`);
+    
+    // Actualizar historial del modal si es el usuario actual
     if(person===currentUser){
-      _loadVidaHistorial(person);
+      console.log(`   Reactivando historial modal...`);
+      setTimeout(async()=>{
+        await _loadVidaHistorial(person);
+        console.log(`   ✅ Historial modal actualizado`);
+      }, 300);
     }
   }
+  
+  console.log(`✅ applyDayHp completada para [${person}]
+`);
 }
 
 async function triggerKO(person){
@@ -5254,90 +5287,62 @@ async function _loadVidaCatalogs(vp,isOwn){
 async function _loadVidaHistorial(vp){
   const el=document.getElementById('vida-historial');
   if(!el)return;
+  
   try{
-    console.log(`📖 _loadVidaHistorial para [${vp}]`);
+    console.log(`📖 Cargando historial para [${vp}]`);
     
-    // Cargar muertes
-    const s=await getDoc(doc(db,'state','deaths'));
-    const deaths=s.exists()?Object.values(s.data()).filter(d=>d.person===vp).sort((a,b)=>b.ts-a.ts):[];
+    // Cargar TODOS los cambios de HP
+    const hpHistSnap=await getDocs(collection(db,'hp_history'));
+    let hpChanges=[];
     
-    // Cargar historial de cambios de HP
-    let hpChanges = [];
-    try{
-      // Cargar TODOS los cambios de HP y filtrar por persona
-      // (es más robusto que confiar en where)
-      const hpHistSnap=await getDocs(query(collection(db,'hp_history'),orderBy('timestamp','desc'),limit(100)));
-      console.log(`   Total en hp_history: ${hpHistSnap.size}`);
-      
-      hpHistSnap.forEach(d=>{
-        const data = d.data();
-        console.log(`   Entrada: person=${data.person}, change=${data.change}, reason=${data.reason}`);
-        
-        // Filtrar por person manualmente (caso-insensitive)
-        if(data.person && data.person.toLowerCase() === vp.toLowerCase()){
-          hpChanges.push({...data,id:d.id});
-          console.log(`   ✅ Agregado para [${vp}]: ${data.reason}`);
-        }
-      });
-      console.log(`   Resultados filtrados para [${vp}]: ${hpChanges.length} entradas`);
-    }catch(e){
-      console.log(`ℹ️ Error cargando hp_history para [${vp}]:`, e.message);
-      hpChanges=[];
+    hpHistSnap.forEach(d=>{
+      const data=d.data();
+      // Filtrar por person (case-insensitive)
+      if(data.person && data.person.toLowerCase()===vp.toLowerCase()){
+        hpChanges.push({...data,id:d.id});
+      }
+    });
+    
+    // Ordenar por timestamp descendente (más reciente primero)
+    hpChanges.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    
+    console.log(`   Encontradas ${hpChanges.length} entradas para [${vp}]`);
+    
+    if(hpChanges.length===0){
+      el.innerHTML='<div style="color:var(--text2);font-style:italic;">Sin cambios registrados aún</div>';
+      return;
     }
     
-    const hp=hpState[vp]??HP_INITIAL;
+    // Mostrar últimas 10 entradas
     let html='';
-    
-    // Sección estado actual
-    html+=`<div style="font-weight:600;margin-bottom:8px;color:var(--text);">❤️ Estado actual</div>`;
-    if(!hpDead[vp]){
-      const days=Math.max(0,Math.floor(hp/HP_LOSS_BAD));
-      html+=`<div style="line-height:1.8;font-size:11px;color:var(--text2);background:var(--bg3);padding:8px;border-radius:6px;margin-bottom:10px;">
-        <div>💓 HP: <strong style="color:var(--text);">${hp}/100</strong></div>
-        <div>⏳ Sin hacer nada: ~${days} día${days!==1?'s':''}</div>
-        <div>✅ Día bueno: +${HP_GAIN_GOOD} HP → ${Math.min(HP_MAX,hp+HP_GAIN_GOOD)}</div>
-      </div>`;
-    }else{
-      html+='<div style="font-size:12px;color:#F87171;background:var(--bg3);padding:8px;border-radius:6px;margin-bottom:10px;">💀 Necesita resucitar</div>';
-    }
-    
-    // Sección de cambios de HP (últimos 15)
-    if(hpChanges.length){
-      html+=`<div style="font-weight:600;margin-bottom:8px;color:#34D399;margin-top:12px;">📊 Historial de vida (últimas ${Math.min(15,hpChanges.length)})</div>`;
-      html+=hpChanges.slice(0,15).map(c=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg3);border-radius:6px;margin-bottom:4px;border-left:3px solid ${c.change>0?'#34D399':'#F87171'};">
+    hpChanges.slice(0,10).forEach(c=>{
+      const icon=c.change>0?'💪':c.change<0?'💔':'🎭';
+      const color=c.change>0?'#34D399':'#F87171';
+      const changeStr=c.change>0?'+'+c.change:''+c.change;
+      const date=c.date?new Date(c.timestamp).toLocaleDateString('es-ES'):'Hoy';
+      
+      html+=`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg3);border-radius:6px;margin-bottom:4px;border-left:3px solid ${color};">
           <div style="flex:1;">
             <div style="font-size:12px;font-weight:500;">
-              ${c.icon} <strong>${c.reason}</strong>
-              <span style="color:${c.change>0?'#34D399':'#F87171'};font-weight:700;margin-left:4px;">
-                ${c.change>0?'+':''}${c.change} HP
-              </span>
+              ${icon} <strong>${c.reason}</strong>
+              <span style="color:${color};font-weight:700;margin-left:4px;">${changeStr} HP</span>
             </div>
             <div style="font-size:10px;color:var(--text2);">
-              ${c.date} • ${c.hpBefore}→${c.hpAfter} HP
+              ${c.hpBefore}→${c.hpAfter} HP • ${date}
             </div>
           </div>
         </div>
-      `).join('');
-    }else{
-      html+=`<div style="font-size:11px;color:var(--text2);margin-top:12px;">Sin cambios registrados aún</div>`;
-    }
+      `;
+    });
     
-    // Sección de muertes
-    if(deaths.length){
-      html+=`<div style="font-weight:600;margin-bottom:8px;color:#F87171;margin-top:12px;">💀 Muertes (${deaths.length})</div>`;
-      html+=deaths.slice(0,5).map(d=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg3);border-radius:6px;margin-bottom:4px;border-left:3px solid #F87171;">
-          <div style="flex:1;">
-            <div style="font-size:11px;color:var(--text2);">${d.date||''}</div>
-            <div style="font-size:12px;">Nivel ${d.levelBefore}→${d.levelAfter}</div>
-          </div>
-        </div>
-      `).join('');
-    }
+    el.innerHTML=html;
+    console.log(`   ✅ Historial cargado`);
     
-    el.innerHTML=html||'Sin datos';
-  }catch(e){console.error('Error cargando historial:',e);el.innerHTML='Sin datos disponibles';}
+  }catch(e){
+    console.error('Error cargando historial:',e);
+    el.innerHTML='<div style="color:#F87171;">Error cargando historial</div>';
+  }
 }
 
 // Deshacer cambio de HP
