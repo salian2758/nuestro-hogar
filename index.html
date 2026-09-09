@@ -4956,6 +4956,15 @@ async function applyWeeklyHpBonus(){
 }
 
 // Apertura del modal de vida — SÍNCRONO para evitar cualquier problema de timing
+
+// Normalizar nombre para comparación (quitar tildes, minúsculas)
+function normalizeName(name){
+  if(!name)return '';
+  return name.toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g,''); // Quitar tildes
+}
+
 window.openVidaModal=(person)=>{
   const modal=document.getElementById('vida-modal');
   if(!modal)return;
@@ -5023,20 +5032,19 @@ window.openVidaModal=(person)=>{
   const xpTodayEl=document.getElementById('vida-xp-today');
   if(xpTodayEl){
     const today=new Date().toLocaleDateString('es-ES');
-    // DEBUG: Ver qué se está filtrando
-    const allToday=history.filter(h=>h.date===today);
-    const filteredByPerson=allToday.filter(h=>h.person===vp);
-    console.log(`🔍 DEBUG XP Modal [${vp}]`);
-    console.log(`  Hoy: ${today}`);
-    console.log(`  Total entries hoy: ${allToday.length}`, allToday.map(h=>({person:h.person,pts:h.pts})));
-    console.log(`  Filtrado por [${vp}]: ${filteredByPerson.length}`, filteredByPerson.map(h=>({person:h.person,pts:h.pts})));
-    
-    // SOLO usar history que tiene fecha explícita de cuándo se completó
-    // Filtrar por persona ACTUAL y por hoy
-    const xpToday=filteredByPerson
-      .filter(h=>(h.pts||0)>0)
+    // Normalizar el nombre para comparación (sin tildes, minúsculas)
+    const vpNormalized=normalizeName(vp);
+    // Filtrar solo XP de hoy y de esta persona (con normalización)
+    const xpToday=history
+      .filter(h=>{
+        if(h.date!==today)return false; // Solo hoy
+        if(!h.person)return false; // Debe tener persona
+        if(normalizeName(h.person)!==vpNormalized)return false; // Comparar normalizado
+        if((h.pts||0)<=0)return false; // Solo si hay XP positivo
+        return true;
+      })
       .reduce((s,h)=>s+h.pts,0);
-    console.log(`  XP final para ${vp}: ${xpToday} XP`);
+    console.log(`✅ [${vp}] XP de hoy: ${xpToday} XP`);
     
     let projection='';
     if(xpToday>=70){
