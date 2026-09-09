@@ -4809,6 +4809,76 @@ async function applyHpDelta(person,delta,wasPerfect){
   }
 }
 
+
+// Variables globales para el modal de recuperación
+let recoveryModalId=null,recoveryModalName='',recoveryModalHp=0;
+
+// Abrir modal de confirmación para acción de recuperación
+window.openRecoveryModal=(id,name,hp)=>{
+  recoveryModalId=id;
+  recoveryModalName=name;
+  recoveryModalHp=hp;
+  const modal=document.getElementById('recovery-modal');
+  if(modal){
+    document.getElementById('recovery-modal-title').textContent=name;
+    document.getElementById('recovery-modal-desc').textContent=`¿Completar esta acción y ganar ${hp} HP?`;
+    document.getElementById('recovery-modal-hp').textContent=`+${hp} HP`;
+    modal.style.display='flex';
+  }
+};
+
+// Cerrar modal sin hacer nada
+window.closeRecoveryModal=()=>{
+  const modal=document.getElementById('recovery-modal');
+  if(modal)modal.style.display='none';
+  recoveryModalId=null;
+};
+
+// Completar la acción y sumar HP
+window.completeRecoveryAction=async()=>{
+  if(!recoveryModalId||!currentUser)return;
+  
+  try{
+    // Sumar HP
+    const currentHp=hpState[currentUser]??HP_INITIAL;
+    const newHp=Math.min(HP_MAX,currentHp+recoveryModalHp);
+    hpState[currentUser]=newHp;
+    await setDoc(doc(db,'state','hpState'),hpState);
+    
+    // Registrar en historial de HP
+    const historyId='recovery'+Date.now();
+    await setDoc(doc(db,'hp_history',historyId),{
+      person:currentUser,
+      change:recoveryModalHp,
+      reason:`Acción: ${recoveryModalName}`,
+      timestamp:Date.now(),
+      type:'recovery_action'
+    });
+    
+    // Registrar en historial principal (para mostrar en "Historial")
+    const histId='recov'+Date.now();
+    await setDoc(doc(db,'history',histId),{
+      name:`💚 ${recoveryModalName}`,
+      person:currentUser,
+      zona:'Recuperación vida',
+      pts:0, // No suma XP, solo HP
+      date:new Date().toLocaleDateString('es-ES'),
+      ts:Date.now()
+    });
+    
+    showToast(`💚 ¡${recoveryModalHp} HP ganados! (${newHp}/100)`);
+    closeRecoveryModal();
+    updateHpBar(currentUser);
+    _loadVidaHistorial(currentUser);
+    renderHpHistoryInMain(); // Actualizar historial principal
+    _loadVidaCatalogs(currentUser,true); // Recargar catálogo
+  }catch(e){
+    console.error('Error completando acción de recuperación:',e);
+    showToast('Error al completar la acción');
+  }
+};
+
+
 async function applyDayHp(person,streakResult){
   if(!streakResult||hpDead[person]||travelMode[person])return;
   let delta=0;
@@ -5084,9 +5154,9 @@ async function _loadVidaCatalogs(vp,isOwn){
     if(!recItems.length){recoveryEl.innerHTML=`<div style="padding:10px 12px;font-size:11px;color:var(--text2);">Sin acciones${isOwn?' — pulsa + Añadir':''}</div>`;}
     else{
       recoveryEl.innerHTML=recItems.map(it=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:0.5px solid var(--border);">
+        <div style="cursor:${isOwn?'pointer':'default'};display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:0.5px solid var(--border);transition:background 0.2s;border-left:3px solid transparent;" onmouseover="this.style.background='var(--bg3)';this.style.borderLeft='3px solid #34D399'" onmouseout="this.style.background='transparent';this.style.borderLeft='3px solid transparent'" onclick="${isOwn?`openRecoveryModal('${it.id}','${it.name.replace(/'/g,"\\'")}',${it.hp})`:''}">
           <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${escHtml(it.name)} <span style="color:#34D399;font-size:11px;font-weight:600;">+${it.hp} HP</span></div>${it.desc?`<div style="font-size:10px;color:var(--text2);">${escHtml(it.desc)}</div>`:''}</div>
-          ${isOwn?`<button onclick="_delRecoveryItem('${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}
+          ${isOwn?`<button onclick="event.stopPropagation();_delRecoveryItem('${it.id}')" style="background:none;border:none;color:#F87171;font-size:11px;cursor:pointer;padding:4px;">✕</button>`:''}\
         </div>
       `).join('');
     }
