@@ -875,7 +875,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <!-- XP del día y proyección -->
       <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:14px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📊 Hoy</div>
-        
+        <div id="vida-xp-today" style="font-size:12px;color:var(--text2);">Cargando...</div>
       </div>
       <!-- Tabla suma/resta -->
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Qué suma y qué resta</div>
@@ -5161,23 +5161,31 @@ window.openVidaModal=(person)=>{
     
     // Buscar SOLO las tareas de HOY de ESTA PERSONA
     let xpToday = 0;
-    console.log(`🔍 Buscando XP para [${vp}] en fecha [${today}]`);
-    console.log(`   history.length = ${history ? history.length : 0}`);
+    console.log(`
+🔍 === CALCULANDO XP PARA [${vp}] ===`);
+    console.log(`   Persona: [${vp}]`);
+    console.log(`   Fecha buscada: [${today}]`);
+    console.log(`   history.length: ${history ? history.length : 0}`);
     
     if(history && history.length){
+      // Mostrar todas las entradas de hoy
+      const todayEntries = history.filter(h => h.date === today);
+      console.log(`   Entradas de ${today}: ${todayEntries.length}`);
+      todayEntries.forEach(h => console.log(`     - ${h.person}: ${h.pts} XP`));
+      
       // Filtrar: date=hoy AND person=esta persona AND pts>0
       history.forEach(h=>{
-        if(h.date === today){
-          console.log(`   Encontrada entrada: person=[${h.person}], pts=${h.pts}, date=${h.date}`);
-          if(h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
-            console.log(`   ✅ Agregando ${h.pts} XP`);
-            xpToday += h.pts;
-          }
+        if(h.date === today && h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
+          console.log(`   ✅ Agregando ${h.pts} XP (${h.name})`);
+          xpToday += h.pts;
         }
       });
+    }else{
+      console.log(`   ⚠️ history vacío o no cargado`);
     }
     
-    console.log(`📊 [${vp}] XP de hoy FINAL: ${xpToday} XP`);
+    console.log(`   📊 FINAL: ${xpToday} XP para [${vp}]
+`);
     
     let projection='';
     let hpChange='';
