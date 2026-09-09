@@ -468,91 +468,22 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 }
 
 
-/* === EFECTOS DINÁMICOS GAMIFICADOS === */
-@keyframes glow-bright {
-  0%, 100% { filter: drop-shadow(0 0 12px currentColor) brightness(1); }
-  50% { filter: drop-shadow(0 0 24px currentColor) brightness(1.2); }
-}
-
-@keyframes pulse-number {
+/* Efectos dinámicos HP */
+@keyframes hp-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.08); }
 }
 
-@keyframes aura-spin {
-  0% { transform: rotate(0deg) scale(1); opacity: 0.4; }
-  100% { transform: rotate(360deg) scale(1); opacity: 0; }
+@keyframes bar-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px currentColor); }
+  50% { filter: drop-shadow(0 0 12px currentColor); }
 }
 
-@keyframes spark-burst {
-  0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-}
+.hp-pulse { animation: hp-pulse 1.5s ease-in-out infinite; }
+.bar-glow { animation: bar-glow 2s ease-in-out infinite; }
 
-@keyframes energy-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), inset 0 0 10px rgba(16, 185, 129, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.8), inset 0 0 20px rgba(16, 185, 129, 0.4); }
-}
-
-@keyframes danger-flash {
-  0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5); }
-  50% { box-shadow: 0 0 40px rgba(220, 38, 38, 1), 0 0 60px rgba(220, 38, 38, 0.6); }
-}
-
-@keyframes float-up {
-  0% { transform: translateY(0) opacity(1); }
-  100% { transform: translateY(-60px) opacity(0); }
-}
-
-.heart-glow {
-  animation: glow-bright 1.5s ease-in-out infinite;
-}
-
-.heart-glow-intense {
-  animation: glow-bright 0.8s ease-in-out infinite;
-}
-
-.number-pulse {
-  animation: pulse-number 1.2s ease-in-out infinite;
-}
-
-.bar-energy {
-  animation: energy-pulse 2s ease-in-out infinite;
-}
-
-.bar-danger {
-  animation: danger-flash 0.6s ease-in-out infinite;
-}
-
-.spark {
-  position: fixed;
-  pointer-events: none;
-  font-size: 16px;
-  animation: float-up 1s ease-out forwards;
-}
-
-
-@keyframes float-particle {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-80px) translateX(var(--drift, 0px)) scale(0); opacity: 0; }
-}
-
-.magic-particle {
-  position: fixed;
-  pointer-events: none;
-  font-size: 20px;
-  animation: float-particle 2s ease-out forwards;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-.twinkle-star {
-  animation: twinkle 1.5s ease-in-out infinite;
-}
-
+.heart-glow { filter: drop-shadow(0 0 8px currentColor); }
+.heart-glow-intense { filter: drop-shadow(0 0 16px currentColor); }
 </style>
 </head>
 <body>
@@ -780,91 +711,22 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 }
 
 
-/* === EFECTOS DINÁMICOS GAMIFICADOS === */
-@keyframes glow-bright {
-  0%, 100% { filter: drop-shadow(0 0 12px currentColor) brightness(1); }
-  50% { filter: drop-shadow(0 0 24px currentColor) brightness(1.2); }
-}
-
-@keyframes pulse-number {
+/* Efectos dinámicos HP */
+@keyframes hp-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.08); }
 }
 
-@keyframes aura-spin {
-  0% { transform: rotate(0deg) scale(1); opacity: 0.4; }
-  100% { transform: rotate(360deg) scale(1); opacity: 0; }
+@keyframes bar-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px currentColor); }
+  50% { filter: drop-shadow(0 0 12px currentColor); }
 }
 
-@keyframes spark-burst {
-  0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-}
+.hp-pulse { animation: hp-pulse 1.5s ease-in-out infinite; }
+.bar-glow { animation: bar-glow 2s ease-in-out infinite; }
 
-@keyframes energy-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), inset 0 0 10px rgba(16, 185, 129, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.8), inset 0 0 20px rgba(16, 185, 129, 0.4); }
-}
-
-@keyframes danger-flash {
-  0%, 100% { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5); }
-  50% { box-shadow: 0 0 40px rgba(220, 38, 38, 1), 0 0 60px rgba(220, 38, 38, 0.6); }
-}
-
-@keyframes float-up {
-  0% { transform: translateY(0) opacity(1); }
-  100% { transform: translateY(-60px) opacity(0); }
-}
-
-.heart-glow {
-  animation: glow-bright 1.5s ease-in-out infinite;
-}
-
-.heart-glow-intense {
-  animation: glow-bright 0.8s ease-in-out infinite;
-}
-
-.number-pulse {
-  animation: pulse-number 1.2s ease-in-out infinite;
-}
-
-.bar-energy {
-  animation: energy-pulse 2s ease-in-out infinite;
-}
-
-.bar-danger {
-  animation: danger-flash 0.6s ease-in-out infinite;
-}
-
-.spark {
-  position: fixed;
-  pointer-events: none;
-  font-size: 16px;
-  animation: float-up 1s ease-out forwards;
-}
-
-
-@keyframes float-particle {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-80px) translateX(var(--drift, 0px)) scale(0); opacity: 0; }
-}
-
-.magic-particle {
-  position: fixed;
-  pointer-events: none;
-  font-size: 20px;
-  animation: float-particle 2s ease-out forwards;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-.twinkle-star {
-  animation: twinkle 1.5s ease-in-out infinite;
-}
-
+.heart-glow { filter: drop-shadow(0 0 8px currentColor); }
+.heart-glow-intense { filter: drop-shadow(0 0 16px currentColor); }
 </style>
   
   <div id="splash-heart">❤️</div>
@@ -930,9 +792,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
             <div style="height:12px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="rafa-hp-container">
               <div id="rafa-hp-bar" class="hp-bar level-1" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+            <div style="margin-top:3px;">
               <span style="font-size:10px;font-weight:600;color:var(--text);" id="rafa-hp-lbl">80</span>
-              <span style="font-size:9px;font-weight:600;color:var(--text);" id="rafa-hp-status">BIEN</span>
             </div>
           </div>
         </div>
@@ -957,9 +818,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
             <div style="height:12px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="maria-hp-container">
               <div id="maria-hp-bar" class="hp-bar level-1" style="height:100%;width:62%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+            <div style="margin-top:3px;">
               <span style="font-size:10px;font-weight:600;color:var(--text);" id="maria-hp-lbl">62</span>
-              <span style="font-size:9px;font-weight:600;color:var(--text);" id="maria-hp-status">BIEN</span>
             </div>
           </div>
         </div>
@@ -1361,7 +1221,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <div style="font-size:15px;font-weight:700;" id="vida-title">❤️ Salud del hogar</div>
         <div style="display:flex;gap:6px;">
-          <button onclick="openHpTestPanel()" style="background:rgba(168,85,247,0.2);border:1px solid #A855F7;border-radius:8px;color:#A855F7;padding:6px 12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">🧪 Test</button>
           <button onclick="document.getElementById('vida-modal').style.display='none'" style="background:var(--bg3);border:none;border-radius:8px;color:var(--text);padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;">✕</button>
         </div>
       </div>
@@ -1372,11 +1231,11 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         
         <!-- Contenido -->
         <div style="position:relative;z-index:1;">
-          <!-- Corazón enorme que late + GLOW -->
-          <div style="font-size:80px;margin-bottom:16px;animation:heartbeat-slow 1.5s infinite;filter:drop-shadow(0 0 12px rgba(52,211,153,0.6));" id="vida-heart-big" class="heart-glow">❤️</div>
+          <!-- Corazón enorme que late -->
+          <div style="font-size:80px;margin-bottom:16px;animation:heartbeat-slow 1.5s infinite;" id="vida-heart-big">❤️</div>
           
-          <!-- Número grande de HP + PULSO -->
-          <div style="font-size:56px;font-weight:900;margin-bottom:8px;color:#34D399;text-shadow:0 4px 12px rgba(52,211,153,0.3);" id="vida-hp-number" class="number-pulse">80</div>
+          <!-- Número grande de HP -->
+          <div style="font-size:56px;font-weight:900;margin-bottom:8px;color:#34D399;text-shadow:0 4px 12px rgba(52,211,153,0.3);" id="vida-hp-number">80</div>
           
           <!-- Nombre del nivel con emoji -->
           <div style="font-size:16px;font-weight:700;margin-bottom:4px;color:var(--text);" id="vida-level-name">💪 FUERTE</div>
@@ -1384,9 +1243,9 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
           <!-- Descripción breve -->
           <div style="font-size:12px;color:var(--text2);margin-bottom:12px;" id="vida-level-desc">Confianza y poder</div>
           
-          <!-- Barra grande con gradiente + ENERGÍA -->
+          <!-- Barra grande con gradiente -->
           <div style="height:20px;background:var(--bg3);border-radius:10px;overflow:hidden;margin-bottom:12px;border:1px solid var(--border);">
-            <div id="vida-hp-bar-big" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:9px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 12px rgba(52,211,153,0.4);" class="bar-energy"></div>
+            <div id="vida-hp-bar-big" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:9px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 12px rgba(52,211,153,0.4);"></div>
           </div>
           
           <!-- Texto HP/100 -->
@@ -2141,47 +2000,19 @@ function getHpLevelData(level) {
 window.simulateHpLevel = (level, hp) => {
   const levelData = getHpLevelData(level);
   
-  // Actualizar corazón con animación + GLOW
+  // Actualizar corazón con animación
   const heart = document.getElementById('test-heart');
   if(heart){
     heart.style.animation = 'none';
-    heart.classList.remove('heart-glow', 'heart-glow-intense');
     void heart.offsetWidth;
     
-    if(level === 1) {
-      heart.style.animation = 'heartbeat-slow 1.5s infinite';
-      heart.classList.add('heart-glow');
-      heart.style.filter = `drop-shadow(0 0 20px ${levelData.color}60)`;
-    }
-    else if(level === 2) {
-      heart.style.animation = 'heartbeat-slow 1.2s infinite';
-      heart.classList.add('heart-glow');
-      heart.style.filter = `drop-shadow(0 0 16px ${levelData.color}50)`;
-    }
-    else if(level === 3) {
-      heart.style.animation = 'heartbeat-normal 1s infinite';
-      heart.classList.add('heart-glow');
-      heart.style.filter = `drop-shadow(0 0 12px ${levelData.color}40)`;
-    }
-    else if(level === 4) {
-      heart.style.animation = 'heartbeat-fast 0.8s infinite';
-      heart.classList.add('heart-glow');
-      heart.style.filter = `drop-shadow(0 0 16px ${levelData.color}50)`;
-    }
-    else if(level === 5) {
-      heart.style.animation = 'heartbeat-critical 0.6s infinite';
-      heart.classList.add('heart-glow-intense');
-      heart.style.filter = `drop-shadow(0 0 24px ${levelData.color}70)`;
-    }
-    else if(level === 6) {
-      heart.style.animation = 'heartbeat-critical 0.4s infinite';
-      heart.classList.add('heart-glow-intense');
-      heart.style.filter = `drop-shadow(0 0 32px ${levelData.color}90)`;
-    }
-    else if(level === 7) {
-      heart.style.animation = 'heartbeat-dying 2s infinite';
-      heart.style.filter = `drop-shadow(0 0 8px ${levelData.color}40)`;
-    }
+    if(level === 1) heart.style.animation = 'heartbeat-slow 1.5s infinite';
+    else if(level === 2) heart.style.animation = 'heartbeat-slow 1.2s infinite';
+    else if(level === 3) heart.style.animation = 'heartbeat-normal 1s infinite';
+    else if(level === 4) heart.style.animation = 'heartbeat-fast 0.8s infinite';
+    else if(level === 5) heart.style.animation = 'heartbeat-critical 0.6s infinite';
+    else if(level === 6) heart.style.animation = 'heartbeat-critical 0.4s infinite';
+    else if(level === 7) heart.style.animation = 'heartbeat-dying 2s infinite';
     else if(level === 8) { heart.style.animation = 'none'; heart.textContent = '💔'; }
     else heart.textContent = '❤️';
   }
@@ -2217,18 +2048,19 @@ window.simulateHpLevel = (level, hp) => {
     };
     
     barEl.style.background = gradients[level] || gradients[1];
-    barEl.classList.remove('bar-energy', 'bar-danger');
+    
+    if(level >= 5){
+      barEl.style.boxShadow = `0 0 16px ${levelData.color}80`;
+    }else{
+      barEl.style.boxShadow = 'none';
+    }
     
     if(level === 6){
-      barEl.classList.add('bar-danger');
-      barEl.style.boxShadow = `0 0 20px ${levelData.color}80, inset 0 0 6px ${levelData.color}60`;
-    }else if(level >= 5){
-      barEl.classList.add('bar-energy');
-      barEl.style.boxShadow = `0 0 16px ${levelData.color}60, inset 0 0 4px ${levelData.color}40`;
-    }else if(level >= 3){
-      barEl.style.boxShadow = `0 0 8px ${levelData.color}40`;
+      barEl.style.animation = 'shake 0.4s';
+    }else if(level === 5){
+      barEl.style.animation = 'shake 0.4s infinite';
     }else{
-      barEl.style.boxShadow = `0 0 4px ${levelData.color}20`;
+      barEl.style.animation = 'none';
     }
   }
   
@@ -5444,7 +5276,6 @@ function updateHpBar(person){
   const lbl=document.getElementById(k+'-hp-lbl');
   const avatar=document.getElementById(k+'-avatar-emoji');
   const container=document.getElementById(k+'-hp-container');
-  const statusEl=document.getElementById(k+'-hp-status');
   
   // Calcular nivel (1-8)
   const level=getHpLevel(hp);
@@ -5466,9 +5297,11 @@ function updateHpBar(person){
     bar.style.width=hp+'%';
     bar.style.background=gradients[level]||gradients[1];
     
-    // Glow intenso en niveles críticos
+    // Glow intenso en niveles críticos + efecto pulsante
+    bar.classList.remove('bar-glow');
     if(level>=5){
       bar.style.boxShadow=`0 0 12px ${levelData.color}60, inset 0 0 4px ${levelData.color}40`;
+      bar.classList.add('bar-glow');
     }else if(level>=3){
       bar.style.boxShadow=`0 0 6px ${levelData.color}40`;
     }else{
@@ -5480,21 +5313,33 @@ function updateHpBar(person){
     lbl.textContent=hpDead[person]?'💀':hp;
     lbl.style.color=levelData.color;
     lbl.style.fontWeight='700';
+    // Agregar pulso al número
+    lbl.classList.remove('hp-pulse');
+    if(level>=4 && !hpDead[person]){
+      lbl.classList.add('hp-pulse');
+    }
   }
   
-  // Actualizar status
-  if(statusEl){
-    statusEl.textContent=levelData.name;
-    statusEl.style.color=levelData.color;
-    statusEl.style.fontWeight='600';
-  }
-  
-  // Actualizar avatar
+
+  // Actualizar avatar con glow dinámico
   if(avatar){
     if(hpDead[person]){
       avatar.textContent='💔';
+      avatar.style.filter='none';
+      avatar.classList.remove('heart-glow', 'heart-glow-intense');
     }else{
       avatar.textContent='❤️';
+      // Glow según nivel
+      avatar.classList.remove('heart-glow', 'heart-glow-intense');
+      if(level>=6){
+        avatar.classList.add('heart-glow-intense');
+        avatar.style.filter=`drop-shadow(0 0 12px ${levelData.color}80)`;
+      }else if(level>=4){
+        avatar.classList.add('heart-glow');
+        avatar.style.filter=`drop-shadow(0 0 8px ${levelData.color}60)`;
+      }else{
+        avatar.style.filter=`drop-shadow(0 0 4px ${levelData.color}40)`;
+      }
     }
   }
   
@@ -5835,93 +5680,9 @@ function normalizeName(name){
     .replace(/[\u0300-\u036f]/g,''); // Quitar tildes
 }
 
-
-// Crear destello de luz al abrir modal
-function createModalFlash(){
-  const flash = document.createElement('div');
-  flash.style.cssText = `
-    position: fixed;
-    inset: 0;
-    z-index: 799;
-    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
-    animation: flash-fade 0.6s ease-out forwards;
-    pointer-events: none;
-  `;
-  document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 600);
-}
-
-// Keyframe para el flash
-const styleSheet = document.styleSheets[0];
-if(styleSheet && !document.querySelector('style:has(@keyframes flash-fade)')){
-  const css = `@keyframes flash-fade {
-    0% { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.5); }
-  }`;
-  try{
-    styleSheet.insertRule(css, styleSheet.cssRules.length);
-  }catch(e){}
-}
-
-
-
-// Crear partículas flotantes mágicas
-function createMagicParticles(x, y, count = 5) {
-  for (let i = 0; i < count; i++) {
-    const particle = document.createElement('div');
-    const angle = (Math.PI * 2 * i) / count;
-    const drift = Math.cos(angle) * 40;
-    const emojis = ['✨', '💫', '⭐', '🌟', '💚'];
-    
-    particle.className = 'magic-particle twinkle-star';
-    particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    particle.style.left = x + 'px';
-    particle.style.top = y + 'px';
-    particle.style.setProperty('--drift', drift + 'px');
-    
-    document.body.appendChild(particle);
-    setTimeout(() => particle.remove(), 2000);
-  }
-}
-
-// Crear efecto de brillo intenso
-function createBrightnessFlare(element) {
-  const rect = element.getBoundingClientRect();
-  const x = rect.left + rect.width / 2;
-  const y = rect.top + rect.height / 2;
-  
-  const flare = document.createElement('div');
-  flare.style.cssText = `
-    position: fixed;
-    left: ${x}px;
-    top: ${y}px;
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    animation: fade-out 0.8s ease-out forwards;
-    pointer-events: none;
-    z-index: 900;
-  `;
-  document.body.appendChild(flare);
-  setTimeout(() => flare.remove(), 800);
-}
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fade-out {
-    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
-  }
-`;
-document.head.appendChild(style);
-
-
 window.openVidaModal=(person)=>{
   const modal=document.getElementById('vida-modal');
   if(!modal)return;
-  createModalFlash();
   modal.style.display='block';
   const vp=person||currentUser||'Rafa';
   const hp=hpState[vp]??HP_INITIAL;
@@ -5949,7 +5710,7 @@ window.openVidaModal=(person)=>{
     titleEl.textContent=`❤️ Salud de ${vp}`;
   }
   
-  // Corazón enorme con animación + GLOW según nivel
+  // Corazón enorme con animación + glow dinámico según nivel
   const heartEl=document.getElementById('vida-heart-big');
   if(heartEl){
     heartEl.style.animation='none';
@@ -5962,44 +5723,42 @@ window.openVidaModal=(person)=>{
       heartEl.style.filter='drop-shadow(0 0 8px rgba(107, 114, 128, 0.4))';
     }else{
       heartEl.textContent='❤️';
-      // Animar según nivel
-      if(level===1){
-        heartEl.style.animation='heartbeat-slow 1.5s infinite';
-        heartEl.classList.add('heart-glow');
-        heartEl.style.filter=`drop-shadow(0 0 20px ${levelData.color}60)`;
-      }else if(level===2){
-        heartEl.style.animation='heartbeat-slow 1.2s infinite';
-        heartEl.classList.add('heart-glow');
-        heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}50)`;
-      }else if(level===3){
-        heartEl.style.animation='heartbeat-normal 1s infinite';
-        heartEl.classList.add('heart-glow');
-        heartEl.style.filter=`drop-shadow(0 0 12px ${levelData.color}40)`;
-      }else if(level===4){
-        heartEl.style.animation='heartbeat-fast 0.8s infinite';
-        heartEl.classList.add('heart-glow');
-        heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}50)`;
-      }else if(level===5){
-        heartEl.style.animation='heartbeat-critical 0.6s infinite';
+      // Animación según nivel
+      if(level===1) heartEl.style.animation='heartbeat-slow 1.5s infinite';
+      else if(level===2) heartEl.style.animation='heartbeat-slow 1.2s infinite';
+      else if(level===3) heartEl.style.animation='heartbeat-normal 1s infinite';
+      else if(level===4) heartEl.style.animation='heartbeat-fast 0.8s infinite';
+      else if(level===5) heartEl.style.animation='heartbeat-critical 0.6s infinite';
+      else if(level===6) heartEl.style.animation='heartbeat-critical 0.4s infinite';
+      else if(level===7) heartEl.style.animation='heartbeat-dying 2s infinite';
+      
+      // Glow dinámico
+      if(level>=6){
         heartEl.classList.add('heart-glow-intense');
-        heartEl.style.filter=`drop-shadow(0 0 24px ${levelData.color}70)`;
-      }else if(level===6){
-        heartEl.style.animation='heartbeat-critical 0.4s infinite';
-        heartEl.classList.add('heart-glow-intense');
-        heartEl.style.filter=`drop-shadow(0 0 32px ${levelData.color}90)`;
-      }else if(level===7){
-        heartEl.style.animation='heartbeat-dying 2s infinite';
+        heartEl.style.filter=`drop-shadow(0 0 20px ${levelData.color}80)`;
+      }else if(level>=4){
+        heartEl.classList.add('heart-glow');
+        heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}60)`;
+      }else{
         heartEl.style.filter=`drop-shadow(0 0 8px ${levelData.color}40)`;
       }
     }
   }
   
-  // Número HP grande
+  // Número HP grande con glow
   const numEl=document.getElementById('vida-hp-number');
   if(numEl){
     numEl.textContent=dead?'💀':hp;
     numEl.style.color=levelData.color;
-    numEl.style.textShadow=`0 4px 12px ${levelData.color}40`;
+    numEl.classList.remove('hp-pulse');
+    if(!dead){
+      numEl.style.textShadow=`0 4px 20px ${levelData.color}60`;
+      if(level>=5){
+        numEl.classList.add('hp-pulse');
+      }
+    }else{
+      numEl.style.textShadow=`0 4px 8px rgba(107, 114, 128, 0.4)`;
+    }
   }
   
   // Nombre del nivel con emoji
@@ -6015,23 +5774,20 @@ window.openVidaModal=(person)=>{
     descEl.textContent=dead?'Game Over':''+levelData.desc;
   }
   
-  // Barra grande + EFECTOS DINÁMICOS
+  // Barra grande con glow pulsante
   const barEl=document.getElementById('vida-hp-bar-big');
   if(barEl){
     barEl.style.width=(dead?0:hp)+'%';
     barEl.style.background=gradients[level]||gradients[1];
-    barEl.classList.remove('bar-energy', 'bar-danger');
+    barEl.classList.remove('bar-glow');
     
-    if(level===6 && !dead){
-      barEl.classList.add('bar-danger');
-      barEl.style.boxShadow=`0 0 20px ${levelData.color}80, inset 0 0 6px ${levelData.color}60`;
-    }else if(level>=5 && !dead){
-      barEl.classList.add('bar-energy');
+    if(level>=5){
       barEl.style.boxShadow=`0 0 16px ${levelData.color}60, inset 0 0 4px ${levelData.color}40`;
+      barEl.classList.add('bar-glow');
     }else if(level>=3){
       barEl.style.boxShadow=`0 0 8px ${levelData.color}40`;
     }else{
-      barEl.style.boxShadow=`0 0 4px ${levelData.color}20`;
+      barEl.style.boxShadow=`0 0 6px ${levelData.color}30`;
     }
   }
   
@@ -6042,7 +5798,7 @@ window.openVidaModal=(person)=>{
     textEl.style.color=levelData.color;
   }
   
-  // Fondo pulsante en crítico + PARTÍCULAS en perfecto
+  // Fondo pulsante en crítico
   const bgEl=document.getElementById('vida-bg-pulse');
   if(bgEl){
     if(level===6 && !dead){
@@ -6054,12 +5810,6 @@ window.openVidaModal=(person)=>{
     }else{
       bgEl.style.background='transparent';
       bgEl.style.animation='none';
-    }
-    
-    // PARTÍCULAS MÁGICAS si está perfecto
-    if(level===1 && !dead){
-      const rect = bgEl.getBoundingClientRect();
-      createMagicParticles(rect.left + rect.width/2, rect.top + rect.height/2, 8);
     }
   }
   
