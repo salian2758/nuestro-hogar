@@ -5251,17 +5251,15 @@ async function _loadVidaCatalogs(vp,isOwn){
     const recCol=`recovery_shared`;
     let recItems=[];
     
-    // Si es el propio usuario, SIEMPRE borra viejos y carga nuevos catálogo
-    if(isOwn){
-      try{
-        // Borrar TODOS los items antiguos
-        const s=await getDocs(collection(db,recCol));
-        for(const doc of s.docs){
-          try{await deleteDoc(doc.ref);}catch(e){}
-        }
-      }catch(e){}
+    // SIEMPRE cargar lo que existe en Firebase primero
+    try{const s=await getDocs(collection(db,recCol));s.forEach(d=>recItems.push({...d.data(),id:d.id}));}catch(e){}
+    
+    console.log(`📋 Acciones cargadas de Firebase: ${recItems.length}`);
+    
+    // Si el usuario propio ve que no hay nada, AGREGAR los ejemplos por defecto
+    if(isOwn && recItems.length === 0){
+      console.log(`   Primeros acceso: cargando ejemplos por defecto...`);
       
-      // Cargar catálogo nuevo
       const RECOVERY_DEFAULTS=[
         // TAREAS PROFUNDAS (limpiezas/organizaciones no frecuentes) - 10 acciones
         {n:'Limpiar baño a fondo (azulejos, inodoro, espejo)',hp:3,d:'Limpieza profunda completa'},
@@ -5301,9 +5299,7 @@ async function _loadVidaCatalogs(vp,isOwn){
           recItems.push({name:ej.n,hp:ej.hp,desc:ej.d,id});
         }catch(e){}
       }
-    }else{
-      // Si NO es el propio usuario, solo carga desde Firebase
-      try{const s=await getDocs(collection(db,recCol));s.forEach(d=>recItems.push({...d.data(),id:d.id}));}catch(e){}
+      console.log(`   ✅ Ejemplos cargados: ${recItems.length} acciones`);
     }
     if(!recItems.length){recoveryEl.innerHTML=`<div style="padding:10px 12px;font-size:11px;color:var(--text2);">Sin acciones${isOwn?' — pulsa + Añadir':''}</div>`;}
     else{
