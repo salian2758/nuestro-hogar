@@ -4747,14 +4747,17 @@ function updateHpBar(person){
     }else if(hp<30&&hp>0){
       // Latido rápido y agresivo cuando es crítico
       avatar.style.animation='heartbeatCritical 0.8s ease-in-out infinite';
+      avatar.style.animationDelay='0s';
       avatar.style.opacity='1';
     }else if(hp<60){
       // Latido normal cuando está bien pero no perfecto
       avatar.style.animation='heartbeatNormal 1.2s ease-in-out infinite';
+      avatar.style.animationDelay='0s';
       avatar.style.opacity='1';
     }else{
       // Latido lento y sutil cuando está bien
       avatar.style.animation='heartbeatSlow 2s ease-in-out infinite';
+      avatar.style.animationDelay='0s';
       avatar.style.opacity='1';
     }
   }
@@ -4807,17 +4810,18 @@ async function applyDayHp(person,streakResult){
   let reason='';
   if(streakResult.result==='perfect'){
     delta=HP_GAIN_PERFECT;
-    reason='Día perfecto';
+    reason='Día perfecto (70+ XP)';
   }else if(streakResult.result==='good'){
     delta=HP_GAIN_GOOD;
-    reason='Día bueno';
+    reason='Día bueno (50-69 XP)';
   }else if(streakResult.result==='neutral'){
     delta=-HP_LOSS_NEUTRAL;
-    reason='Semana floja';
+    reason='Día neutral (20-49 XP)';
   }else{
     delta=-HP_LOSS_BAD;
-    reason='Día malo';
+    reason='Día malo (<20 XP)';
   }
+  console.log(`🏥 [${person}] HP: ${streakResult.result.toUpperCase()} → ${delta>0?'+':''}${delta} HP (${reason})`)
   
   const hpBefore=person===currentUser?hpState[person]??HP_INITIAL:hpState[person]??HP_INITIAL;
   hpState[person]=Math.max(0,Math.min(HP_MAX,hpBefore+delta));
