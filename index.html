@@ -792,8 +792,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
             <div style="height:12px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="rafa-hp-container">
               <div id="rafa-hp-bar" class="hp-bar level-1" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
             </div>
-            <div style="margin-top:3px;">
-              <span style="font-size:10px;font-weight:600;color:var(--text);" id="rafa-hp-lbl">80</span>
+            <div style="margin-top:3px;padding-right:4px;">
+              <span style="font-size:10px;font-weight:600;color:var(--text);display:inline-block;" id="rafa-hp-lbl">80</span>
             </div>
           </div>
         </div>
@@ -818,8 +818,8 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
             <div style="height:12px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="maria-hp-container">
               <div id="maria-hp-bar" class="hp-bar level-1" style="height:100%;width:62%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
             </div>
-            <div style="margin-top:3px;">
-              <span style="font-size:10px;font-weight:600;color:var(--text);" id="maria-hp-lbl">62</span>
+            <div style="margin-top:3px;padding-right:4px;">
+              <span style="font-size:10px;font-weight:600;color:var(--text);display:inline-block;" id="maria-hp-lbl">62</span>
             </div>
           </div>
         </div>
@@ -5313,9 +5313,9 @@ function updateHpBar(person){
     lbl.textContent=hpDead[person]?'💀':hp;
     lbl.style.color=levelData.color;
     lbl.style.fontWeight='700';
-    // Agregar pulso al número
+    // Latido siempre (salvo si está muerto)
     lbl.classList.remove('hp-pulse');
-    if(level>=4 && !hpDead[person]){
+    if(!hpDead[person]){
       lbl.classList.add('hp-pulse');
     }
   }
