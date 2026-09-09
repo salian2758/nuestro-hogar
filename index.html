@@ -5171,13 +5171,24 @@ window.openVidaModal=(person)=>{
       // Mostrar todas las entradas de hoy
       const todayEntries = history.filter(h => h.date === today);
       console.log(`   Entradas de ${today}: ${todayEntries.length}`);
-      todayEntries.forEach(h => console.log(`     - ${h.person}: ${h.pts} XP`));
+      todayEntries.forEach(h => console.log(`     - ${h.person}: pts=${h.pts}, xpFor=${JSON.stringify(h.xpFor)}`));
       
-      // Filtrar: date=hoy AND person=esta persona AND pts>0
+      // Filtrar: date=hoy AND calcular XP de ESTA PERSONA
       history.forEach(h=>{
-        if(h.date === today && h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
-          console.log(`   ✅ Agregando ${h.pts} XP (${h.name})`);
-          xpToday += h.pts;
+        if(h.date === today){
+          // NUEVO: Usar xpFor[persona] si existe (data nueva con distribución)
+          if(h.xpFor && typeof h.xpFor === 'object' && h.xpFor[vp]){
+            const xpForThis = h.xpFor[vp];
+            if(xpForThis > 0){
+              console.log(`   ✅ xpFor[${vp}] = ${xpForThis} XP (${h.name})`);
+              xpToday += xpForThis;
+            }
+          }
+          // FALLBACK: Si no tiene xpFor, verificar person (data antigua)
+          else if(h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
+            console.log(`   ✅ Fallback pts = ${h.pts} XP (${h.name})`);
+            xpToday += h.pts;
+          }
         }
       });
     }else{
