@@ -886,7 +886,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>De viaje ✈️</span><span style="color:var(--text2);font-weight:700;">sin cambio</span></div>
         <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Día neutro (20–49 XP)</span><span style="color:#F87171;font-weight:700;">−4 HP</span></div>
         <div style="display:flex;justify-content:space-between;padding:9px 12px;border-bottom:0.5px solid var(--border);"><span>Día malo (&lt;20 XP)</span><span style="color:#F87171;font-weight:700;">−10 HP</span></div>
-        <div style="display:flex;justify-content:space-between;padding:9px 12px;"><span>Semana floja (≤2 días buenos)</span><span style="color:#F87171;font-weight:700;">−8 HP</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 12px;"><span>Semana floja (≤2 días buenos)</span><span style="color:#F87171;font-weight:700;">−6 HP</span></div>
       </div>
       <!-- Al llegar a 0 -->
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Al llegar a 0 HP 💀</div>
@@ -1548,8 +1548,8 @@ let tasks=[];
 let history=[];
 // ─── SISTEMA HP ───────────────────────────────────────────────────────────
 const HP_MAX=100, HP_INITIAL=80;
-const HP_LOSS_BAD=10, HP_LOSS_NEUTRAL=4;
-const HP_GAIN_GOOD=3, HP_GAIN_PERFECT=6;
+const HP_LOSS_BAD=8, HP_LOSS_NEUTRAL=3;
+const HP_GAIN_GOOD=4, HP_GAIN_PERFECT=7;
 const HP_WEEKLY_BONUS=5, HP_WEEKLY_PENALTY=8;
 let hpState={Rafa:HP_INITIAL,María:HP_INITIAL};
 let hpDead={Rafa:false,María:false};
