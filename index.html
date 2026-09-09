@@ -5031,8 +5031,14 @@ window.openVidaModal=(person)=>{
   if(xpTodayEl){
     const today=new Date().toLocaleDateString('es-ES');
     // SOLO usar history que tiene fecha explícita de cuándo se completó
-    const histToday=history.filter(h=>h.date===today&&h.person===vp&&h.pts).reduce((s,h)=>s+(h.pts||0),0);
+    const histToday=history.filter(h=>{
+      if(h.date!==today)return false; // Solo hoy
+      if(!h.person||h.person!==vp)return false; // Solo esta persona
+      if(typeof h.pts!=='number'||h.pts===0)return false; // Solo si tiene XP
+      return true;
+    }).reduce((s,h)=>s+(h.pts||0),0);
     const xpToday=histToday;
+    console.log(`📊 [${vp}] XP de hoy: ${xpToday} XP (${new Date().toLocaleDateString('es-ES')})`, history.filter(h=>h.date===today).map(h=>({person:h.person,pts:h.pts})));
     
     let projection='';
     if(xpToday>=70){
