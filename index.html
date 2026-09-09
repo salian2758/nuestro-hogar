@@ -5208,9 +5208,14 @@ async function _loadVidaHistorial(vp){
     const deaths=s.exists()?Object.values(s.data()).filter(d=>d.person===vp).sort((a,b)=>b.ts-a.ts):[];
     
     // Cargar historial de cambios de HP
-    const hpHistSnap=await getDocs(query(collection(db,'hp_history'),where('person','==',vp),orderBy('timestamp','desc'),limit(50)));
-    const hpChanges=[];
-    hpHistSnap.forEach(d=>hpChanges.push({...d.data(),id:d.id}));
+    let hpChanges = [];
+    try{
+      const hpHistSnap=await getDocs(query(collection(db,'hp_history'),where('person','==',vp),orderBy('timestamp','desc'),limit(50)));
+      hpHistSnap.forEach(d=>hpChanges.push({...d.data(),id:d.id}));
+    }catch(e){
+      console.log(`ℹ️ No hay hp_history para [${vp}]:`, e.message);
+      hpChanges=[];
+    }
     
     const hp=hpState[vp]??HP_INITIAL;
     let html='';
