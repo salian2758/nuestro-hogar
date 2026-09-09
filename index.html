@@ -4869,9 +4869,9 @@ window.completeRecoveryAction=async()=>{
     const newHp=Math.min(HP_MAX,hpBefore+recoveryModalHp);
     console.log(`   HP cambio: ${hpBefore} → ${newHp} (+${recoveryModalHp})`);
     
-    // GUARDAR EN BD PRIMERO
+    // GUARDAR EN BD PRIMERO - usar saveHpState() en lugar de setDoc manual
     hpState[currentUser]=newHp;
-    await setDoc(doc(db,'state','hpState'),hpState);
+    await saveHpState();
     console.log(`   ✅ HP guardado en BD: ${newHp}`);
     
     // Registrar en historial de HP
@@ -5147,16 +5147,23 @@ window.openVidaModal=(person)=>{
     
     // Buscar SOLO las tareas de HOY de ESTA PERSONA
     let xpToday = 0;
+    console.log(`🔍 Buscando XP para [${vp}] en fecha [${today}]`);
+    console.log(`   history.length = ${history ? history.length : 0}`);
+    
     if(history && history.length){
       // Filtrar: date=hoy AND person=esta persona AND pts>0
       history.forEach(h=>{
-        if(h.date === today && h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
-          xpToday += h.pts;
+        if(h.date === today){
+          console.log(`   Encontrada entrada: person=[${h.person}], pts=${h.pts}, date=${h.date}`);
+          if(h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
+            console.log(`   ✅ Agregando ${h.pts} XP`);
+            xpToday += h.pts;
+          }
         }
       });
     }
     
-    console.log(`📊 [${vp}] XP de hoy: ${xpToday} XP`);
+    console.log(`📊 [${vp}] XP de hoy FINAL: ${xpToday} XP`);
     
     let projection='';
     let hpChange='';
@@ -5180,12 +5187,16 @@ window.openVidaModal=(person)=>{
       needText=` (${need} XP falta para perfecto)`;
     }
     
+    // Mostrar siempre, aunque sea 0 XP
     xpTodayEl.innerHTML=`
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;">
         <span>XP acumulado: <strong style="color:var(--text);">${xpToday} XP</strong>${needText}</span>
       </div>
       <div>Proyección: ${projection} — <strong>${hpChange}</strong></div>
     `;
+    console.log(`✅ Sección "Hoy" actualizada con ${xpToday} XP`);
+  }else{
+    console.warn(`⚠️ No encontré elemento vida-xp-today`);
   }
   
   // Cargar catálogos e historial en segundo plano
