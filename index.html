@@ -4845,37 +4845,56 @@ window.closeRecoveryModal=()=>{
 
 // Completar la acción y sumar HP
 window.completeRecoveryAction=async()=>{
-  if(!recoveryModalId||!currentUser)return;
+  if(!recoveryModalId||!currentUser){
+    console.error('❌ completeRecoveryAction: recoveryModalId o currentUser no definido');
+    return;
+  }
+  
+  console.log(`🎯 completeRecoveryAction iniciada para [${currentUser}]`);
   
   try{
-    // Sumar HP
+    // Sumar HP - CRÍTICO
     const hpBefore=hpState[currentUser]??HP_INITIAL;
     const newHp=Math.min(HP_MAX,hpBefore+recoveryModalHp);
+    console.log(`   HP cambio: ${hpBefore} → ${newHp} (+${recoveryModalHp})`);
+    
+    // GUARDAR EN BD PRIMERO
     hpState[currentUser]=newHp;
     await setDoc(doc(db,'state','hpState'),hpState);
+    console.log(`   ✅ HP guardado en BD: ${newHp}`);
     
-    // Registrar en historial de HP usando recordHpChange
+    // Registrar en historial de HP
+    console.log(`   Registrando en hp_history...`);
     await recordHpChange(currentUser,hpBefore,newHp,`💚 ${recoveryModalName}`,'recovery');
+    console.log(`   ✅ hp_history actualizado`);
     
-    // Registrar en historial principal (para mostrar en "Historial")
+    // Registrar en historial principal
     const histId='recov'+Date.now();
     await setDoc(doc(db,'history',histId),{
       name:`💚 ${recoveryModalName}`,
       person:currentUser,
       zona:'Recuperación vida',
-      pts:0, // No suma XP, solo HP
+      pts:0,
       date:new Date().toLocaleDateString('es-ES'),
       ts:Date.now()
     });
+    console.log(`   ✅ history actualizado`);
     
     showToast(`💚 ¡${recoveryModalHp} HP ganados! (${newHp}/100)`);
     closeRecoveryModal();
     updateHpBar(currentUser);
-    _loadVidaHistorial(currentUser);
-    renderHpHistoryInMain(); // Actualizar historial principal
-    _loadVidaCatalogs(currentUser,true); // Recargar catálogo
+    
+    // Cargar historial
+    console.log(`   Cargando historial de vida...`);
+    setTimeout(async()=>{
+      await _loadVidaHistorial(currentUser);
+      renderHpHistoryInMain();
+      _loadVidaCatalogs(currentUser,true);
+      console.log(`✅ completeRecoveryAction COMPLETADO`);
+    }, 500);
+    
   }catch(e){
-    console.error('Error completando acción de recuperación:',e);
+    console.error('❌ Error en completeRecoveryAction:',e);
     showToast('Error al completar la acción');
   }
 };
@@ -5080,9 +5099,53 @@ window.openVidaModal=(person)=>{
     else stEl.textContent=hp+'/100 HP';
   }
   
-  // SECCIÓN DE XP COMENTADA - Se mostrará el historial de HP en su lugar
-  // const xpTodayEl=document.getElementById('vida-xp-today');
-  // Esta sección tenía problemas con el cálculo individual, se mostrará correctamente después
+  // Calcular y mostrar XP del día - CORRECCIÓN: Usar el field 'person' no 'xpFor'
+  const xpTodayEl=document.getElementById('vida-xp-today');
+  if(xpTodayEl){
+    const today=new Date().toLocaleDateString('es-ES');
+    
+    // Buscar SOLO las tareas de HOY de ESTA PERSONA
+    let xpToday = 0;
+    if(history && history.length){
+      // Filtrar: date=hoy AND person=esta persona AND pts>0
+      history.forEach(h=>{
+        if(h.date === today && h.person && h.person.toLowerCase() === vp.toLowerCase() && h.pts && h.pts > 0){
+          xpToday += h.pts;
+        }
+      });
+    }
+    
+    console.log(`📊 [${vp}] XP de hoy: ${xpToday} XP`);
+    
+    let projection='';
+    let hpChange='';
+    if(xpToday>=70){
+      projection=`<span style="color:#34D399;font-weight:700;">PERFECTO ✨</span>`;
+      hpChange=`+6 HP`;
+    }else if(xpToday>=50){
+      projection=`<span style="color:#34D399;font-weight:700;">BUENO 👍</span>`;
+      hpChange=`+3 HP`;
+    }else if(xpToday>=20){
+      projection=`<span style="color:#FBBF24;font-weight:700;">NEUTRAL 😐</span>`;
+      hpChange=`−4 HP`;
+    }else{
+      projection=`<span style="color:#F87171;font-weight:700;">MALO 💀</span>`;
+      hpChange=`−10 HP`;
+    }
+    
+    let needText='';
+    if(xpToday<70){
+      const need=70-xpToday;
+      needText=` (${need} XP falta para perfecto)`;
+    }
+    
+    xpTodayEl.innerHTML=`
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;">
+        <span>XP acumulado: <strong style="color:var(--text);">${xpToday} XP</strong>${needText}</span>
+      </div>
+      <div>Proyección: ${projection} — <strong>${hpChange}</strong></div>
+    `;
+  }
   
   // Cargar catálogos e historial en segundo plano
   const isOwn=vp===currentUser;
