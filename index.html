@@ -1608,16 +1608,16 @@ function isCadaXLocked(t){
   return(Date.now()-t.lastDoneDate)<intervalMs;
 }
 
-function calcXP(freq,diff,custom,freqUnit){
+function calcXP(freq,diff,custom,cadaxUnit){
   if(custom&&!isNaN(parseInt(custom)))return parseInt(custom);
   let baseFreq=freq;
   if(freq==='CadaX'){
     // CadaX: si es cada X días → usa Diaria, si cada X semanas → usa Semanal
-    baseFreq=freqUnit==='semanas'?'Semanal':'Diaria';
+    baseFreq=cadaxUnit==='semanas'?'Semanal':'Diaria';
   }
   return Math.round((BASE[baseFreq]||10)*(DIFF[diff]||1));
 }
-function getXP(t){return calcXP(t.freq,t.diff,t.customXP,t.freqUnit);}
+function getXP(t){return calcXP(t.freq,t.diff,t.customXP,t.cadaxUnit);}
 
 // Escapa de forma segura un texto libre (nombre de tarea, premio, etc.) para insertarlo
 // dentro de un argumento de cadena dentro de un atributo onclick="...". Sin esto, un
@@ -3645,8 +3645,8 @@ window.openEditModal=(id)=>{
 window.closeEditModal=()=>{document.getElementById('edit-modal').classList.add('hidden');editingTaskId=null;};
 window.updateEditXPPrev=()=>{
   const freq=document.getElementById('ef').value;
-  const baseFreq=freq==='CadaX'?'Semanal':freq;
-  const val=calcXP(baseFreq,document.getElementById('ed').value,document.getElementById('exp').value);
+  const cadaxUnit=freq==='CadaX'?document.getElementById('edit-cadax-unit').value:'';
+  const val=calcXP(freq,document.getElementById('ed').value,document.getElementById('exp').value,cadaxUnit);
   const el=document.getElementById('edit-xp-val');if(el)el.textContent=val+' XP';
 };
 window.saveEdit=async()=>{
