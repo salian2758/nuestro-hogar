@@ -4815,7 +4815,15 @@ async function applyHpDelta(person,delta,wasPerfect){
   if(hpState[person]===0){await triggerKO(person);}
   else{
     await saveHpState();
-    const reason=d>0?'Día perfecto':'Día del registro';
+    
+    // Determinar razón según el delta
+    let reason='Cambio de vida';
+    if(d>0){
+      reason='Bonificación HP';
+    }else if(d<0){
+      reason='Penalización HP';
+    }
+    
     await recordHpChange(person,hpBefore,hpState[person],reason,'daily');
     updateHpBar(person);
   }
