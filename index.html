@@ -5171,7 +5171,18 @@ window.openVidaModal=(person)=>{
       // Mostrar todas las entradas de hoy
       const todayEntries = history.filter(h => h.date === today);
       console.log(`   Entradas de ${today}: ${todayEntries.length}`);
-      todayEntries.forEach(h => console.log(`     - ${h.person}: pts=${h.pts}, xpFor=${JSON.stringify(h.xpFor)}`));
+      console.log(`   === DETALLES COMPLETOS ===`);
+      todayEntries.forEach((h, idx) => {
+        console.log(`   [${idx}] ${h.name}`);
+        console.log(`       person: ${h.person}`);
+        console.log(`       pts: ${h.pts}`);
+        console.log(`       xpFor: ${JSON.stringify(h.xpFor)}`);
+        if(h.xpFor){
+          console.log(`       xpFor[Rafa]: ${h.xpFor.Rafa}`);
+          console.log(`       xpFor[María]: ${h.xpFor.María}`);
+        }
+        console.log(`       splitMode: ${h.splitMode}`);
+      });
       
       // Filtrar: date=hoy AND calcular XP de ESTA PERSONA
       history.forEach(h=>{
