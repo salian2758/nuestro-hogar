@@ -4987,7 +4987,7 @@ function normalizeName(name){
   if(!name)return '';
   return name.toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g,''); // Quitar tildes
+    .replace(/[\u0300-\u036f]/g,''); // Quitar tildes
 }
 
 window.openVidaModal=(person)=>{
