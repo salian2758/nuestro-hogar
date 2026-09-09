@@ -872,6 +872,11 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
         </div>
         <div style="font-size:12px;color:var(--text2);" id="vida-status">Todo bien — sigue así ✓</div>
       </div>
+      <!-- XP del día y proyección -->
+      <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📊 Hoy</div>
+        <div id="vida-xp-today" style="font-size:12px;color:var(--text2);">Calculando...</div>
+      </div>
       <!-- Tabla suma/resta -->
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">Qué suma y qué resta</div>
       <div style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:14px;font-size:12px;">
@@ -4950,6 +4955,40 @@ window.openVidaModal=(person)=>{
     if(dead)stEl.textContent='💀 KO';
     else stEl.textContent=hp+'/100 HP';
   }
+  
+  // Calcular y mostrar XP del día
+  const xpTodayEl=document.getElementById('vida-xp-today');
+  if(xpTodayEl){
+    const today=new Date().toLocaleDateString('es-ES');
+    const completedToday=tasks.filter(t=>t.done&&t.freq!=='Puntual').reduce((s,t)=>s+getXP(t),0);
+    const histToday=history.filter(h=>h.date===today).reduce((s,h)=>s+(h.pts||0),0);
+    const xpToday=completedToday+histToday;
+    
+    let projection='';
+    if(xpToday>=70){
+      projection=`<span style="color:#34D399;font-weight:700;">PERFECTO ✨</span> — +6 HP`;
+    }else if(xpToday>=50){
+      projection=`<span style="color:#34D399;font-weight:700;">BUENO 👍</span> — +3 HP`;
+    }else if(xpToday>=20){
+      projection=`<span style="color:#FBBF24;font-weight:700;">NEUTRAL 😐</span> — −4 HP`;
+    }else{
+      projection=`<span style="color:#F87171;font-weight:700;">MALO 💀</span> — −10 HP`;
+    }
+    
+    let needText='';
+    if(xpToday<70){
+      const need=70-xpToday;
+      needText=` (${need} XP falta para perfecto)`;
+    }
+    
+    xpTodayEl.innerHTML=`
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;">
+        <span>XP acumulado: <strong style="color:var(--text);">${xpToday} XP</strong>${needText}</span>
+      </div>
+      <div>Proyección: ${projection}</div>
+    `;
+  }
+  
   // Cargar catálogos e historial en segundo plano
   const isOwn=vp===currentUser;
   _loadVidaCatalogs(vp,isOwn);
