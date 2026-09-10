@@ -4104,9 +4104,9 @@ function updateHeader(){
       
       // Efecto especial para días perfectos
       if(dailyData.state==='perfecto'){
-        dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;font-size:1.1em;text-shadow:0 0 8px ${dailyData.stateColor},0 0 4px ${dailyData.stateColor};animation:glow 1.5s ease-in-out infinite;">✨ +${dailyData.xpToday} XP ✨</span>`;
+        dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;font-size:0.95em;text-shadow:0 0 8px ${dailyData.stateColor},0 0 4px ${dailyData.stateColor};animation:glow 1.5s ease-in-out infinite;white-space:nowrap;">+${dailyData.xpToday} XP ✨</span>`;
       }else{
-        dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;">+${dailyData.xpToday} XP</span>`;
+        dailyEl.innerHTML=`📅 Hoy: <span style="color:${dailyData.stateColor};font-weight:bold;white-space:nowrap;">+${dailyData.xpToday} XP</span>`;
       }
     }
     const avEl=document.getElementById((p==='Rafa'?'rafa':'maria')+'-avatar-emoji');if(avEl)avEl.textContent=info.emoji;
