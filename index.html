@@ -5578,10 +5578,23 @@ window.completeRecoveryAction=async()=>{
 
 
 async function applyDayHp(person,streakResult){
-  if(!streakResult||hpDead[person]||travelMode[person])return;
+  console.log(`🏥 [DEBUG] applyDayHp llamada para [${person}]`);
+  console.log(`   streakResult=${JSON.stringify(streakResult)}, dead=${hpDead[person]}, travel=${travelMode[person]}`);
   
-  console.log(`
-🏥 applyDayHp iniciada para [${person}]`);
+  if(!streakResult){
+    console.log(`   ❌ streakResult NULL - ABORTADO`);
+    return;
+  }
+  if(hpDead[person]){
+    console.log(`   ❌ Está muerto - ABORTADO`);
+    return;
+  }
+  if(travelMode[person]){
+    console.log(`   ❌ Está de viaje - ABORTADO`);
+    return;
+  }
+  
+  console.log(`   ✅ Validaciones OK, aplicando...`);
   
   let delta=0;
   let reason='';
