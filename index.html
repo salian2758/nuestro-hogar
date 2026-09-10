@@ -5197,33 +5197,44 @@ async function applyCoupleStreakXpReward(streakResult){
 }
 
 function closeOutPastDays(data,today,goodMin,neutralMin,perfectMin){
-  // Cierra el último día registrado con el resultado que tuviera, y por cada
-  // día completamente saltado entre medias (sin ninguna actividad) lo cuenta
-  // como "malo" (0 XP ese día). Devuelve el resultado del ÚLTIMO día cerrado
-  // (el real, no los huecos vacíos intermedios), que es el que importa para
-  // decidir el reparto de XP por racha.
+  console.log(`\n📅 closeOutPastDays: last=${data.lastDate}, today=${today}, thresholds: perfect≥${perfectMin}, good≥${goodMin}, neutral≥${neutralMin}`);
+  
   const lastResult=finalizeDayResult(data,data.todayXP||0,goodMin,neutralMin,perfectMin);
-  let gapDays=daysBetween(data.lastDate,today)-1; // días totalmente vacíos entre el último registrado y hoy
-  while(gapDays>0){finalizeDayResult(data,0,goodMin,neutralMin,perfectMin);gapDays--;}
+  console.log(`   ÚLTIMO DÍA: ${lastResult.result} (XP: ${data.todayXP||0})`);
+  
+  let gapDays=daysBetween(data.lastDate,today)-1;
+  console.log(`   Días vacíos intermedios: ${gapDays}`);
+  let gapCount=0;
+  while(gapDays>0){
+    finalizeDayResult(data,0,goodMin,neutralMin,perfectMin);
+    gapCount++;
+    gapDays--;
+  }
+  if(gapCount>0) console.log(`   Se rellenaron ${gapCount} días como "malo"`);
+  
   return lastResult;
 }
 
 function finalizeDayResult(data,xpThatDay,goodMin,neutralMin,perfectMin){
   const prevCount=data.count||0;
-  let result; // 'perfect' | 'good' | 'neutral' | 'bad'
+  let result;
   
   if(xpThatDay>=perfectMin){
     data.count=prevCount>0?prevCount+1:1;
     result='perfect';
+    console.log(`      XP=${xpThatDay} → PERFECTO, count=${data.count}`);
   }else if(xpThatDay>=goodMin){
     data.count=prevCount>0?prevCount+1:1;
     result='good';
+    console.log(`      XP=${xpThatDay} → BUENO, count=${data.count}`);
   }else if(xpThatDay>=neutralMin){
     if(prevCount<=0)data.count=0;
     result='neutral';
+    console.log(`      XP=${xpThatDay} → NEUTRO, count=${data.count}`);
   }else{
     data.count=prevCount<0?prevCount-1:-1;
     result='bad';
+    console.log(`      XP=${xpThatDay} → MALO, count=${data.count}`);
   }
   const isContinuation=(result==='perfect'&&prevCount>0)||(result==='good'&&prevCount>0)||(result==='bad'&&prevCount<0);
   return {result,isContinuation};
