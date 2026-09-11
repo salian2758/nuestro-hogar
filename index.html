@@ -6698,60 +6698,36 @@ function notifyHpChange(){
   }
 }
 
-// ═══ FUNCIÓN DEBUG: Forzar chequeo manual ═══
-window.debugForceCheckNow = async () => {
-  console.log(`\n🚀 [DEBUG] Forzando chequeo reseteando fechas en BD...`);
+// ═══ FUNCIÓN DEBUG: Forzar chequeo AHORA ═══
+window.forceHpCheck = async () => {
+  console.log(`🔥 Forzando evaluación manual...`);
   
-  const before = {
-    rafa_hp: hpState['Rafa'],
-    maria_hp: hpState['María']
-  };
+  const before = {rafa: hpState['Rafa'], maria: hpState['María']};
   
-  // RESETEAR lastDate en la BD PARA AMBOS
-  for(const person of ['Rafa', 'María']) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toLocaleDateString('es-ES');
-    
-    // Obtener datos actuales de la BD
-    const docRef = doc(db, 'state', 'streak_' + person);
-    const currentData = streakData[person] || {};
-    
-    // Actualizar con lastDate del día anterior
-    const resetData = {
-      ...currentData,
-      lastDate: yesterdayStr,
-      count: currentData.count || 0,
-      todayXP: currentData.todayXP || 0
-    };
-    
-    // GUARDAR en BD
-    await setDoc(docRef, resetData);
-    streakData[person] = resetData;
-    
-    console.log(`   ✅ ${person}: reseteado a ${yesterdayStr}`);
-  }
+  // Resetear en MEMORIA (en el objeto)
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yd = yesterday.toLocaleDateString('es-ES');
   
-  // AHORA ejecutar el chequeo (debería detectar un día diferente)
-  console.log(`   🔄 Ejecutando checkStreakGaps...`);
+  streakData['Rafa'] = {...streakData['Rafa'], lastDate: yd};
+  streakData['María'] = {...streakData['María'], lastDate: yd};
+  
+  // Ejecutar
   await checkStreakGaps();
   
-  const after = {
-    rafa_hp: hpState['Rafa'],
-    maria_hp: hpState['María']
-  };
+  const after = {rafa: hpState['Rafa'], maria: hpState['María']};
   
-  let msg = `✅ CHEQUEO COMPLETADO\n\n📊 CAMBIOS DE HP:\n\nRafa: ${before.rafa_hp}HP → ${after.rafa_hp}HP`;
-  msg += `\nMaría: ${before.maria_hp}HP → ${after.maria_hp}HP`;
+  console.log(`ANTES: Rafa ${before.rafa}HP, María ${before.maria}HP`);
+  console.log(`DESPUÉS: Rafa ${after.rafa}HP, María ${after.maria}HP`);
   
-  if(before.rafa_hp !== after.rafa_hp || before.maria_hp !== after.maria_hp) {
-    msg += `\n\n✅ SE APLICARON LOS CAMBIOS CORRECTAMENTE`;
+  let txt = `RAFA: ${before.rafa} → ${after.rafa}HP\nMARÍA: ${before.maria} → ${after.maria}HP`;
+  if(before.rafa !== after.rafa || before.maria !== after.maria) {
+    txt += `\n\n✅ CAMBIOS APLICADOS`;
   } else {
-    msg += `\n\n❌ NO HUBO CAMBIOS (HAY UN BUG)`;
+    txt += `\n\n⚠️ SIN CAMBIOS`;
   }
   
-  console.log(`📊 RESULTADO FINAL:`, {before, after});
-  alert(msg);
+  alert(txt);
   location.reload();
 };
 
