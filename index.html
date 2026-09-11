@@ -804,7 +804,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
 <div class="header" id="main-header" style="display:none;">
   <div class="header-top">
-    <span class="app-title">🏠 Nuestro Hogar</span>
+    <span class="app-title" id="debug-title-btn" style="cursor:pointer;" onclick="if((window._debugClicks=window._debugClicks||0)+1===3){debugForceCheckNow();window._debugClicks=0;}else setTimeout(()=>window._debugClicks=0,800)">🏠 Nuestro Hogar</span>
     <div class="header-right">
       <div class="week-pill"><span class="week-pct" id="wpct">0%</span></div>
       <span id="current-user-badge" style="font-size:11px;color:var(--text2);"></span>
@@ -6697,6 +6697,47 @@ function notifyHpChange(){
     });
   }
 }
+
+// ═══ FUNCIÓN DEBUG: Forzar chequeo manual ═══
+window.debugForceCheckNow = async () => {
+  console.log(`\n🚀 [DEBUG] Forzando checkStreakGaps manualmente...`);
+  
+  const before = {
+    rafa_hp: hpState['Rafa'],
+    maria_hp: hpState['María']
+  };
+  
+  // FORZAR que se evalúe reseteando lastDate
+  for(const person of ['Rafa', 'María']) {
+    if(streakData[person]) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      streakData[person].lastDate = yesterday.toLocaleDateString('es-ES');
+      console.log(`   Forzando ${person}: lastDate=${streakData[person].lastDate}`);
+    }
+  }
+  
+  // Ahora ejecutar el chequeo
+  await checkStreakGaps();
+  
+  const after = {
+    rafa_hp: hpState['Rafa'],
+    maria_hp: hpState['María']
+  };
+  
+  let msg = `✅ CHEQUEO COMPLETADO\n\n📊 RESULTADOS:\n\nRafa: ${before.rafa_hp}HP → ${after.rafa_hp}HP`;
+  msg += `\nMaría: ${before.maria_hp}HP → ${after.maria_hp}HP`;
+  
+  if(before.rafa_hp !== after.rafa_hp || before.maria_hp !== after.maria_hp) {
+    msg += `\n\n✅ Se aplicaron cambios correctamente`;
+  } else {
+    msg += `\n\n⚠️ No hubo cambios`;
+  }
+  
+  console.log(`📊 Cambios:`, {before, after});
+  alert(msg);
+  location.reload();
+};
 
 // Pedir permiso para notificaciones al iniciar
 function requestNotificationPermission(){
