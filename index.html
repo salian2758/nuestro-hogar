@@ -594,13 +594,17 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   15% { transform: scale(1.32) rotate(-1deg); }
   25% { transform: scale(1) rotate(0deg); }
 }
-@keyframes heartbeat-ultra-critical {
+@keyframes heartbeat-dying {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.1); }
+  40% { transform: scale(1); }
+}
+@keyframes heartbeat-peligro-shake {
   0%, 100% { transform: scale(1) translateX(0); }
-  2% { transform: scale(1.45) translateX(-2px) rotate(-4deg); }
-  4% { transform: scale(0.85) translateX(2px) rotate(4deg); }
-  6% { transform: scale(1.42) translateX(-1px) rotate(-3deg); }
-  8% { transform: scale(0.9) translateX(1px) rotate(3deg); }
-  12% { transform: scale(1) translateX(0) rotate(0deg); }
+  10% { transform: scale(1.25) translateX(-2px); }
+  20% { transform: scale(0.95) translateX(2px); }
+  30% { transform: scale(1.22) translateX(-1px); }
+  40% { transform: scale(1) translateX(0); }
 }
 @keyframes glow-pulse {
   0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
@@ -897,13 +901,21 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
   
   <!-- DEBUG: Botones para ver distintos niveles de HP -->
   <div style="margin-top:8px;padding:8px;background:rgba(59,130,246,0.1);border-radius:8px;border:1px dashed rgba(59,130,246,0.5);font-size:9px;display:flex;gap:4px;flex-wrap:wrap;" id="debug-hp-buttons" onclick="event.stopPropagation()">
-    <div style="width:100%;font-weight:700;color:var(--text2);margin-bottom:4px;">🔧 VER HP EN DIFERENTES ESTADOS:</div>
-    <button onclick="event.stopPropagation();window.previewHp(100,100)" style="padding:4px 8px;background:#10B981;border:none;border-radius:4px;color:white;font-size:8px;cursor:pointer;font-weight:600;">✨ Perfecto (100)</button>
-    <button onclick="event.stopPropagation();window.previewHp(80,80)" style="padding:4px 8px;background:#34D399;border:none;border-radius:4px;color:white;font-size:8px;cursor:pointer;font-weight:600;">💪 Fuerte (80)</button>
-    <button onclick="event.stopPropagation();window.previewHp(60,60)" style="padding:4px 8px;background:#FBBF24;border:none;border-radius:4px;color:white;font-size:8px;cursor:pointer;font-weight:600;">😐 Estable (60)</button>
-    <button onclick="event.stopPropagation();window.previewHp(40,40)" style="padding:4px 8px;background:#F97316;border:none;border-radius:4px;color:white;font-size:8px;cursor:pointer;font-weight:600;">⚠️ Cuidado (40)</button>
-    <button onclick="event.stopPropagation();window.previewHp(20,20)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:8px;cursor:pointer;font-weight:600;">🔥 Peligro (20)</button>
-    <button onclick="event.stopPropagation();window.previewHp(10,10)" style="padding:4px 8px;background:#DC2626;border:none;border-radius:4px;color:white;font-size:8px;cursor:pointer;font-weight:600;">🚨 Crítico (10)</button>
+    <div style="width:100%;font-weight:700;color:var(--text2);margin-bottom:4px;">🔧 VER HP EN DIFERENTES ESTADOS (1-100):</div>
+    <button onclick="event.stopPropagation();window.previewHp(1,1)" style="padding:4px 8px;background:#374151;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">1</button>
+    <button onclick="event.stopPropagation();window.previewHp(3,3)" style="padding:4px 8px;background:#4B5563;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">3</button>
+    <button onclick="event.stopPropagation();window.previewHp(5,5)" style="padding:4px 8px;background:#6B7280;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">5</button>
+    <button onclick="event.stopPropagation();window.previewHp(10,10)" style="padding:4px 8px;background:#DC2626;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">10</button>
+    <button onclick="event.stopPropagation();window.previewHp(15,15)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">15</button>
+    <button onclick="event.stopPropagation();window.previewHp(20,20)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">20</button>
+    <button onclick="event.stopPropagation();window.previewHp(30,30)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">30</button>
+    <button onclick="event.stopPropagation();window.previewHp(40,40)" style="padding:4px 8px;background:#F97316;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">40</button>
+    <button onclick="event.stopPropagation();window.previewHp(50,50)" style="padding:4px 8px;background:#F97316;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">50</button>
+    <button onclick="event.stopPropagation();window.previewHp(60,60)" style="padding:4px 8px;background:#FBBF24;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">60</button>
+    <button onclick="event.stopPropagation();window.previewHp(70,70)" style="padding:4px 8px;background:#FBBF24;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">70</button>
+    <button onclick="event.stopPropagation();window.previewHp(80,80)" style="padding:4px 8px;background:#34D399;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">80</button>
+    <button onclick="event.stopPropagation();window.previewHp(90,90)" style="padding:4px 8px;background:#34D399;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">90</button>
+    <button onclick="event.stopPropagation();window.previewHp(100,100)" style="padding:4px 8px;background:#10B981;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">100</button>
     <button onclick="event.stopPropagation();location.reload()" style="padding:4px 8px;background:var(--text2);border:none;border-radius:4px;color:var(--bg);font-size:8px;cursor:pointer;font-weight:600;margin-left:auto;">✕ Quitar</button>
   </div>
 </div>
@@ -5511,19 +5523,17 @@ function updateHpBar(person){
       }else if(level===4) {
         dashboardHeart.style.animation = 'heartbeat-fast 0.8s infinite';
       }else if(level===5) {
-        dashboardHeart.style.animation = 'heartbeat-critical 0.6s infinite';
+        // 🔥 PELIGRO: CON vibración característica
+        dashboardHeart.style.animation = 'heartbeat-peligro-shake 0.6s infinite';
       }else if(level===6) {
-        // Crítico: si es ultra-critical (<15), mucho más exagerado
-        if(isUltraCritical) {
-          dashboardHeart.style.animation = 'heartbeat-ultra-critical 0.25s infinite';
-        } else {
-          dashboardHeart.style.animation = 'heartbeat-critical 0.4s infinite';
-        }
+        // 🚨 CRÍTICO: latido rápido y desesperado
+        dashboardHeart.style.animation = 'heartbeat-critical 0.4s infinite';
       }else if(level===7) {
-        dashboardHeart.style.animation = 'heartbeat-critical 0.3s infinite';
+        // 💀 AGONÍA: latido lentísimo, casi muerto
+        dashboardHeart.style.animation = 'heartbeat-dying 2s infinite';
       }
       
-      // 💡 GLOW PROGRESIVO Y EXAGERADO
+      // 💡 GLOW PROGRESIVO
       if(isUltraCritical) {
         dashboardHeart.style.filter = `drop-shadow(0 0 20px ${levelData.color}) drop-shadow(0 0 10px rgba(239,68,68,0.8))`;
         dashboardHeart.style.textShadow = `0 0 10px ${levelData.color}`;
@@ -5541,25 +5551,17 @@ function updateHpBar(person){
     }
   }
   
-  // 🎪 EFECTOS VISUALES EN BARRA HP: TEMBLOR Y ANIMACIONES PROGRESIVAS
+  // 🎪 EFECTOS VISUALES EN BARRA HP: TEMBLOR SOLO EN PELIGRO
   if(container){
     container.classList.remove('shake', 'shake-critical', 'critical', 'ultra-critical');
+    container.style.animation = '';
+    
     if(hp > 0) {
-      const isUltraCritical = hp < 15;
-      
-      if(isUltraCritical) {
-        // ULTRA-CRÍTICO: temblor EXTREMO y pulsación intensa
-        container.classList.add('ultra-critical');
-        container.style.animation = 'shake-critical 0.15s infinite';
-      } else if(level===6) {
-        // CRÍTICO (10-24): temblor fuerte
-        container.classList.add('shake');
-        container.style.animation = 'shake-critical 0.2s infinite';
-      } else if(level===5) {
-        // PELIGRO (25-39): temblor moderado
-        container.classList.add('critical');
+      // 🔥 PELIGRO: temblor característico
+      if(level===5) {
         container.style.animation = 'shake 0.3s infinite';
       }
+      // 🚨 CRÍTICO y 💀 AGONÍA: sin temblor, solo corazón rápido/lento
     }
   }
   
