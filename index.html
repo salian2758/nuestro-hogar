@@ -5116,19 +5116,21 @@ async function applyStreakXpReward(person,streakResult){
 async function checkStreakGaps(){
   const today=new Date().toLocaleDateString('es-ES');
   console.log(`\n🔍 ════════ checkStreakGaps INICIADA ════════`);
-  console.log(`   Hoy: ${today}`);
+  console.log(`   📅 Hoy es: ${today} (se evalúa el XP acumulado AYER)`);
   
   for(const person of ['Rafa','María']){
     console.log(`\n   👤 Evaluando ${person}:`);
     const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
-    console.log(`      lastDate=${data.lastDate}, hoy=${today}, ¿diferente? ${data.lastDate!==today}`);
-    console.log(`      todayXP ACTUAL=${data.todayXP}`);
+    console.log(`      lastDate guardada: ${data.lastDate}`);
+    console.log(`      ¿Es un día diferente? ${data.lastDate!==today}`);
+    console.log(`      XP acumulado ayer: ${data.todayXP}`);
     
     if(data.lastDate&&data.lastDate!==today){
-      console.log(`      ✅ Se evalúa el día anterior`);
+      console.log(`      ✅ SON DÍAS DIFERENTES - Evaluar el XP de AYER`);
       if(travelMode[person]){
-        console.log(`      ⚠️ DE VIAJE - No se evalúa`);
-        data.todayXP=0;data.lastDate=today;
+        console.log(`      ⚠️ DE VIAJE - Solo resetear fecha`);
+        data.todayXP=0;
+        data.lastDate=today;
         streakData[person]=data;
         await setDoc(doc(db,'state','streak_'+person),data);
         updateStreakBadge(person);
@@ -5139,21 +5141,25 @@ async function checkStreakGaps(){
       const yesterdayXP = data.todayXP || 0;
       console.log(`      💾 XP DE AYER GUARDADO: ${yesterdayXP}`);
       
-      console.log(`      📊 Evaluando con XP de ayer: ${yesterdayXP}`);
+      console.log(`      📊 Evaluando: ¿${yesterdayXP} XP fue perfecto/bueno/malo?`);
       const res=closeOutPastDays({...data, todayXP: yesterdayXP}, today, STREAK_GOOD_MIN, STREAK_NEUTRAL_MIN, 70);
       console.log(`      📈 Resultado: ${res.result}`);
       
-      // Ahora SÍ resetear para hoy
-      data.todayXP=0;
-      data.lastDate=today;
+      // ⚡ RESETEAR para HOY (nuevo período de 00:00 a 00:00)
+      data.todayXP=0;        // Nuevo día = 0 XP acumulado
+      data.lastDate=today;   // Nueva fecha = hoy
       streakData[person]=data;
+      
+      // GUARDAR EN BD
       await setDoc(doc(db,'state','streak_'+person),data);
       updateStreakBadge(person);
+      
       await applyStreakXpReward(person,res);
       console.log(`      💓 Aplicando HP con resultado: ${res.result}`);
       await applyDayHp(person,res);
+      console.log(`      ✅ ${person}: Día evaluado y reseteado para hoy`);
     }else{
-      console.log(`      ⏭️ No se evalúa (mismo día o sin lastDate)`);
+      console.log(`      ⏭️ Mismo día - Sin evaluar (esperando a mañana a las 00:00)`);
     }
   }
   
