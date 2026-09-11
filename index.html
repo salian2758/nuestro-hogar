@@ -811,68 +811,68 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </div>
-  <div class="profiles" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);">
+  <div class="profiles" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);">
     
     <!-- RAFA -->
-    <div style="display:flex;flex-direction:column;gap:8px;text-align:center;cursor:pointer;" onclick="openProfile('Rafa')">
+    <div style="display:flex;flex-direction:column;gap:5px;text-align:center;cursor:pointer;" onclick="openProfile('Rafa')">
       <!-- Avatar -->
-      <div style="font-size:32px;cursor:pointer;" id="rafa-avatar-emoji" onclick="event.stopPropagation();openVidaModal('Rafa')">🌱</div>
+      <div style="font-size:24px;cursor:pointer;" id="rafa-avatar-emoji" onclick="event.stopPropagation();openProfile('Rafa')">🌱</div>
       
       <!-- Nombre + Racha -->
-      <div style="font-weight:700;font-size:13px;color:var(--text);">Rafa <span id="rafa-streak-flame" style="font-size:11px;"></span></div>
+      <div style="font-weight:700;font-size:11px;color:var(--text);">Rafa <span id="rafa-streak-flame" style="font-size:9px;"></span></div>
       
-      <!-- Nivel (espacio fijo para que no afecte el nivel más largo) -->
-      <div id="rl" style="font-size:11px;color:var(--text2);font-weight:600;height:16px;display:flex;align-items:center;justify-content:center;">Nv.5</div>
+      <!-- Nivel (espacio fijo) -->
+      <div id="rl" style="font-size:10px;color:var(--text2);font-weight:600;height:12px;display:flex;align-items:center;justify-content:center;">Nv.5</div>
       
       <!-- Especialidad (espacio fijo) -->
-      <div style="font-size:10px;color:var(--text2);height:28px;display:flex;align-items:center;justify-content:center;">Detallista</div>
+      <div style="font-size:9px;color:var(--text2);height:18px;display:flex;align-items:center;justify-content:center;line-height:1.2;">Detallista</div>
       
       <!-- XP Bar -->
       <div class="xp-bar"><div class="xp-fill xp-fill-r" id="rxp" style="width:0%"></div></div>
       
       <!-- XP Total -->
-      <div class="p-xp p-xp-r" id="rxpn" style="font-size:12px;font-weight:600;color:var(--text);">0 XP</div>
+      <div class="p-xp p-xp-r" id="rxpn" style="font-size:10px;font-weight:600;color:var(--text);">0 XP</div>
       
-      <!-- Hoy (debajo de XP Total) -->
-      <div id="rafa-daily-xp" style="font-size:11px;color:var(--text2);font-weight:600;min-height:16px;"></div>
+      <!-- Hoy -->
+      <div id="rafa-daily-xp" style="font-size:9px;color:var(--text2);font-weight:600;min-height:12px;"></div>
       
-      <!-- Corazón + Barra HP (en una línea) -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;">
-        <div onclick="event.stopPropagation();openVidaModal('Rafa')" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 10px;background:rgba(239,68,68,0.1);border-radius:8px;border:1px solid rgba(239,68,68,0.25);flex-shrink:0;"><span style="font-size:18px;" id="rafa-heart" class="heart-dashboard">❤️</span><span id="rafa-hp-lbl" style="color:#EF4444;font-weight:700;">80</span></div>
-        <div style="flex:1;height:12px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="rafa-hp-container">
-          <div id="rafa-hp-bar" class="hp-bar level-1" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
+      <!-- Corazón + Barra HP -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;">
+        <div onclick="event.stopPropagation();openVidaModal('Rafa')" style="display:flex;align-items:center;gap:3px;cursor:pointer;padding:3px 6px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.25);flex-shrink:0;"><span style="font-size:14px;" id="rafa-heart" class="heart-dashboard">❤️</span><span id="rafa-hp-lbl" style="color:#EF4444;font-weight:700;font-size:9px;">80</span></div>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="rafa-hp-container" onclick="event.stopPropagation();openVidaModal('Rafa')" style="cursor:pointer;">
+          <div id="rafa-hp-bar" class="hp-bar level-1" style="height:100%;width:80%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:2px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
         </div>
       </div>
     </div>
     
     <!-- MARÍA -->
-    <div style="display:flex;flex-direction:column;gap:8px;text-align:center;cursor:pointer;" onclick="openProfile('María')">
+    <div style="display:flex;flex-direction:column;gap:5px;text-align:center;cursor:pointer;" onclick="openProfile('María')">
       <!-- Avatar -->
-      <div style="font-size:32px;cursor:pointer;" id="maria-avatar-emoji" onclick="event.stopPropagation();openVidaModal('María')">🌱</div>
+      <div style="font-size:24px;cursor:pointer;" id="maria-avatar-emoji" onclick="event.stopPropagation();openProfile('María')">🌱</div>
       
       <!-- Nombre + Racha -->
-      <div style="font-weight:700;font-size:13px;color:var(--text);">María <span id="maria-streak-flame" style="font-size:11px;"></span></div>
+      <div style="font-weight:700;font-size:11px;color:var(--text);">María <span id="maria-streak-flame" style="font-size:9px;"></span></div>
       
       <!-- Nivel (espacio fijo) -->
-      <div id="ml" style="font-size:11px;color:var(--text2);font-weight:600;height:16px;display:flex;align-items:center;justify-content:center;">Nv.9</div>
+      <div id="ml" style="font-size:10px;color:var(--text2);font-weight:600;height:12px;display:flex;align-items:center;justify-content:center;">Nv.9</div>
       
       <!-- Especialidad (espacio fijo) -->
-      <div style="font-size:10px;color:var(--text2);height:28px;display:flex;align-items:center;justify-content:center;">Constructor de equipo</div>
+      <div style="font-size:9px;color:var(--text2);height:18px;display:flex;align-items:center;justify-content:center;line-height:1.2;">Constructor de equipo</div>
       
       <!-- XP Bar -->
       <div class="xp-bar"><div class="xp-fill xp-fill-m" id="mxp" style="width:0%"></div></div>
       
       <!-- XP Total -->
-      <div class="p-xp p-xp-m" id="mxpn" style="font-size:12px;font-weight:600;color:var(--text);">0 XP</div>
+      <div class="p-xp p-xp-m" id="mxpn" style="font-size:10px;font-weight:600;color:var(--text);">0 XP</div>
       
-      <!-- Hoy (debajo de XP Total) -->
-      <div id="maria-daily-xp" style="font-size:11px;color:var(--text2);font-weight:600;min-height:16px;"></div>
+      <!-- Hoy -->
+      <div id="maria-daily-xp" style="font-size:9px;color:var(--text2);font-weight:600;min-height:12px;"></div>
       
-      <!-- Corazón + Barra HP (en una línea) -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;">
-        <div onclick="event.stopPropagation();openVidaModal('María')" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 10px;background:rgba(239,68,68,0.1);border-radius:8px;border:1px solid rgba(239,68,68,0.25);flex-shrink:0;"><span style="font-size:18px;" id="maria-heart" class="heart-dashboard">❤️</span><span id="maria-hp-lbl" style="color:#EF4444;font-weight:700;">62</span></div>
-        <div style="flex:1;height:12px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="maria-hp-container">
-          <div id="maria-hp-bar" class="hp-bar level-1" style="height:100%;width:62%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:3px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
+      <!-- Corazón + Barra HP -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px;">
+        <div onclick="event.stopPropagation();openVidaModal('María')" style="display:flex;align-items:center;gap:3px;cursor:pointer;padding:3px 6px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.25);flex-shrink:0;"><span style="font-size:14px;" id="maria-heart" class="heart-dashboard">❤️</span><span id="maria-hp-lbl" style="color:#EF4444;font-weight:700;font-size:9px;">62</span></div>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);" id="maria-hp-container" onclick="event.stopPropagation();openVidaModal('María')" style="cursor:pointer;">
+          <div id="maria-hp-bar" class="hp-bar level-1" style="height:100%;width:62%;background:linear-gradient(90deg, #10B981, #34D399);border-radius:2px;transition:width 0.4s ease,background 0.3s ease;box-shadow:0 0 8px rgba(52,211,153,0.4);"></div>
         </div>
       </div>
     </div>
