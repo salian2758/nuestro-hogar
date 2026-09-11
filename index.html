@@ -3082,6 +3082,18 @@ window.confirmComplete=async()=>{
   // Suma también histórico (si hay entrada manual o de otras acciones)
   const xpFromHistoryToday=history.filter(h=>h.date===todayStr&&h.taskId!==id).reduce((s,h)=>s+(h.pts||0),0);
   const todayTotalXP=xpFromAllCompletedToday+xpFromHistoryToday+earned;
+  
+  // ⚡ ACTUALIZAR streakData[person].todayXP para la racha individual
+  for(const person of [me, whoDidIt].filter(Boolean)){
+    if(!streakData[person]) streakData[person] = {count:0, lastDate: todayStr, todayXP: 0};
+    streakData[person].todayXP = (streakData[person].todayXP || 0) + earned;
+    streakData[person].lastDate = todayStr;
+    console.log(`📊 streakData[${person}].todayXP actualizado: +${earned} → ${streakData[person].todayXP}`);
+    
+    // Guardar en Firebase
+    await setDoc(doc(db, 'state', 'streak_'+person), streakData[person]);
+  }
+  
   await updateCoupleStreak(todayTotalXP);
   // NO hacer history.unshift aquí - onSnapshot traerá la entrada de Firebase automáticamente
   const toastMsg=splitMode==='shared'?`+${earned} XP repartido ✓`:splitMode==='other'?`+${earned} XP para ${other} ✓`:`+${earned} XP para ${me||whoDidIt}! ✓`;
