@@ -899,26 +899,6 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
     
   </div>
   
-  <!-- DEBUG: Botones para ver distintos niveles de HP -->
-  <div style="margin-top:8px;padding:8px;background:rgba(59,130,246,0.1);border-radius:8px;border:1px dashed rgba(59,130,246,0.5);font-size:9px;display:flex;gap:4px;flex-wrap:wrap;" id="debug-hp-buttons" onclick="event.stopPropagation()">
-    <div style="width:100%;font-weight:700;color:var(--text2);margin-bottom:4px;">🔧 VER HP EN DIFERENTES ESTADOS (1-100):</div>
-    <button onclick="event.stopPropagation();window.previewHp(1,1)" style="padding:4px 8px;background:#374151;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">1</button>
-    <button onclick="event.stopPropagation();window.previewHp(3,3)" style="padding:4px 8px;background:#4B5563;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">3</button>
-    <button onclick="event.stopPropagation();window.previewHp(5,5)" style="padding:4px 8px;background:#6B7280;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">5</button>
-    <button onclick="event.stopPropagation();window.previewHp(10,10)" style="padding:4px 8px;background:#DC2626;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">10</button>
-    <button onclick="event.stopPropagation();window.previewHp(15,15)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">15</button>
-    <button onclick="event.stopPropagation();window.previewHp(20,20)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">20</button>
-    <button onclick="event.stopPropagation();window.previewHp(30,30)" style="padding:4px 8px;background:#EF4444;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">30</button>
-    <button onclick="event.stopPropagation();window.previewHp(40,40)" style="padding:4px 8px;background:#F97316;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">40</button>
-    <button onclick="event.stopPropagation();window.previewHp(50,50)" style="padding:4px 8px;background:#F97316;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">50</button>
-    <button onclick="event.stopPropagation();window.previewHp(60,60)" style="padding:4px 8px;background:#FBBF24;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">60</button>
-    <button onclick="event.stopPropagation();window.previewHp(70,70)" style="padding:4px 8px;background:#FBBF24;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">70</button>
-    <button onclick="event.stopPropagation();window.previewHp(80,80)" style="padding:4px 8px;background:#34D399;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">80</button>
-    <button onclick="event.stopPropagation();window.previewHp(90,90)" style="padding:4px 8px;background:#34D399;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">90</button>
-    <button onclick="event.stopPropagation();window.previewHp(100,100)" style="padding:4px 8px;background:#10B981;border:none;border-radius:4px;color:white;font-size:7px;cursor:pointer;font-weight:600;">100</button>
-    <button onclick="event.stopPropagation();location.reload()" style="padding:4px 8px;background:var(--text2);border:none;border-radius:4px;color:var(--bg);font-size:8px;cursor:pointer;font-weight:600;margin-left:auto;">✕ Quitar</button>
-  </div>
-</div>
 
 <div id="sc-hoy" class="screen" style="display:none;">
   <div class="content">
@@ -5414,13 +5394,6 @@ async function saveHpState(){
 }
 
 // ═══ DEBUG: Visualizar distintos niveles de HP ═══
-window.previewHp = (rafaHp, mariaHp) => {
-  console.log(`👀 PREVIEW HP: Rafa ${rafaHp}, María ${mariaHp}`);
-  hpState['Rafa'] = rafaHp;
-  hpState['María'] = mariaHp;
-  updateHpBar('Rafa');
-  updateHpBar('María');
-};
 
 function updateHpBar(person){
   const k=person==='Rafa'?'rafa':'maria';
