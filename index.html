@@ -574,7 +574,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 /* === SISTEMA DE VIDA GAMIFICADO === */
 @keyframes heartbeat-slow {
   0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.08); }
+  25% { transform: scale(1.2); }
   50% { transform: scale(1); }
 }
 @keyframes heartbeat-normal {
@@ -5484,12 +5484,22 @@ function updateHpBar(person){
       avatar.textContent='❤️';
       // Glow según nivel
       avatar.classList.remove('heart-glow', 'heart-glow-intense');
-      if(level>=6){
+      if(level===1){
+        // ✨ PERFECTO: Avatar radiante y fuerte
+        avatar.classList.add('heart-glow-intense');
+        avatar.style.filter=`drop-shadow(0 0 14px ${levelData.color}90) drop-shadow(0 0 6px ${levelData.color}60)`;
+      }else if(level===2){
+        // 💪 FUERTE: Avatar robusto
+        avatar.classList.add('heart-glow');
+        avatar.style.filter=`drop-shadow(0 0 10px ${levelData.color}70)`;
+      }else if(level>=6){
         avatar.classList.add('heart-glow-intense');
         avatar.style.filter=`drop-shadow(0 0 12px ${levelData.color}80)`;
       }else if(level>=4){
         avatar.classList.add('heart-glow');
         avatar.style.filter=`drop-shadow(0 0 8px ${levelData.color}60)`;
+      }else if(level===3){
+        avatar.style.filter=`drop-shadow(0 0 6px ${levelData.color}50)`;
       }else{
         avatar.style.filter=`drop-shadow(0 0 4px ${levelData.color}40)`;
       }
@@ -5537,6 +5547,13 @@ function updateHpBar(person){
       if(isUltraCritical) {
         dashboardHeart.style.filter = `drop-shadow(0 0 20px ${levelData.color}) drop-shadow(0 0 10px rgba(239,68,68,0.8))`;
         dashboardHeart.style.textShadow = `0 0 10px ${levelData.color}`;
+      }else if(level===1){
+        // ✨ PERFECTO: Glow radiante y fuerte
+        dashboardHeart.style.filter = `drop-shadow(0 0 16px ${levelData.color}90) drop-shadow(0 0 8px ${levelData.color}60)`;
+        dashboardHeart.style.textShadow = `0 0 8px ${levelData.color}`;
+      }else if(level===2){
+        // 💪 FUERTE: Glow robusto
+        dashboardHeart.style.filter = `drop-shadow(0 0 10px ${levelData.color}80)`;
       }else if(level>=6){
         dashboardHeart.style.filter = `drop-shadow(0 0 12px ${levelData.color}80)`;
       }else if(level===5){
@@ -5545,8 +5562,6 @@ function updateHpBar(person){
         dashboardHeart.style.filter = `drop-shadow(0 0 8px ${levelData.color}60)`;
       }else if(level===3){
         dashboardHeart.style.filter = `drop-shadow(0 0 6px ${levelData.color}50)`;
-      }else{
-        dashboardHeart.style.filter = `drop-shadow(0 0 4px ${levelData.color}40)`;
       }
     }
   }
@@ -5955,12 +5970,22 @@ window.openVidaModal=(person)=>{
       else if(level===7) heartEl.style.animation='heartbeat-dying 2s infinite';
       
       // Glow dinámico
-      if(level>=6){
+      if(level===1){
+        // ✨ PERFECTO: Glow radiante
+        heartEl.classList.add('heart-glow-intense');
+        heartEl.style.filter=`drop-shadow(0 0 24px ${levelData.color}90) drop-shadow(0 0 12px ${levelData.color}60)`;
+      }else if(level===2){
+        // 💪 FUERTE: Glow robusto
+        heartEl.classList.add('heart-glow');
+        heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}70)`;
+      }else if(level>=6){
         heartEl.classList.add('heart-glow-intense');
         heartEl.style.filter=`drop-shadow(0 0 20px ${levelData.color}80)`;
       }else if(level>=4){
         heartEl.classList.add('heart-glow');
         heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}60)`;
+      }else if(level===3){
+        heartEl.style.filter=`drop-shadow(0 0 12px ${levelData.color}50)`;
       }else{
         heartEl.style.filter=`drop-shadow(0 0 8px ${levelData.color}40)`;
       }
