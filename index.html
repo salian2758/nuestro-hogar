@@ -5102,42 +5102,59 @@ async function applyStreakXpReward(person,streakResult){
 // ha iniciado sesión), porque la otra persona puede no abrir la app en días.
 async function checkStreakGaps(){
   const today=new Date().toLocaleDateString('es-ES');
+  console.log(`\n🔍 ════════ checkStreakGaps INICIADA ════════`);
+  console.log(`   Hoy: ${today}`);
+  
   for(const person of ['Rafa','María']){
+    console.log(`\n   👤 Evaluando ${person}:`);
     const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
+    console.log(`      lastDate=${data.lastDate}, hoy=${today}, ¿diferente? ${data.lastDate!==today}`);
+    console.log(`      todayXP=${data.todayXP}`);
+    
     if(data.lastDate&&data.lastDate!==today){
+      console.log(`      ✅ Se evalúa el día anterior`);
       if(travelMode[person]){
-        // De viaje: racha individual en pausa, no se evalúa el día
+        console.log(`      ⚠️ DE VIAJE - No se evalúa`);
         data.todayXP=0;data.lastDate=today;
         streakData[person]=data;
         await setDoc(doc(db,'state','streak_'+person),data);
         updateStreakBadge(person);
         continue;
       }
+      console.log(`      📊 Llamando closeOutPastDays con XP=${data.todayXP}`);
       const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN,70);
+      console.log(`      📈 Resultado: ${res.result}`);
       data.todayXP=0;
       data.lastDate=today;
       streakData[person]=data;
       await setDoc(doc(db,'state','streak_'+person),data);
       updateStreakBadge(person);
       await applyStreakXpReward(person,res);
-    await applyDayHp(person,res);
+      console.log(`      💓 Aplicando HP con resultado: ${res.result}`);
+      await applyDayHp(person,res);
+    }else{
+      console.log(`      ⏭️ No se evalúa (mismo día o sin lastDate)`);
     }
   }
-  // Racha CONJUNTA del progreso diario — si AMBOS están de viaje, se pausa
-  // del todo; si solo UNO está de viaje, se evalúa igual pero con los
-  // umbrales a la mitad (el esfuerzo de quien se queda en casa, solo).
+  
+  console.log(`\n   🔗 Racha CONJUNTA:`);
   const bothTraveling=travelMode.Rafa&&travelMode.María;
+  console.log(`      bothTraveling=${bothTraveling}`);
   if(coupleStreakData.lastDate&&coupleStreakData.lastDate!==today){
+    console.log(`      lastDate=${coupleStreakData.lastDate} !== today=${today}`);
     if(bothTraveling){
+      console.log(`      ⚠️ AMBOS DE VIAJE - Solo resetea fecha`);
       coupleStreakData.todayXP=0;
       coupleStreakData.lastDate=today;
       await setDoc(doc(db,'state','coupleStreak'),coupleStreakData);
       updateCoupleStreakBadge();
     }else{
+      console.log(`      ✅ Se evalúa racha conjunta`);
       const anyTraveling=travelMode.Rafa||travelMode.María;
       const goodMin=anyTraveling?COUPLE_STREAK_GOOD_MIN/2:COUPLE_STREAK_GOOD_MIN;
       const neutralMin=anyTraveling?COUPLE_STREAK_NEUTRAL_MIN/2:COUPLE_STREAK_NEUTRAL_MIN;
       const perfectMin=anyTraveling?70:140;
+      console.log(`      Umbrales: good=${goodMin}, neutral=${neutralMin}, perfect=${perfectMin}`);
       const res=closeOutPastDays(coupleStreakData,today,goodMin,neutralMin,perfectMin);
       coupleStreakData.todayXP=0;
       coupleStreakData.lastDate=today;
@@ -5145,7 +5162,10 @@ async function checkStreakGaps(){
       updateCoupleStreakBadge();
       await applyCoupleStreakXpReward(res);
     }
+  }else{
+    console.log(`      ⏭️ No se evalúa`);
   }
+  console.log(`\n🔍 ════════ checkStreakGaps TERMINADA ════════\n`);
 }
 
 // ─── RACHA CONJUNTA del progreso diario (sobre el objetivo de 140 XP entre los dos) ───
@@ -5622,10 +5642,7 @@ async function applyDayHp(person,streakResult){
     delta=-HP_LOSS_BAD;
     reason='Día malo (<20 XP)';
   }
-  console.log(`   Resultado: ${streakResult.result.toUpperCase()}`);
-  console.log(`   XP del día anterior: ${streakResult.data.todayXP}`);
-  console.log(`   Cambio HP: ${delta>0?'+':''}${delta}`);
-  console.log(`   Motivo: ${reason}`);
+  console.log(`   📌 APLICANDO: ${streakResult.result.toUpperCase()} → ${delta>0?'+':''}${delta} HP (${reason})`);
   
   const hpBefore=hpState[person]??HP_INITIAL;
   const newHp=Math.max(0,Math.min(HP_MAX,hpBefore+delta));
