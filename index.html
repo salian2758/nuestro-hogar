@@ -6724,7 +6724,56 @@ function notifyHpChange(){
   }
 }
 
-// ═══ RESTAURAR HP CORRECTOS Y RESETEAR HOY ═══
+// ═══ SIMULADOR: Ver qué HP tocaría mañana con el XP de hoy ═══
+window.simulateCalculation = () => {
+  console.log(`\n📊 SIMULADOR: ¿Qué HP tocará mañana con el XP de hoy?`);
+  
+  const today = new Date().toLocaleDateString('es-ES');
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toLocaleDateString('es-ES');
+  
+  let simulation = `\n╔════════════════════════════════════════╗\n║  SIMULACIÓN - Mañana ${tomorrowStr}   ║\n╚════════════════════════════════════════╝\n`;
+  
+  for(const person of ['Rafa', 'María']) {
+    const currentHp = hpState[person] || 55;
+    const todayXP = streakData[person]?.todayXP || 0;
+    
+    console.log(`\n👤 ${person}:`);
+    console.log(`   HP actual: ${currentHp}`);
+    console.log(`   XP acumulado hoy: ${todayXP}`);
+    
+    // Determinar resultado
+    let result = '', delta = 0;
+    if(todayXP >= 70) {
+      result = 'PERFECTO (70+ XP)';
+      delta = 7;
+    } else if(todayXP >= 50) {
+      result = 'BUENO (50-69 XP)';
+      delta = 4;
+    } else if(todayXP >= 20) {
+      result = 'NEUTRO (20-49 XP)';
+      delta = -3;
+    } else {
+      result = 'MALO (<20 XP)';
+      delta = -8;
+    }
+    
+    const newHp = currentHp + delta;
+    
+    console.log(`   Resultado: ${result}`);
+    console.log(`   Cambio HP: ${delta > 0 ? '+' : ''}${delta}`);
+    console.log(`   HP mañana: ${currentHp} ${delta > 0 ? '+' : ''}${delta} = ${newHp} HP`);
+    
+    simulation += `\n${person}:\n`;
+    simulation += `  XP hoy: ${todayXP}\n`;
+    simulation += `  Resultado: ${result}\n`;
+    simulation += `  ${currentHp} → ${newHp} HP\n`;
+  }
+  
+  console.log(simulation);
+  alert(simulation);
+};
 window.restoreAndReset = async () => {
   console.log(`🔧 RESTAURANDO HP CORRECTOS y reseteando HOY...`);
   
