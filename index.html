@@ -5109,7 +5109,7 @@ async function checkStreakGaps(){
     console.log(`\n   👤 Evaluando ${person}:`);
     const data=streakData[person]||{count:0,lastDate:null,todayXP:0};
     console.log(`      lastDate=${data.lastDate}, hoy=${today}, ¿diferente? ${data.lastDate!==today}`);
-    console.log(`      todayXP=${data.todayXP}`);
+    console.log(`      todayXP ACTUAL=${data.todayXP}`);
     
     if(data.lastDate&&data.lastDate!==today){
       console.log(`      ✅ Se evalúa el día anterior`);
@@ -5121,9 +5121,16 @@ async function checkStreakGaps(){
         updateStreakBadge(person);
         continue;
       }
-      console.log(`      📊 Llamando closeOutPastDays con XP=${data.todayXP}`);
-      const res=closeOutPastDays(data,today,STREAK_GOOD_MIN,STREAK_NEUTRAL_MIN,70);
+      
+      // ⚡ GUARDAR el XP del día anterior ANTES de resetearlo
+      const yesterdayXP = data.todayXP || 0;
+      console.log(`      💾 XP DE AYER GUARDADO: ${yesterdayXP}`);
+      
+      console.log(`      📊 Evaluando con XP de ayer: ${yesterdayXP}`);
+      const res=closeOutPastDays({...data, todayXP: yesterdayXP}, today, STREAK_GOOD_MIN, STREAK_NEUTRAL_MIN, 70);
       console.log(`      📈 Resultado: ${res.result}`);
+      
+      // Ahora SÍ resetear para hoy
       data.todayXP=0;
       data.lastDate=today;
       streakData[person]=data;
