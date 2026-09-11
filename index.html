@@ -2077,7 +2077,7 @@ function getHpLevelData(level) {
     4: { name: '⚠️ CUIDADO', color: '#F97316', intensity: 'medium', desc: 'Precaución necesaria' },
     5: { name: '🔥 PELIGRO', color: '#EF4444', intensity: 'high', desc: 'Alerta roja, actúa' },
     6: { name: '🚨 CRÍTICO', color: '#DC2626', intensity: 'critical', desc: '¡¡ACTÚA YA!!' },
-    7: { name: '💀 AGONÍA', color: '#9CA3AF', intensity: 'dying', desc: 'Últimos latidos' },
+    7: { name: '💀 AGONÍA', color: '#6B7280', intensity: 'dying', desc: 'Últimos latidos' },
     8: { name: '⚫ MUERTO', color: '#1F2937', intensity: 'dead', desc: 'Game Over' }
   };
   return data[level] || data[8];
@@ -5482,27 +5482,17 @@ function updateHpBar(person){
       avatar.classList.remove('heart-glow', 'heart-glow-intense');
     }else{
       avatar.textContent='❤️';
-      // Glow según nivel
+      // Glow SOLO en PERFECTO
       avatar.classList.remove('heart-glow', 'heart-glow-intense');
       if(level===1){
-        // ✨ PERFECTO: Avatar radiante y fuerte
+        // ✨ PERFECTO: Avatar radiante y fuerte (ÚNICO nivel que brilla)
         avatar.classList.add('heart-glow-intense');
         avatar.style.filter=`drop-shadow(0 0 14px ${levelData.color}90) drop-shadow(0 0 6px ${levelData.color}60)`;
-      }else if(level===2){
-        // 💪 FUERTE: Avatar robusto
-        avatar.classList.add('heart-glow');
-        avatar.style.filter=`drop-shadow(0 0 10px ${levelData.color}70)`;
-      }else if(level>=6){
-        avatar.classList.add('heart-glow-intense');
-        avatar.style.filter=`drop-shadow(0 0 12px ${levelData.color}80)`;
-      }else if(level>=4){
-        avatar.classList.add('heart-glow');
-        avatar.style.filter=`drop-shadow(0 0 8px ${levelData.color}60)`;
-      }else if(level===3){
-        avatar.style.filter=`drop-shadow(0 0 6px ${levelData.color}50)`;
       }else{
-        avatar.style.filter=`drop-shadow(0 0 4px ${levelData.color}40)`;
+        // Todos los demás: Sin glow
+        avatar.style.filter='none';
       }
+    }
     }
   }
   
@@ -5521,9 +5511,7 @@ function updateHpBar(person){
     }else{
       dashboardHeart.textContent = '❤️';
       
-      // ✨ LATIDOS PROGRESIVOS Y EXAGERADOS
-      const isUltraCritical = hp < 15;
-      
+      // 🔥 LATIDOS PROGRESIVOS SIN DRAMA INNECESARIO
       if(level===1) {
         dashboardHeart.style.animation = 'heartbeat-slow 1.5s infinite';
       }else if(level===2) {
@@ -5533,50 +5521,39 @@ function updateHpBar(person){
       }else if(level===4) {
         dashboardHeart.style.animation = 'heartbeat-fast 0.8s infinite';
       }else if(level===5) {
-        // 🔥 PELIGRO: CON vibración característica
-        dashboardHeart.style.animation = 'heartbeat-peligro-shake 0.6s infinite';
+        // 🔥 PELIGRO: Latido ultra-rápido (SIN vibración, sin glow)
+        dashboardHeart.style.animation = 'heartbeat-critical 0.6s infinite';
       }else if(level===6) {
-        // 🚨 CRÍTICO: latido rápido y desesperado
+        // 🚨 CRÍTICO: Latido rápido + VIBRACIÓN característica
         dashboardHeart.style.animation = 'heartbeat-critical 0.4s infinite';
       }else if(level===7) {
         // 💀 AGONÍA: latido lentísimo, casi muerto
         dashboardHeart.style.animation = 'heartbeat-dying 2s infinite';
       }
       
-      // 💡 GLOW PROGRESIVO
-      if(isUltraCritical) {
-        dashboardHeart.style.filter = `drop-shadow(0 0 20px ${levelData.color}) drop-shadow(0 0 10px rgba(239,68,68,0.8))`;
-        dashboardHeart.style.textShadow = `0 0 10px ${levelData.color}`;
-      }else if(level===1){
-        // ✨ PERFECTO: Glow radiante y fuerte
+      // ✨ GLOW SOLO EN PERFECTO
+      if(level===1){
+        // ✨ PERFECTO: Glow radiante (ÚNICO nivel que brilla)
         dashboardHeart.style.filter = `drop-shadow(0 0 16px ${levelData.color}90) drop-shadow(0 0 8px ${levelData.color}60)`;
         dashboardHeart.style.textShadow = `0 0 8px ${levelData.color}`;
-      }else if(level===2){
-        // 💪 FUERTE: Glow robusto
-        dashboardHeart.style.filter = `drop-shadow(0 0 10px ${levelData.color}80)`;
-      }else if(level>=6){
-        dashboardHeart.style.filter = `drop-shadow(0 0 12px ${levelData.color}80)`;
-      }else if(level===5){
-        dashboardHeart.style.filter = `drop-shadow(0 0 10px ${levelData.color}70)`;
-      }else if(level>=4){
-        dashboardHeart.style.filter = `drop-shadow(0 0 8px ${levelData.color}60)`;
-      }else if(level===3){
-        dashboardHeart.style.filter = `drop-shadow(0 0 6px ${levelData.color}50)`;
-      }
+      }else{
+        // Todos los demás: Sin glow, solo color limpio
+        dashboardHeart.style.filter = 'none';
+        dashboardHeart.style.textShadow = 'none';
     }
   }
   
-  // 🎪 EFECTOS VISUALES EN BARRA HP: TEMBLOR SOLO EN PELIGRO
+  // 🎪 TEMBLOR SOLO EN CRÍTICO: Característica del pánico
   if(container){
     container.classList.remove('shake', 'shake-critical', 'critical', 'ultra-critical');
     container.style.animation = '';
     
     if(hp > 0) {
-      // 🔥 PELIGRO: temblor característico
-      if(level===5) {
+      // 🚨 CRÍTICO: vibración característica (el pánico vibra)
+      if(level===6) {
         container.style.animation = 'shake 0.3s infinite';
       }
-      // 🚨 CRÍTICO y 💀 AGONÍA: sin temblor, solo corazón rápido/lento
+      // PELIGRO, AGONÍA, etc: sin vibración
     }
   }
   
@@ -5969,25 +5946,15 @@ window.openVidaModal=(person)=>{
       else if(level===6) heartEl.style.animation='heartbeat-critical 0.4s infinite';
       else if(level===7) heartEl.style.animation='heartbeat-dying 2s infinite';
       
-      // Glow dinámico
+      // Glow dinámico: SOLO en PERFECTO
       if(level===1){
-        // ✨ PERFECTO: Glow radiante
+        // ✨ PERFECTO: Glow radiante (ÚNICO nivel que brilla)
         heartEl.classList.add('heart-glow-intense');
         heartEl.style.filter=`drop-shadow(0 0 24px ${levelData.color}90) drop-shadow(0 0 12px ${levelData.color}60)`;
-      }else if(level===2){
-        // 💪 FUERTE: Glow robusto
-        heartEl.classList.add('heart-glow');
-        heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}70)`;
-      }else if(level>=6){
-        heartEl.classList.add('heart-glow-intense');
-        heartEl.style.filter=`drop-shadow(0 0 20px ${levelData.color}80)`;
-      }else if(level>=4){
-        heartEl.classList.add('heart-glow');
-        heartEl.style.filter=`drop-shadow(0 0 16px ${levelData.color}60)`;
-      }else if(level===3){
-        heartEl.style.filter=`drop-shadow(0 0 12px ${levelData.color}50)`;
       }else{
-        heartEl.style.filter=`drop-shadow(0 0 8px ${levelData.color}40)`;
+        // Todos los demás: Sin glow
+        heartEl.classList.remove('heart-glow-intense', 'heart-glow');
+        heartEl.style.filter='none';
       }
     }
   }
