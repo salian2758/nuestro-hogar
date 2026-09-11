@@ -6700,24 +6700,40 @@ function notifyHpChange(){
 
 // ═══ FUNCIÓN DEBUG: Forzar chequeo manual ═══
 window.debugForceCheckNow = async () => {
-  console.log(`\n🚀 [DEBUG] Forzando checkStreakGaps manualmente...`);
+  console.log(`\n🚀 [DEBUG] Forzando chequeo reseteando fechas en BD...`);
   
   const before = {
     rafa_hp: hpState['Rafa'],
     maria_hp: hpState['María']
   };
   
-  // FORZAR que se evalúe reseteando lastDate
+  // RESETEAR lastDate en la BD PARA AMBOS
   for(const person of ['Rafa', 'María']) {
-    if(streakData[person]) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      streakData[person].lastDate = yesterday.toLocaleDateString('es-ES');
-      console.log(`   Forzando ${person}: lastDate=${streakData[person].lastDate}`);
-    }
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('es-ES');
+    
+    // Obtener datos actuales de la BD
+    const docRef = doc(db, 'state', 'streak_' + person);
+    const currentData = streakData[person] || {};
+    
+    // Actualizar con lastDate del día anterior
+    const resetData = {
+      ...currentData,
+      lastDate: yesterdayStr,
+      count: currentData.count || 0,
+      todayXP: currentData.todayXP || 0
+    };
+    
+    // GUARDAR en BD
+    await setDoc(docRef, resetData);
+    streakData[person] = resetData;
+    
+    console.log(`   ✅ ${person}: reseteado a ${yesterdayStr}`);
   }
   
-  // Ahora ejecutar el chequeo
+  // AHORA ejecutar el chequeo (debería detectar un día diferente)
+  console.log(`   🔄 Ejecutando checkStreakGaps...`);
   await checkStreakGaps();
   
   const after = {
@@ -6725,16 +6741,16 @@ window.debugForceCheckNow = async () => {
     maria_hp: hpState['María']
   };
   
-  let msg = `✅ CHEQUEO COMPLETADO\n\n📊 RESULTADOS:\n\nRafa: ${before.rafa_hp}HP → ${after.rafa_hp}HP`;
+  let msg = `✅ CHEQUEO COMPLETADO\n\n📊 CAMBIOS DE HP:\n\nRafa: ${before.rafa_hp}HP → ${after.rafa_hp}HP`;
   msg += `\nMaría: ${before.maria_hp}HP → ${after.maria_hp}HP`;
   
   if(before.rafa_hp !== after.rafa_hp || before.maria_hp !== after.maria_hp) {
-    msg += `\n\n✅ Se aplicaron cambios correctamente`;
+    msg += `\n\n✅ SE APLICARON LOS CAMBIOS CORRECTAMENTE`;
   } else {
-    msg += `\n\n⚠️ No hubo cambios`;
+    msg += `\n\n❌ NO HUBO CAMBIOS (HAY UN BUG)`;
   }
   
-  console.log(`📊 Cambios:`, {before, after});
+  console.log(`📊 RESULTADO FINAL:`, {before, after});
   alert(msg);
   location.reload();
 };
