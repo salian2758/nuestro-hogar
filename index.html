@@ -6819,6 +6819,59 @@ window.restoreAndReset = async () => {
   alert(`✅ RESTAURADO\n\nRafa: 55 HP ✓\nMaría: 66 HP ✓\n\nHoy se acumula XP limpio.\nMañana a las 00:00 se aplican los HP automáticamente`);
   location.reload();
 };
+
+// ═══ RESTAURACIÓN ROBUSTA CON VERIFICACIÓN ═══
+window.fixHpFinal = async () => {
+  console.log(`🔧 RESTAURACIÓN FINAL Y ROBUSTA...`);
+  
+  const today = new Date().toLocaleDateString('es-ES');
+  
+  // PASO 1: Actualizar en MEMORIA
+  hpState['Rafa'] = 55;
+  hpState['María'] = 66;
+  console.log(`✅ Paso 1: Actualizado en memoria:`, hpState);
+  
+  // PASO 2: Guardar en BD (hp state)
+  try {
+    await setDoc(doc(db, 'state', 'hp'), {
+      'Rafa': 55,
+      'María': 66
+    });
+    console.log(`✅ Paso 2: HP guardado en BD`);
+  } catch(e) {
+    console.error(`❌ Error guardando HP:`, e);
+    return;
+  }
+  
+  // PASO 3: Resetear streakData
+  streakData['Rafa'] = {count: 0, lastDate: today, todayXP: 45};  // Rafa tiene 45 XP hoy
+  streakData['María'] = {count: 0, lastDate: today, todayXP: 0};   // María tiene 0 XP hoy
+  console.log(`✅ Paso 3: streakData resetado:`, streakData);
+  
+  // PASO 4: Guardar streakData en BD
+  try {
+    await setDoc(doc(db, 'state', 'streak_Rafa'), streakData['Rafa']);
+    await setDoc(doc(db, 'state', 'streak_María'), streakData['María']);
+    console.log(`✅ Paso 4: streakData guardado en BD`);
+  } catch(e) {
+    console.error(`❌ Error guardando streakData:`, e);
+    return;
+  }
+  
+  // PASO 5: Actualizar UI
+  updateHpBar('Rafa');
+  updateHpBar('María');
+  updateHeader();
+  console.log(`✅ Paso 5: UI actualizada`);
+  
+  // PASO 6: Verificar
+  console.log(`\n✅ VERIFICACIÓN FINAL:`);
+  console.log(`   Rafa: ${hpState['Rafa']} HP, ${streakData['Rafa'].todayXP} XP`);
+  console.log(`   María: ${hpState['María']} HP, ${streakData['María'].todayXP} XP`);
+  
+  alert(`✅ FIJADO CORRECTAMENTE\n\nRafa: 55 HP (45 XP hoy)\nMaría: 66 HP (0 XP hoy)\n\nMañana a las 00:00:\n- Rafa: 45 XP = NEUTRO = -3 HP → 52 HP\n- María: 0 XP = MALO = -8 HP → 58 HP`);
+};
+
 window.resetTodayAndApplyYesterday = async () => {
   console.log(`🔄 RESETEANDO HOY y aplicando día de ayer...`);
   
