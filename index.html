@@ -409,6 +409,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
 .hp-bar-container.shake { animation: shake 0.4s; }
 .hp-bar-container.critical { animation: shake-critical 0.5s infinite; }
+.hp-bar-container.ultra-critical { animation: shake-critical 0.15s infinite; filter: drop-shadow(0 0 12px rgba(239,68,68,0.8)) drop-shadow(0 0 6px rgba(239,68,68,1)); }
 
 .hp-bar {
   height: 100%;
@@ -573,27 +574,33 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 /* === SISTEMA DE VIDA GAMIFICADO === */
 @keyframes heartbeat-slow {
   0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.15); }
+  25% { transform: scale(1.08); }
   50% { transform: scale(1); }
 }
 @keyframes heartbeat-normal {
   0%, 100% { transform: scale(1); }
-  20% { transform: scale(1.2); }
+  20% { transform: scale(1.12); }
   40% { transform: scale(1); }
 }
 @keyframes heartbeat-fast {
   0%, 100% { transform: scale(1); }
-  15% { transform: scale(1.25); }
+  15% { transform: scale(1.18); }
   30% { transform: scale(1); }
 }
 @keyframes heartbeat-critical {
-  0%, 100% { transform: scale(1); }
-  10% { transform: scale(1.3); }
-  20% { transform: scale(1); }
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  5% { transform: scale(1.35) rotate(-2deg); }
+  10% { transform: scale(0.95) rotate(2deg); }
+  15% { transform: scale(1.32) rotate(-1deg); }
+  25% { transform: scale(1) rotate(0deg); }
 }
-@keyframes heartbeat-dying {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+@keyframes heartbeat-ultra-critical {
+  0%, 100% { transform: scale(1) translateX(0); }
+  2% { transform: scale(1.45) translateX(-2px) rotate(-4deg); }
+  4% { transform: scale(0.85) translateX(2px) rotate(4deg); }
+  6% { transform: scale(1.42) translateX(-1px) rotate(-3deg); }
+  8% { transform: scale(0.9) translateX(1px) rotate(3deg); }
+  12% { transform: scale(1) translateX(0) rotate(0deg); }
 }
 @keyframes glow-pulse {
   0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
@@ -601,7 +608,15 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 }
 @keyframes glow-intense {
   0%, 100% { filter: drop-shadow(0 0 12px currentColor); }
-  50% { filter: drop-shadow(0 0 20px currentColor); }
+  50% { filter: drop-shadow(0 0 24px currentColor); }
+}
+@keyframes glow-critical {
+  0%, 100% { filter: drop-shadow(0 0 16px currentColor); }
+  50% { filter: drop-shadow(0 0 32px currentColor); }
+}
+@keyframes glow-ultra-critical {
+  0%, 100% { filter: drop-shadow(0 0 20px currentColor) drop-shadow(0 0 10px rgba(239,68,68,0.8)); }
+  50% { filter: drop-shadow(0 0 40px currentColor) drop-shadow(0 0 20px rgba(239,68,68,1)); }
 }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -669,6 +684,7 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
 
 .hp-bar-container.shake { animation: shake 0.4s; }
 .hp-bar-container.critical { animation: shake-critical 0.5s infinite; }
+.hp-bar-container.ultra-critical { animation: shake-critical 0.15s infinite; filter: drop-shadow(0 0 12px rgba(239,68,68,0.8)) drop-shadow(0 0 6px rgba(239,68,68,1)); }
 
 .hp-bar {
   height: 100%;
@@ -5483,35 +5499,67 @@ function updateHpBar(person){
     }else{
       dashboardHeart.textContent = '❤️';
       
-      // Latidos según nivel
-      if(level===1) dashboardHeart.classList.add('heart-beat-slow');
-      else if(level===2) dashboardHeart.classList.add('heart-beat-normal');
-      else if(level===3) dashboardHeart.classList.add('heart-beat-alert');
-      else if(level===4) dashboardHeart.classList.add('heart-beat-fast');
-      else if(level===5) dashboardHeart.classList.add('heart-beat-critical');
-      else if(level===6) dashboardHeart.classList.add('heart-beat-danger');
-      else if(level===7) dashboardHeart.classList.add('heart-beat-dying');
+      // ✨ LATIDOS PROGRESIVOS Y EXAGERADOS
+      const isUltraCritical = hp < 15;
       
-      // Glow según nivel
-      if(level>=6){
-        dashboardHeart.classList.add('heart-glow-intense-dashboard');
+      if(level===1) {
+        dashboardHeart.style.animation = 'heartbeat-slow 1.5s infinite';
+      }else if(level===2) {
+        dashboardHeart.style.animation = 'heartbeat-normal 1.2s infinite';
+      }else if(level===3) {
+        dashboardHeart.style.animation = 'heartbeat-normal 1s infinite';
+      }else if(level===4) {
+        dashboardHeart.style.animation = 'heartbeat-fast 0.8s infinite';
+      }else if(level===5) {
+        dashboardHeart.style.animation = 'heartbeat-critical 0.6s infinite';
+      }else if(level===6) {
+        // Crítico: si es ultra-critical (<15), mucho más exagerado
+        if(isUltraCritical) {
+          dashboardHeart.style.animation = 'heartbeat-ultra-critical 0.25s infinite';
+        } else {
+          dashboardHeart.style.animation = 'heartbeat-critical 0.4s infinite';
+        }
+      }else if(level===7) {
+        dashboardHeart.style.animation = 'heartbeat-critical 0.3s infinite';
+      }
+      
+      // 💡 GLOW PROGRESIVO Y EXAGERADO
+      if(isUltraCritical) {
+        dashboardHeart.style.filter = `drop-shadow(0 0 20px ${levelData.color}) drop-shadow(0 0 10px rgba(239,68,68,0.8))`;
+        dashboardHeart.style.textShadow = `0 0 10px ${levelData.color}`;
+      }else if(level>=6){
         dashboardHeart.style.filter = `drop-shadow(0 0 12px ${levelData.color}80)`;
+      }else if(level===5){
+        dashboardHeart.style.filter = `drop-shadow(0 0 10px ${levelData.color}70)`;
       }else if(level>=4){
-        dashboardHeart.classList.add('heart-glow-dashboard');
         dashboardHeart.style.filter = `drop-shadow(0 0 8px ${levelData.color}60)`;
+      }else if(level===3){
+        dashboardHeart.style.filter = `drop-shadow(0 0 6px ${levelData.color}50)`;
       }else{
         dashboardHeart.style.filter = `drop-shadow(0 0 4px ${levelData.color}40)`;
       }
     }
   }
   
-  // Aplicar temblor en crítico
+  // 🎪 EFECTOS VISUALES EN BARRA HP: TEMBLOR Y ANIMACIONES PROGRESIVAS
   if(container){
-    container.classList.remove('shake','critical');
-    if(level===6&&hp>0){
-      container.classList.add('shake');
-    }else if(level>=5&&hp>0){
-      container.classList.add('critical');
+    container.classList.remove('shake', 'shake-critical', 'critical', 'ultra-critical');
+    if(hp > 0) {
+      const isUltraCritical = hp < 15;
+      
+      if(isUltraCritical) {
+        // ULTRA-CRÍTICO: temblor EXTREMO y pulsación intensa
+        container.classList.add('ultra-critical');
+        container.style.animation = 'shake-critical 0.15s infinite';
+      } else if(level===6) {
+        // CRÍTICO (10-24): temblor fuerte
+        container.classList.add('shake');
+        container.style.animation = 'shake-critical 0.2s infinite';
+      } else if(level===5) {
+        // PELIGRO (25-39): temblor moderado
+        container.classList.add('critical');
+        container.style.animation = 'shake 0.3s infinite';
+      }
     }
   }
   
