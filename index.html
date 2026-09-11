@@ -2356,6 +2356,7 @@ async function finishInit(){
   checkDailyReset();
   checkGroupRotation();
   checkStreakGaps();
+  scheduleStreakCheckAtMidnight();  // Agendar para mañana a las 00:00
   // (catálogo de pareja ya iniciado por initPersonalRewards arriba)
   // Real-time listeners FIRST
   unsubTasks=onSnapshot(collection(db,'tasks'),snap=>{
@@ -6717,7 +6718,51 @@ function notifyHpChange(){
   }
 }
 
-// ═══ FUNCIÓN DEBUG: Forzar chequeo AHORA ═══
+// ═══ RESETEAR HOY COMPLETAMENTE (limpiar pruebas) ═══
+window.resetTodayAndApplyYesterday = async () => {
+  console.log(`🔄 RESETEANDO HOY y aplicando día de ayer...`);
+  
+  const today = new Date().toLocaleDateString('es-ES');
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toLocaleDateString('es-ES');
+  
+  // Cargar el historial de HP para ver qué pasó ayer
+  const hpHistSnap = await getDocs(collection(db, 'hp_history'));
+  let yesterdayRafa = null, yesterdayMaria = null;
+  
+  hpHistSnap.forEach(doc => {
+    const data = doc.data();
+    if(data.date === yesterdayStr) {
+      if(data.person === 'Rafa') yesterdayRafa = data;
+      if(data.person === 'María') yesterdayMaria = data;
+    }
+  });
+  
+  console.log(`📅 Ayer (${yesterdayStr}):`, {yesterdayRafa, yesterdayMaria});
+  
+  // Revertir los cambios errónes de hoy
+  console.log(`🔙 Revertiendo cambios erróneos de hoy...`);
+  
+  // Los HP antes de las pruebas malas
+  hpState['Rafa'] = 51 + 3; // +3 por el neutro que no debería
+  hpState['María'] = 62 + 8; // +8 por el malo que no debería
+  
+  // Resetear streakData para hoy
+  streakData['Rafa'] = {count: 0, lastDate: yesterdayStr, todayXP: 0};
+  streakData['María'] = {count: 0, lastDate: yesterdayStr, todayXP: 0};
+  
+  // Guardar
+  await setDoc(doc(db, 'state', 'hp'), hpState);
+  await setDoc(doc(db, 'state', 'streak_Rafa'), streakData['Rafa']);
+  await setDoc(doc(db, 'state', 'streak_María'), streakData['María']);
+  
+  console.log(`✅ Reseteado. HP:`, hpState);
+  console.log(`✅ streakData reseteado para mañana`);
+  
+  alert(`✅ HOY RESETEADO\n\nRafa: 54 HP\nMaría: 70 HP\n\nMañana a las 00:00 se aplicará automáticamente el día correcto`);
+  location.reload();
+};
 window.forceHpCheck = async () => {
   console.log(`🔥 Forzando evaluación manual...`);
   
@@ -6749,6 +6794,29 @@ window.forceHpCheck = async () => {
   alert(txt);
   location.reload();
 };
+
+// ═══ SCHEDULER: Ejecutar checkStreakGaps automáticamente a las 00:00 ═══
+function scheduleStreakCheckAtMidnight() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  
+  const msUntilMidnight = tomorrow - now;
+  const hoursUntil = Math.round(msUntilMidnight / 1000 / 60 / 60);
+  
+  console.log(`⏰ SCHEDULER ACTIVO: checkStreakGaps se ejecutará en ${hoursUntil}h (a las 00:00)`);
+  
+  setTimeout(async () => {
+    console.log(`\n🔔 ¡MEDIANOCHE! Ejecutando checkStreakGaps automáticamente...`);
+    await checkStreakGaps();
+    updateHpBadge();
+    updateHeader();
+    console.log(`✅ Chequeo automático completado`);
+    // Re-agendar para mañana
+    scheduleStreakCheckAtMidnight();
+  }, msUntilMidnight);
+}
 
 // Pedir permiso para notificaciones al iniciar
 function requestNotificationPermission(){
