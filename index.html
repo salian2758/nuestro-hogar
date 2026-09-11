@@ -6724,7 +6724,52 @@ function notifyHpChange(){
   }
 }
 
-// ═══ RESETEAR HOY COMPLETAMENTE (limpiar pruebas) ═══
+// ═══ RESTAURAR HP CORRECTOS Y RESETEAR HOY ═══
+window.restoreAndReset = async () => {
+  console.log(`🔧 RESTAURANDO HP CORRECTOS y reseteando HOY...`);
+  
+  const today = new Date().toLocaleDateString('es-ES');
+  
+  // RESTAURAR HP CORRECTOS (antes de errores + 4 de ayer)
+  hpState['Rafa'] = 55;    // 51 + 4 por día bueno ayer
+  hpState['María'] = 66;   // 62 + 4 por día bueno ayer
+  
+  console.log(`✅ HP RESTAURADOS:`);
+  console.log(`   Rafa: 55 HP`);
+  console.log(`   María: 66 HP`);
+  
+  // Guardar HP en BD
+  await setDoc(doc(db, 'state', 'hp'), hpState);
+  console.log(`   ✅ Guardado en BD`);
+  
+  // RESETEAR streakData para que HOY acumule XP limpio
+  streakData['Rafa'] = {count: 0, lastDate: today, todayXP: 0};
+  streakData['María'] = {count: 0, lastDate: today, todayXP: 0};
+  
+  console.log(`✅ HOY RESETEADO LIMPIO:`);
+  console.log(`   Rafa: todayXP = 0`);
+  console.log(`   María: todayXP = 0`);
+  
+  // Guardar streakData en BD
+  await setDoc(doc(db, 'state', 'streak_Rafa'), streakData['Rafa']);
+  await setDoc(doc(db, 'state', 'streak_María'), streakData['María']);
+  console.log(`   ✅ Guardado en BD`);
+  
+  // Actualizar UI
+  updateHpBar('Rafa');
+  updateHpBar('María');
+  updateHeader();
+  
+  console.log(`\n🕐 MAÑANA A LAS 00:00:`);
+  console.log(`   - Automáticamente se evaluará el XP de HOY`);
+  console.log(`   - Si fue 70+ XP → +7 HP`);
+  console.log(`   - Si fue 50-69 XP → +4 HP`);
+  console.log(`   - Si fue 20-49 XP → -3 HP`);
+  console.log(`   - Si fue <20 XP → -8 HP`);
+  
+  alert(`✅ RESTAURADO\n\nRafa: 55 HP ✓\nMaría: 66 HP ✓\n\nHoy se acumula XP limpio.\nMañana a las 00:00 se aplican los HP automáticamente`);
+  location.reload();
+};
 window.resetTodayAndApplyYesterday = async () => {
   console.log(`🔄 RESETEANDO HOY y aplicando día de ayer...`);
   
