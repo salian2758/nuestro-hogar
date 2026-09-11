@@ -5493,7 +5493,6 @@ function updateHpBar(person){
         avatar.style.filter='none';
       }
     }
-    }
   }
   
   // Actualizar corazón del DASHBOARD con latidos y glow dinámicos
@@ -5540,9 +5539,9 @@ function updateHpBar(person){
         // Todos los demás: Sin glow, solo color limpio
         dashboardHeart.style.filter = 'none';
         dashboardHeart.style.textShadow = 'none';
+      }
     }
   }
-  
   // 🎪 TEMBLOR SOLO EN CRÍTICO: Característica del pánico
   if(container){
     container.classList.remove('shake', 'shake-critical', 'critical', 'ultra-critical');
