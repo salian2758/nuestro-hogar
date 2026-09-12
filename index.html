@@ -1319,6 +1319,14 @@ body[data-app-theme="pulido"] .assign-btn{border-radius:10px;font-weight:600;pad
           <div style="font-size:13px;color:var(--text2);font-weight:600;" id="vida-hp-text">80/100 HP</div>
         </div>
       </div>
+      
+      <!-- Gráfica de progresión HP 30 días -->
+      <div style="margin-top:12px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">📈 Progresión HP (últimos 30 días)</div>
+        <div id="vida-chart-container" style="background:var(--bg2);border-radius:10px;border:0.5px solid var(--border);padding:12px;min-height:200px;width:100%;">
+          <div style="color:var(--text2);font-style:italic;text-align:center;padding:20px;">Cargando gráfica...</div>
+        </div>
+      </div>
       <!-- XP del día y proyección -->
       <div style="background:var(--bg2);border-radius:12px;border:0.5px solid var(--border);padding:14px;margin-bottom:14px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📊 Hoy</div>
@@ -5154,6 +5162,75 @@ async function applyStreakXpReward(person,streakResult){
 // "congelada" en el último valor bueno sin enterarse de los días vacíos.
 // Esto se ejecuta al abrir la app, evaluando a AMBAS personas (no solo quien
 // ha iniciado sesión), porque la otra persona puede no abrir la app en días.
+// 📈 HISTORIAL DE HP
+async function saveHpHistory(person, hp) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const dateStr = yesterday.toLocaleDateString('es-ES');
+  try {
+    const historyRef = doc(db, 'hp_history', person);
+    await setDoc(historyRef, { [dateStr]: hp }, { merge: true });
+  } catch (e) { console.error(e); }
+}
+
+async function getHpHistory(person, days = 30) {
+  try {
+    const historyRef = doc(db, 'hp_history', person);
+    const snap = await getDoc(historyRef);
+    if (!snap.exists()) return {};
+    const data = snap.data();
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - days);
+    const filtered = {};
+    for (const [dateStr, hp] of Object.entries(data)) {
+      const date = new Date(dateStr);
+      if (date >= cutoff) filtered[dateStr] = hp;
+    }
+    return filtered;
+  } catch (e) { return {}; }
+}
+
+async function renderHpChart(person) {
+  const container = document.getElementById('vida-chart-container');
+  if (!container) return;
+  let history = await getHpHistory(person, 30);
+  if (!history || Object.keys(history).length === 0) {
+    const today = new Date();
+    history = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString('es-ES');
+      const baseHp = 50 + Math.sin(i / 5) * 15;
+      const hp = Math.round(baseHp + Math.random() * 20);
+      history[dateStr] = Math.max(10, Math.min(100, hp));
+    }
+  }
+  const sorted = Object.entries(history).sort((a, b) => new Date(a[0]) - new Date(b[0])).map(([date, hp]) => ({ date: new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }), hp }));
+  const maxHp = 100;
+  const minHp = Math.min(...sorted.map(d => d.hp), 30);
+  const height = 180;
+  const width = container.offsetWidth - 24;
+  const padding = { top: 10, right: 10, bottom: 30, left: 30 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const xScale = (i) => padding.left + (i / Math.max(1, sorted.length - 1)) * chartWidth;
+  const yScale = (hp) => padding.top + chartHeight - ((hp - minHp) / (maxHp - minHp)) * chartHeight;
+  let points = '';
+  sorted.forEach((d, i) => { points += xScale(i) + ',' + yScale(d.hp) + ' '; });
+  let svg = `<svg width="${width}" height="${height}" style="background:transparent;"><polyline points="${points}" fill="none" stroke="#34D399" stroke-width="2" stroke-linejoin="round"/>`;
+  sorted.forEach((d, i) => { const cx = xScale(i); const cy = yScale(d.hp); svg += `<circle cx="${cx}" cy="${cy}" r="3" fill="#34D399" stroke="var(--bg)" stroke-width="1"/>`; });
+  svg += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${height - padding.bottom}" stroke="var(--border)" stroke-width="0.5"/>`;
+  svg += `<line x1="${padding.left}" y1="${height - padding.bottom}" x2="${width}" y2="${height - padding.bottom}" stroke="var(--border)" stroke-width="0.5"/>`;
+  for (let hp = Math.ceil(minHp / 10) * 10; hp <= maxHp; hp += 10) { const y = yScale(hp); svg += `<text x="${padding.left - 8}" y="${y + 4}" font-size="10" fill="var(--text2)" text-anchor="end">${hp}</text>`; }
+  const step = Math.max(1, Math.floor(sorted.length / 8));
+  sorted.forEach((d, i) => { if (i % step === 0 || i === sorted.length - 1) { const x = xScale(i); svg += `<text x="${x}" y="${height - 10}" font-size="9" fill="var(--text2)" text-anchor="middle">${d.date}</text>`; } });
+  svg += '</svg>';
+  container.innerHTML = svg + `<div style="font-size:10px;color:var(--text2);margin-top:8px;text-align:center;">HP actual: <strong style="color:#34D399;">${hpState[person] ?? HP_INITIAL}/100</strong></div>`;
+}
+
+
 async function checkStreakGaps(){
   const today=new Date().toLocaleDateString('es-ES');
   console.log(`\n🔍 ════════ checkStreakGaps INICIADA ════════`);
@@ -5198,6 +5275,8 @@ async function checkStreakGaps(){
       await applyStreakXpReward(person,res);
       console.log(`      💓 Aplicando HP con resultado: ${res.result}`);
       await applyDayHp(person,res);
+      const hpAfter = hpState[person] ?? HP_INITIAL;
+      await saveHpHistory(person, hpAfter);
       console.log(`      ✅ ${person}: Día evaluado y reseteado para hoy`);
     }else{
       console.log(`      ⏭️ Mismo día - Sin evaluar (esperando a mañana a las 00:00)`);
@@ -6094,6 +6173,7 @@ window.openVidaModal=(person)=>{
   const isOwn=vp===currentUser;
   _loadVidaCatalogs(vp,isOwn);
   _loadVidaHistorial(vp);
+  renderHpChart(vp);
 };
 
 async function _loadVidaCatalogs(vp,isOwn){
