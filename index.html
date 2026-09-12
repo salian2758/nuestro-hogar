@@ -25,7 +25,7 @@ body[data-app-theme="pulido"]{
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;position:fixed;width:100%;top:0;left:0;right:0;bottom:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 input,textarea{-webkit-user-select:text;user-select:text;}
 .screen{display:none;flex:1;flex-direction:column;overflow-y:scroll;padding-bottom:75px;-webkit-overflow-scrolling:touch;overflow-x:hidden;}
-.screen.active{display:flex;}
+.screen.active{display:flex;height:calc(100vh - 180px);}
 
 /* AUTH */
 #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;z-index:200;}
